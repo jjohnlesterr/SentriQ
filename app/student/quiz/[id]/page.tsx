@@ -1,51 +1,78 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import {
-  AlertTriangle,
-  CheckCircle2,
-  Loader2,
-  Send,
-  ShieldAlert,
-} from "lucide-react";
-
-import PageShell from "@/components/layout/PageShell";
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
-  completeSession,
-  getQuizById,
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+} from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
   getSessionById,
-  recordTabSwitch,
+  getQuizById,
   updateSessionAnswer,
+  recordTabSwitch,
+  completeSession,
 } from "@/lib/actions";
-import type { Quiz, QuizSession } from "@/lib/types";
+import { QuizSession, Quiz } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
 
 export default function StudentQuizPage() {
   const router = useRouter();
   const params = useParams();
+  const { toast } = useToast();
   const sessionId = params.id as string;
 
   const [session, setSession] = useState<QuizSession | null>(null);
   const [quiz, setQuiz] = useState<Quiz | null>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, number>>({});
-  const [tabWarnings, setTabWarnings] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentQ, setCurrentQ] = useState(0);
+  const [hasLeftTab, setHasLeftTab] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    async function loadQuiz() {
-      const sessionData = await getSessionById(sessionId);
+    loadQuiz();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && session) {
+        recordTabSwitch(sessionId);
+        setHasLeftTab(true);
+      }
+    };
+
+    const handleBlur = () => {
+      if (session) {
+        recordTabSwitch(sessionId);
+        setHasLeftTab(true);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("blur", handleBlur);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, [session, sessionId]);
+
+  const loadQuiz = async () => {
+    try {
+      const sessionData = await getSessionById(sessionId);
       if (!sessionData) {
         router.push("/student/join");
         return;
       }
 
       const quizData = await getQuizById(sessionData.quizId);
-
       if (!quizData) {
         router.push("/student/join");
         return;
@@ -53,245 +80,208 @@ export default function StudentQuizPage() {
 
       setSession(sessionData);
       setQuiz(quizData);
-      setCurrentIndex(sessionData.currentQuestion || 0);
-      setAnswers(sessionData.answers || {});
-      setTabWarnings(sessionData.tabSwitches || 0);
+      setCurrentQ(sessionData.currentQuestion);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load quiz",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
     }
+  };
 
-    loadQuiz();
-  }, [sessionId, router]);
-
-  useEffect(() => {
-    async function handleVisibilityChange() {
-      if (document.hidden && sessionId) {
-        setTabWarnings((prev) => prev + 1);
-
-        try {
-          await recordTabSwitch(sessionId);
-        } catch {
-          // ignore temporary network/dev errors
-        }
-      }
-    }
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [sessionId]);
-
-  async function handleAnswer(answerIndex: number) {
-    const updatedAnswers = {
-      ...answers,
-      [currentIndex]: answerIndex,
-    };
-
-    setAnswers(updatedAnswers);
-
-    await updateSessionAnswer(sessionId, currentIndex, answerIndex);
-  }
-
-  function goNext() {
-    if (!quiz) return;
-
-    if (currentIndex < quiz.questions.length - 1) {
-      setCurrentIndex((prev) => prev + 1);
-    }
-  }
-
-  function goPrevious() {
-    if (currentIndex > 0) {
-      setCurrentIndex((prev) => prev - 1);
-    }
-  }
-
-  async function handleSubmit() {
-    setIsSubmitting(true);
+  const handleAnswerSelect = async (optionIndex: number) => {
+    if (!session) return;
 
     try {
-      await completeSession(sessionId);
+      await updateSessionAnswer(sessionId, currentQ, optionIndex);
+      const updated = { ...session };
+      updated.answers[currentQ] = optionIndex;
+      setSession(updated);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save answer",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleNext = () => {
+    if (quiz && currentQ < quiz.questions.length - 1) {
+      setCurrentQ(currentQ + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentQ > 0) {
+      setCurrentQ(currentQ - 1);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!quiz || !session) return;
+
+    setIsSubmitting(true);
+    try {
+      const completed = await completeSession(sessionId);
+      sessionStorage.setItem("score", completed.score?.toString() || "0");
+      sessionStorage.setItem("totalQuestions", quiz.questions.length.toString());
       router.push(`/student/results/${sessionId}`);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to submit quiz",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
-  }
+  };
 
-  if (isLoading || !quiz || !session) {
+  if (isLoading) {
     return (
-      <PageShell>
+      <main className="min-h-screen bg-[#f7fafc] px-4 py-6">
         <div className="flex min-h-screen items-center justify-center">
-          <div className="inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-slate-200 backdrop-blur-md">
-            <Loader2 className="h-5 w-5 animate-spin text-violet-300" />
+          <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-6 py-4 text-slate-600 shadow-sm">
+            <Loader2 className="h-5 w-5 animate-spin" />
             Loading quiz...
           </div>
         </div>
-      </PageShell>
+      </main>
     );
   }
 
-  const currentQuestion = quiz.questions[currentIndex];
-  const selectedAnswer = answers[currentIndex];
-  const answeredCount = Object.keys(answers).length;
-  const progress = Math.round((answeredCount / quiz.questions.length) * 100);
+  if (!session || !quiz) {
+    return (
+      <main className="min-h-screen bg-[#f7fafc] px-4 py-6">
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="rounded-xl border border-red-200 bg-white px-6 py-4 text-red-600 shadow-sm">
+            Error loading quiz
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  const question = quiz.questions[currentQ];
+  const progress = ((currentQ + 1) / quiz.questions.length) * 100;
 
   return (
-    <PageShell>
-      <section className="mx-auto max-w-5xl px-6 py-8 md:px-10">
-        <Card className="mb-6 overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-0 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl">
-          <div className="relative p-6 md:p-8">
-            <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-violet-500/10 blur-2xl" />
-
-            <div className="relative z-10 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-              <div>
-                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-violet-400/20 bg-violet-500/10 px-3 py-1.5 text-xs text-violet-200">
-                  <ShieldAlert className="h-3.5 w-3.5" />
-                  Monitored Assessment
-                </div>
-
-                <h1 className="bg-gradient-to-r from-violet-300 via-fuchsia-300 to-cyan-300 bg-clip-text text-3xl font-extrabold text-transparent md:text-4xl">
-                  {quiz.title}
-                </h1>
-
-                <p className="mt-2 text-sm text-slate-300">
-                  Student:{" "}
-                  <span className="font-semibold text-white">
-                    {session.studentName}
-                  </span>
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
-                Question {currentIndex + 1} of {quiz.questions.length}
-              </div>
+    <main className="min-h-screen bg-[#f7fafc]">
+      <div className="mx-auto flex min-h-screen max-w-3xl flex-col px-4 py-5 sm:px-6">
+        <div className="mb-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900">{quiz.title}</h1>
+              <p className="mt-1 text-base text-slate-500">
+                Student: {session.studentName}
+              </p>
             </div>
 
-            <div className="relative z-10 mt-6">
-              <div className="mb-2 flex items-center justify-between text-xs text-slate-400">
-                <span>Progress</span>
-                <span>{progress}%</span>
-              </div>
-
-              <div className="h-3 overflow-hidden rounded-full bg-white/10">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-500 transition-all"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
+            <div className="text-right">
+              <p className="text-sm text-slate-400">Question</p>
+              <p className="text-4xl font-bold leading-none text-slate-900">
+                {currentQ + 1}/{quiz.questions.length}
+              </p>
             </div>
           </div>
-        </Card>
 
-        {tabWarnings > 0 && (
-          <div className="mb-6 rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-red-200">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="mt-0.5 h-5 w-5" />
-              <div>
-                <p className="font-semibold">Tab switch detected</p>
-                <p className="mt-1 text-sm text-slate-300">
-                  You have switched tabs {tabWarnings} time
-                  {tabWarnings !== 1 ? "s" : ""}. Your teacher can see this.
-                </p>
-              </div>
-            </div>
+          <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-slate-200">
+            <div
+              className="h-full rounded-full bg-blue-500 transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
           </div>
+        </div>
+
+        {hasLeftTab && (
+          <Alert className="mb-4 rounded-xl border border-red-200 bg-red-50 text-red-700">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Warning: Tab switches detected. Your instructor is monitoring this
+              session.
+            </AlertDescription>
+          </Alert>
         )}
 
-        <Card className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl md:p-8">
-          <p className="mb-3 font-mono text-xs uppercase tracking-[0.3em] text-violet-300">
-            Question {currentIndex + 1}
-          </p>
+        <div className="flex flex-1 items-center justify-center">
+          <Card className="w-full rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+            <h2 className="mb-8 text-3xl font-bold leading-tight text-slate-900">
+              {question.text}
+            </h2>
 
-          <h2 className="text-2xl font-bold leading-snug text-white md:text-3xl">
-            {currentQuestion.text}
-          </h2>
-
-          <div className="mt-8 space-y-4">
-            {currentQuestion.options.map((option, index) => {
-              const isSelected = selectedAnswer === index;
-
-              return (
-                <button
-                  key={index}
-                  onClick={() => handleAnswer(index)}
-                  className={
-                    isSelected
-                      ? "w-full rounded-2xl border border-violet-400/50 bg-violet-500/20 p-5 text-left text-white shadow-lg"
-                      : "w-full rounded-2xl border border-white/10 bg-white/5 p-5 text-left text-slate-300 transition hover:border-violet-400/30 hover:bg-white/10 hover:text-white"
-                  }
-                >
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={
-                        isSelected
-                          ? "flex h-9 w-9 items-center justify-center rounded-xl bg-violet-500 text-white"
-                          : "flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-400"
-                      }
-                    >
-                      {isSelected ? (
-                        <CheckCircle2 className="h-5 w-5" />
-                      ) : (
-                        String.fromCharCode(65 + index)
-                      )}
-                    </div>
-
-                    <span className="text-base">{option}</span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <Button
-              variant="outline"
-              onClick={goPrevious}
-              disabled={currentIndex === 0}
+            <RadioGroup
+              value={session.answers[currentQ]?.toString() || ""}
+              onValueChange={(value) => handleAnswerSelect(parseInt(value))}
             >
-              Previous
-            </Button>
+              <div className="space-y-4">
+                {question.options.map((option, index) => {
+                  const selected = session.answers[currentQ] === index;
 
-            <div className="flex gap-3">
-              {currentIndex < quiz.questions.length - 1 ? (
-                <Button
-                  variant="secondary"
-                  onClick={goNext}
-                  disabled={selectedAnswer === undefined}
-                >
-                  Next Question
-                </Button>
+                  return (
+                    <label
+                      key={index}
+                      htmlFor={`option-${index}`}
+                      className={`flex cursor-pointer items-center gap-4 rounded-xl border px-4 py-4 transition ${
+                        selected
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-slate-200 bg-white hover:bg-slate-50"
+                      }`}
+                    >
+                      <RadioGroupItem
+                        value={index.toString()}
+                        id={`option-${index}`}
+                        className="border-slate-400 text-blue-600"
+                      />
+                      <span className="text-base text-slate-800">{option}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </RadioGroup>
+          </Card>
+        </div>
+
+        <div className="mt-6 flex items-center justify-between gap-4">
+          <Button
+            onClick={handlePrevious}
+            disabled={currentQ === 0}
+            variant="secondary"
+            className="min-w-[120px] rounded-lg border-slate-300 bg-slate-200 text-slate-600 hover:bg-slate-300 disabled:opacity-60"
+          >
+            <ChevronLeft className="mr-2 h-4 w-4" />
+            Previous
+          </Button>
+
+          {currentQ === quiz.questions.length - 1 ? (
+            <Button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="min-w-[150px] rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Submitting...
+                </>
               ) : (
-                <Button
-                  variant="primary"
-                  onClick={handleSubmit}
-                  disabled={
-                    isSubmitting || answeredCount < quiz.questions.length
-                  }
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="h-4 w-4" />
-                      Submit Quiz
-                    </>
-                  )}
-                </Button>
+                "Submit Quiz"
               )}
-            </div>
-          </div>
-
-          {answeredCount < quiz.questions.length && (
-            <p className="mt-4 text-center text-xs text-slate-500">
-              Answer all questions before submitting.
-            </p>
+            </Button>
+          ) : (
+            <Button
+              onClick={handleNext}
+              className="min-w-[140px] rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+            >
+              Next
+              <ChevronRight className="ml-2 h-4 w-4" />
+            </Button>
           )}
-        </Card>
-      </section>
-    </PageShell>
+        </div>
+      </div>
+    </main>
   );
 }
