@@ -3,17 +3,11 @@
 import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  ArrowRight,
-  BookOpen,
-  Loader2,
-  ShieldCheck,
-  Users,
-} from "lucide-react";
+import { BookOpen, ShieldCheck, Users } from "lucide-react";
 
 import PageShell from "@/components/layout/PageShell";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import PortalCard from "@/components/home/PortalCard";
+import FeaturedBadge from "@/components/shared/FeaturedBadge";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -49,6 +43,7 @@ export default function LandingPage() {
                       src="/logo.png"
                       alt="SentriQ Logo"
                       fill
+                      sizes="96px"
                       priority
                       className="object-contain p-2"
                     />
@@ -67,15 +62,17 @@ export default function LandingPage() {
                   </p>
 
                   <div className="mt-6 flex flex-wrap items-center justify-center gap-3 md:justify-start">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-sm text-emerald-200">
-                      <ShieldCheck className="h-4 w-4" />
-                      Real-time monitoring
-                    </div>
+                    <FeaturedBadge
+                      icon={ShieldCheck}
+                      label="Real-time monitoring"
+                      className="border border-emerald-400/20 bg-emerald-400/10 text-emerald-200"
+                    />
 
-                    <div className="inline-flex items-center gap-2 rounded-full border border-sky-400/20 bg-sky-400/10 px-4 py-2 text-sm text-sky-200">
-                      <BookOpen className="h-4 w-4" />
-                      Digital assessment support
-                    </div>
+                    <FeaturedBadge
+                      icon={BookOpen}
+                      label="Digital assessment support"
+                      className="border border-sky-400/20 bg-sky-400/10 text-sky-200"
+                    />
                   </div>
                 </div>
               </div>
@@ -84,87 +81,31 @@ export default function LandingPage() {
 
           {/* Portal Cards */}
           <div className="mx-auto mt-6 grid max-w-5xl gap-6 md:grid-cols-2">
-            <Card className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-0 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl">
-              <div className="relative h-full p-8">
-                <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-blue-500/10 blur-2xl" />
+            <PortalCard
+              icon={BookOpen}
+              title="Teacher Portal"
+              description="Create quizzes, manage assessments, and monitor student activity with a secure and streamlined dashboard."
+              buttonText="Teacher Login"
+              variant="primary"
+              glowClass="bg-blue-500/10"
+              iconClass="border border-blue-400/20 bg-blue-500/10 text-blue-300"
+              loading={loadingTarget === "teacher"}
+              disabled={loadingTarget !== null}
+              onClick={handleTeacherClick}
+            />
 
-                <div className="relative z-10">
-                  <div className="mb-8 flex h-16 w-16 items-center justify-center rounded-2xl border border-blue-400/20 bg-blue-500/10 text-blue-300 shadow-lg">
-                    <BookOpen className="h-8 w-8" />
-                  </div>
-
-                  <h2 className="text-3xl font-extrabold text-white">
-                    Teacher Portal
-                  </h2>
-
-                  <p className="mt-5 max-w-md text-lg leading-7 text-slate-300">
-                    Create quizzes, manage assessments, and monitor student
-                    activity with a secure and streamlined dashboard.
-                  </p>
-
-                  <Button
-                    type="button"
-                    variant="primary"
-                    onClick={handleTeacherClick}
-                    className="mt-8 h-12 w-full cursor-pointer text-base transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed"
-                    disabled={loadingTarget !== null}
-                  >
-                    {loadingTarget === "teacher" ? (
-                      <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        Redirecting...
-                      </>
-                    ) : (
-                      <>
-                        Teacher Login
-                        <ArrowRight className="ml-2 h-5 w-5" />
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-0 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl">
-              <div className="relative h-full p-8">
-                <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-violet-500/10 blur-2xl" />
-
-                <div className="relative z-10">
-                  <div className="mb-8 flex h-16 w-16 items-center justify-center rounded-2xl border border-violet-400/20 bg-violet-500/10 text-violet-300 shadow-lg">
-                    <Users className="h-8 w-8" />
-                  </div>
-
-                  <h2 className="text-3xl font-extrabold text-white">
-                    Student Portal
-                  </h2>
-
-                  <p className="mt-5 max-w-md text-lg leading-7 text-slate-300">
-                    Join assessments quickly using a quiz code and complete your
-                    exam in a focused, monitored environment.
-                  </p>
-
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={handleStudentClick}
-                    className="mt-8 h-12 w-full cursor-pointer text-base transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed"
-                    disabled={loadingTarget !== null}
-                  >
-                    {loadingTarget === "student" ? (
-                      <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        Redirecting...
-                      </>
-                    ) : (
-                      <>
-                        Join Quiz
-                        <ArrowRight className="ml-2 h-5 w-5" />
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </Card>
+            <PortalCard
+              icon={Users}
+              title="Student Portal"
+              description="Join assessments quickly using a quiz code and complete your exam in a focused, monitored environment."
+              buttonText="Join Quiz"
+              variant="secondary"
+              glowClass="bg-violet-500/10"
+              iconClass="border border-violet-400/20 bg-violet-500/10 text-violet-300"
+              loading={loadingTarget === "student"}
+              disabled={loadingTarget !== null}
+              onClick={handleStudentClick}
+            />
           </div>
 
           {/* Footer */}

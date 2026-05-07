@@ -1,8 +1,16 @@
+export type QuestionType = "multiple_choice" | "true_false" | "identification";
+
 export interface Question {
   id: string;
+  type: QuestionType;
   text: string;
+
+  // For multiple choice and true/false
   options: string[];
   correctAnswer: number;
+
+  // For identification
+  correctTextAnswer?: string;
 }
 
 export interface Quiz {
@@ -14,7 +22,7 @@ export interface Quiz {
   createdAt: Date;
   createdBy: string;
   published: boolean;
-  status?: 'draft' | 'published' | 'active';
+  status?: "draft" | "published" | "active";
 }
 
 export interface QuizSession {
@@ -25,15 +33,19 @@ export interface QuizSession {
   startedAt: Date;
   completedAt?: Date;
   currentQuestion: number;
-  answers: Record<number, number>;
+
+  // number = multiple choice / true-false answer index
+  // string = identification answer
+  answers: Record<number, number | string>;
+
   score?: number;
   tabSwitches: number;
   events: SessionEvent[];
-  status: 'in-progress' | 'completed';
+  status: "in-progress" | "completed";
 }
 
 export interface SessionEvent {
-  type: 'tab-left' | 'tab-returned' | 'started' | 'completed';
+  type: "tab-left" | "tab-returned" | "started" | "completed";
   timestamp: Date;
   description?: string;
 }
@@ -49,7 +61,7 @@ export interface AppState {
   currentUser: {
     id: string;
     name: string;
-    role: 'teacher' | 'student';
+    role: "teacher" | "student";
     email?: string;
   } | null;
   quizzes: Quiz[];

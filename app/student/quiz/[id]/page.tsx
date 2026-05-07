@@ -1,287 +1,217 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+
+import PageShell from "@/components/layout/PageShell";
+
+import QuizHeader from "@/components/student/quiz/QuizHeader";
+import TabWarning from "@/components/student/quiz/TabWarning";
+import QuestionCard from "@/components/student/quiz/QuestionCard";
+
 import {
-  AlertCircle,
-  ChevronLeft,
-  ChevronRight,
-  Loader2,
-} from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  getSessionById,
-  getQuizById,
-  updateSessionAnswer,
-  recordTabSwitch,
   completeSession,
+  getQuizById,
+  getSessionById,
+  recordTabSwitch,
+  updateSessionAnswer,
 } from "@/lib/actions";
-import { QuizSession, Quiz } from "@/lib/types";
-import { useToast } from "@/hooks/use-toast";
+
+import type { Quiz, QuizSession } from "@/lib/types";
 
 export default function StudentQuizPage() {
   const router = useRouter();
   const params = useParams();
-  const { toast } = useToast();
+
   const sessionId = params.id as string;
 
-  const [session, setSession] = useState<QuizSession | null>(null);
   const [quiz, setQuiz] = useState<Quiz | null>(null);
+  const [session, setSession] = useState<QuizSession | null>(null);
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const [answers, setAnswers] = useState<
+    Record<number, number | string>
+  >({});
+
   const [isLoading, setIsLoading] = useState(true);
-  const [currentQ, setCurrentQ] = useState(0);
-  const [hasLeftTab, setHasLeftTab] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    loadQuiz();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const [tabWarnings, setTabWarnings] = useState(0);
 
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden && session) {
-        recordTabSwitch(sessionId);
-        setHasLeftTab(true);
-      }
-    };
+    async function loadQuizSession() {
+      try {
+        const sessionData = await getSessionById(sessionId);
 
-    const handleBlur = () => {
-      if (session) {
-        recordTabSwitch(sessionId);
-        setHasLeftTab(true);
-      }
-    };
+        if (!sessionData) {
+          router.push("/");
+          return;
+        }
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("blur", handleBlur);
+        const quizData = await getQuizById(sessionData.quizId);
+
+        if (!quizData) {
+          router.push("/");
+          return;
+        }
+
+        setSession(sessionData);
+        setQuiz(quizData);
+
+        setAnswers(sessionData.answers || {});
+        setCurrentIndex(sessionData.currentQuestion || 0);
+        setTabWarnings(sessionData.tabSwitches || 0);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadQuizSession();
+  }, [sessionId, router]);
+
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.hidden) {
+        setTabWarnings((prev) => prev + 1);
+
+        recordTabSwitch(sessionId);
+      }
+    }
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibilityChange
+    );
 
     return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("blur", handleBlur);
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibilityChange
+      );
     };
-  }, [session, sessionId]);
+  }, [sessionId]);
 
-  const loadQuiz = async () => {
-    try {
-      const sessionData = await getSessionById(sessionId);
-      if (!sessionData) {
-        router.push("/student/join");
-        return;
-      }
+  async function handleAnswer(answer: number | string) {
+    const updatedAnswers = {
+      ...answers,
+      [currentIndex]: answer,
+    };
 
-      const quizData = await getQuizById(sessionData.quizId);
-      if (!quizData) {
-        router.push("/student/join");
-        return;
-      }
+    setAnswers(updatedAnswers);
 
-      setSession(sessionData);
-      setQuiz(quizData);
-      setCurrentQ(sessionData.currentQuestion);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load quiz",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+    await updateSessionAnswer(
+      sessionId,
+      currentIndex,
+      answer
+    );
+  }
+
+  function goNext() {
+    if (!quiz) return;
+
+    if (currentIndex < quiz.questions.length - 1) {
+      setCurrentIndex((prev) => prev + 1);
     }
-  };
+  }
 
-  const handleAnswerSelect = async (optionIndex: number) => {
-    if (!session) return;
-
-    try {
-      await updateSessionAnswer(sessionId, currentQ, optionIndex);
-      const updated = { ...session };
-      updated.answers[currentQ] = optionIndex;
-      setSession(updated);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save answer",
-        variant: "destructive",
-      });
+  function goPrevious() {
+    if (currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1);
     }
-  };
+  }
 
-  const handleNext = () => {
-    if (quiz && currentQ < quiz.questions.length - 1) {
-      setCurrentQ(currentQ + 1);
-    }
-  };
-
-  const handlePrevious = () => {
-    if (currentQ > 0) {
-      setCurrentQ(currentQ - 1);
-    }
-  };
-
-  const handleSubmit = async () => {
+  async function handleSubmit() {
     if (!quiz || !session) return;
 
     setIsSubmitting(true);
+
     try {
-      const completed = await completeSession(sessionId);
-      sessionStorage.setItem("score", completed.score?.toString() || "0");
-      sessionStorage.setItem("totalQuestions", quiz.questions.length.toString());
-      router.push(`/student/results/${sessionId}`);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to submit quiz",
-        variant: "destructive",
+      let score = 0;
+
+      quiz.questions.forEach((question, index) => {
+        const answer = answers[index];
+
+        if (question.type === "identification") {
+          if (
+            typeof answer === "string" &&
+            answer.trim().toLowerCase() ===
+              question.correctTextAnswer
+                ?.trim()
+                .toLowerCase()
+          ) {
+            score++;
+          }
+        } else {
+          if (answer === question.correctAnswer) {
+            score++;
+          }
+        }
       });
+
+      await completeSession(sessionId, score);
+
+      router.push(`/student/results/${sessionId}`);
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }
 
-  if (isLoading) {
+  if (isLoading || !quiz || !session) {
     return (
-      <main className="min-h-screen bg-[#f7fafc] px-4 py-6">
+      <PageShell>
         <div className="flex min-h-screen items-center justify-center">
-          <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-6 py-4 text-slate-600 shadow-sm">
-            <Loader2 className="h-5 w-5 animate-spin" />
+          <div className="inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-slate-200 backdrop-blur-md">
+            <Loader2 className="h-5 w-5 animate-spin text-violet-300" />
             Loading quiz...
           </div>
         </div>
-      </main>
+      </PageShell>
     );
   }
 
-  if (!session || !quiz) {
-    return (
-      <main className="min-h-screen bg-[#f7fafc] px-4 py-6">
-        <div className="flex min-h-screen items-center justify-center">
-          <div className="rounded-xl border border-red-200 bg-white px-6 py-4 text-red-600 shadow-sm">
-            Error loading quiz
-          </div>
-        </div>
-      </main>
-    );
-  }
+  const currentQuestion = quiz.questions[currentIndex];
 
-  const question = quiz.questions[currentQ];
-  const progress = ((currentQ + 1) / quiz.questions.length) * 100;
+  const selectedAnswer = answers[currentIndex];
+
+  const answeredCount = Object.keys(answers).length;
+
+  const progress = Math.round(
+    ((currentIndex + 1) / quiz.questions.length) * 100
+  );
+
+  const isCurrentAnswered =
+    selectedAnswer !== undefined &&
+    selectedAnswer !== "";
 
   return (
-    <main className="min-h-screen bg-[#f7fafc]">
-      <div className="mx-auto flex min-h-screen max-w-3xl flex-col px-4 py-5 sm:px-6">
-        <div className="mb-4">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900">{quiz.title}</h1>
-              <p className="mt-1 text-base text-slate-500">
-                Student: {session.studentName}
-              </p>
-            </div>
+    <PageShell>
+      <section className="mx-auto max-w-5xl px-6 py-8 md:px-10">
+        <QuizHeader
+          title={quiz.title}
+          studentName={session.studentName}
+          currentIndex={currentIndex}
+          totalQuestions={quiz.questions.length}
+          progress={progress}
+        />
 
-            <div className="text-right">
-              <p className="text-sm text-slate-400">Question</p>
-              <p className="text-4xl font-bold leading-none text-slate-900">
-                {currentQ + 1}/{quiz.questions.length}
-              </p>
-            </div>
-          </div>
+        <TabWarning tabWarnings={tabWarnings} />
 
-          <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-slate-200">
-            <div
-              className="h-full rounded-full bg-blue-500 transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </div>
-
-        {hasLeftTab && (
-          <Alert className="mb-4 rounded-xl border border-red-200 bg-red-50 text-red-700">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Warning: Tab switches detected. Your instructor is monitoring this
-              session.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <div className="flex flex-1 items-center justify-center">
-          <Card className="w-full rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-            <h2 className="mb-8 text-3xl font-bold leading-tight text-slate-900">
-              {question.text}
-            </h2>
-
-            <RadioGroup
-              value={session.answers[currentQ]?.toString() || ""}
-              onValueChange={(value) => handleAnswerSelect(parseInt(value))}
-            >
-              <div className="space-y-4">
-                {question.options.map((option, index) => {
-                  const selected = session.answers[currentQ] === index;
-
-                  return (
-                    <label
-                      key={index}
-                      htmlFor={`option-${index}`}
-                      className={`flex cursor-pointer items-center gap-4 rounded-xl border px-4 py-4 transition ${
-                        selected
-                          ? "border-blue-500 bg-blue-50"
-                          : "border-slate-200 bg-white hover:bg-slate-50"
-                      }`}
-                    >
-                      <RadioGroupItem
-                        value={index.toString()}
-                        id={`option-${index}`}
-                        className="border-slate-400 text-blue-600"
-                      />
-                      <span className="text-base text-slate-800">{option}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            </RadioGroup>
-          </Card>
-        </div>
-
-        <div className="mt-6 flex items-center justify-between gap-4">
-          <Button
-            onClick={handlePrevious}
-            disabled={currentQ === 0}
-            variant="secondary"
-            className="min-w-[120px] rounded-lg border-slate-300 bg-slate-200 text-slate-600 hover:bg-slate-300 disabled:opacity-60"
-          >
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            Previous
-          </Button>
-
-          {currentQ === quiz.questions.length - 1 ? (
-            <Button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="min-w-[150px] rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                "Submit Quiz"
-              )}
-            </Button>
-          ) : (
-            <Button
-              onClick={handleNext}
-              className="min-w-[140px] rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-            >
-              Next
-              <ChevronRight className="ml-2 h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      </div>
-    </main>
+        <QuestionCard
+          question={currentQuestion}
+          currentIndex={currentIndex}
+          totalQuestions={quiz.questions.length}
+          selectedAnswer={selectedAnswer}
+          answeredCount={answeredCount}
+          isCurrentAnswered={isCurrentAnswered}
+          isSubmitting={isSubmitting}
+          onAnswer={handleAnswer}
+          onPrevious={goPrevious}
+          onNext={goNext}
+          onSubmit={handleSubmit}
+        />
+      </section>
+    </PageShell>
   );
 }
