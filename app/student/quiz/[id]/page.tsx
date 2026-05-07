@@ -31,9 +31,7 @@ export default function StudentQuizPage() {
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const [answers, setAnswers] = useState<
-    Record<number, number | string>
-  >({});
+  const [answers, setAnswers] = useState<Record<number, number | string>>({});
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -75,21 +73,14 @@ export default function StudentQuizPage() {
     function handleVisibilityChange() {
       if (document.hidden) {
         setTabWarnings((prev) => prev + 1);
-
         recordTabSwitch(sessionId);
       }
     }
 
-    document.addEventListener(
-      "visibilitychange",
-      handleVisibilityChange
-    );
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      document.removeEventListener(
-        "visibilitychange",
-        handleVisibilityChange
-      );
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [sessionId]);
 
@@ -101,11 +92,7 @@ export default function StudentQuizPage() {
 
     setAnswers(updatedAnswers);
 
-    await updateSessionAnswer(
-      sessionId,
-      currentIndex,
-      answer
-    );
+    await updateSessionAnswer(sessionId, currentIndex, answer);
   }
 
   function goNext() {
@@ -137,14 +124,12 @@ export default function StudentQuizPage() {
           if (
             typeof answer === "string" &&
             answer.trim().toLowerCase() ===
-              question.correctTextAnswer
-                ?.trim()
-                .toLowerCase()
+              question.correctTextAnswer?.trim().toLowerCase()
           ) {
             score++;
           }
         } else {
-          if (answer === question.correctAnswer) {
+          if (Number(answer) === question.correctAnswer) {
             score++;
           }
         }
@@ -172,9 +157,7 @@ export default function StudentQuizPage() {
   }
 
   const currentQuestion = quiz.questions[currentIndex];
-
   const selectedAnswer = answers[currentIndex];
-
   const answeredCount = Object.keys(answers).length;
 
   const progress = Math.round(
@@ -182,8 +165,7 @@ export default function StudentQuizPage() {
   );
 
   const isCurrentAnswered =
-    selectedAnswer !== undefined &&
-    selectedAnswer !== "";
+    selectedAnswer !== undefined && selectedAnswer !== "";
 
   return (
     <PageShell>
