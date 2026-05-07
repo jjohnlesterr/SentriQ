@@ -35,7 +35,7 @@ export default function MonitorHeader({
           <div className="flex items-start gap-4">
             <Button
               variant="ghost"
-              size="icon"
+              size="sm"
               onClick={onBack}
               className="border border-white/10 bg-white/5 hover:bg-white/10"
             >

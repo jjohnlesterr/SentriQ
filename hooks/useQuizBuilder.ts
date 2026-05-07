@@ -36,10 +36,10 @@ export function useQuizBuilder() {
       setDescription(data.description);
       setQuestions(
         data.questions.map((question) => ({
+          ...question,
           type: question.type || "multiple_choice",
           correctTextAnswer: question.correctTextAnswer || "",
-          ...question,
-        }))
+        })),
       );
 
       setIsLoading(false);
@@ -157,7 +157,7 @@ export function useQuizBuilder() {
   function updateOption(
     questionIndex: number,
     optionIndex: number,
-    value: string
+    value: string,
   ) {
     const updated = [...questions];
 
@@ -168,7 +168,7 @@ export function useQuizBuilder() {
 
   function removeQuestion(index: number) {
     const updated = questions.filter(
-      (_, questionIndex) => questionIndex !== index
+      (_, questionIndex) => questionIndex !== index,
     );
 
     setQuestions(updated);
