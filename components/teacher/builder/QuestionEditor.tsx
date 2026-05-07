@@ -44,7 +44,7 @@ export default function QuestionEditor({
         <Button
           type="button"
           onClick={() => onRemoveQuestion(activeQuestion)}
-          variant="destructive"
+          variant="secondary"
           size="sm"
           className="cursor-pointer"
         >
@@ -94,7 +94,7 @@ export default function QuestionEditor({
                 <Button
                   type="button"
                   onClick={() => onAddOption(activeQuestion)}
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
                   className="cursor-pointer border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white"
                 >
@@ -138,7 +138,7 @@ export default function QuestionEditor({
                           onRemoveOption(activeQuestion, optionIndex)
                         }
                         variant="ghost"
-                        size="icon"
+                        size="sm"
                         className="cursor-pointer hover:bg-white/10"
                       >
                         <Trash2 className="h-4 w-4 text-red-400" />

@@ -83,7 +83,7 @@ export default function SessionCard({
         </div>
 
         <Button
-          variant="outline"
+          variant="secondary"
           onClick={() => onView(session.id)}
           className="border-white/10 bg-white/5 hover:bg-white/10 hover:text-white"
         >

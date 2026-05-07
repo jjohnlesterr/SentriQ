@@ -229,7 +229,7 @@ export async function recordTabSwitch(sessionId: string): Promise<void> {
 export async function updateSessionAnswer(
   sessionId: string,
   questionIndex: number,
-  answerIndex: number
+  answer: number | string
 ): Promise<void> {
   const session = sessions.find((session) => session.id === sessionId);
 
@@ -237,12 +237,13 @@ export async function updateSessionAnswer(
     throw new Error("Session not found");
   }
 
-  session.answers[questionIndex] = answerIndex;
+  session.answers[questionIndex] = answer;
   session.currentQuestion = Math.max(session.currentQuestion, questionIndex);
 }
 
 export async function completeSession(
-  sessionId: string
+  sessionId: string,
+  submittedScore?: number
 ): Promise<QuizSession> {
   const session = sessions.find((session) => session.id === sessionId);
 
@@ -256,11 +257,28 @@ export async function completeSession(
     throw new Error("Quiz not found");
   }
 
-  let score = 0;
+  let score = submittedScore ?? 0;
 
-  for (let i = 0; i < quiz.questions.length; i++) {
-    if (session.answers[i] === quiz.questions[i].correctAnswer) {
-      score += 1;
+  if (submittedScore === undefined) {
+    score = 0;
+
+    for (let i = 0; i < quiz.questions.length; i++) {
+      const question = quiz.questions[i];
+      const answer = session.answers[i];
+
+      if (question.type === "identification") {
+        if (
+          typeof answer === "string" &&
+          answer.trim().toLowerCase() ===
+            question.correctTextAnswer?.trim().toLowerCase()
+        ) {
+          score += 1;
+        }
+      } else {
+        if (Number(answer) === question.correctAnswer) {
+          score += 1;
+        }
+      }
     }
   }
 

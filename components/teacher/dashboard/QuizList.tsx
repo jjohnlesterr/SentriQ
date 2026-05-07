@@ -61,7 +61,7 @@ export default function QuizList({ items }: Props) {
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
-                variant="outline"
+                variant="secondary"
                 onClick={() => router.push(`/teacher/quiz/${quiz.id}/builder`)}
                 className="cursor-pointer border-white/10 bg-white/5 hover:bg-white/10 hover:text-white"
               >

@@ -75,7 +75,7 @@ export default function MonitorHeader({
             </p>
 
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={onRefresh}
               className="border-white/10 bg-white/5 hover:bg-white/10 hover:text-white"
             >
@@ -85,7 +85,7 @@ export default function MonitorHeader({
 
             <Button
               onClick={onToggleAutoRefresh}
-              variant={autoRefresh ? "primary" : "outline"}
+              variant={autoRefresh ? "primary" : "secondary"}
             >
               Auto {autoRefresh ? "ON" : "OFF"}
             </Button>

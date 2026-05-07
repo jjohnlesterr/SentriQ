@@ -98,7 +98,7 @@ export default function QuestionCard({
       <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Button
           type="button"
-          variant="outline"
+          variant="secondary"
           onClick={onPrevious}
           disabled={currentIndex === 0}
           className="cursor-pointer border-white/10 bg-white/5 hover:bg-white/10 hover:text-white"

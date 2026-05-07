@@ -29,7 +29,7 @@ export default function BuilderHeader({
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
-            size="icon"
+            size="sm"
             onClick={onBack}
             className="cursor-pointer rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
           >
@@ -51,7 +51,7 @@ export default function BuilderHeader({
             type="button"
             onClick={onSave}
             disabled={isSaving}
-            variant="outline"
+            variant="secondary"
             className="cursor-pointer border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white"
           >
             {isSaving ? (

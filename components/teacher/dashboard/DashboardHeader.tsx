@@ -39,7 +39,7 @@ export default function DashboardHeader({
 
           <Button
             type="button"
-            variant="outline"
+            variant="secondary"
             onClick={onLogout}
             className="cursor-pointer border-white/10 bg-white/5 hover:bg-white/10 hover:text-white"
           >

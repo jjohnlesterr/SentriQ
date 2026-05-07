@@ -46,7 +46,7 @@ export default function PublishCodeDialog({
           <Button
             type="button"
             onClick={onCopyCode}
-            variant="outline"
+            variant="secondary"
             className="w-full cursor-pointer border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white"
           >
             <Copy className="h-4 w-4" />
