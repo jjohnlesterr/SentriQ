@@ -1,17 +1,18 @@
-export type QuestionType = "multiple_choice" | "true_false" | "identification";
+export type QuestionType =
+  | "multiple_choice"
+  | "true_false"
+  | "identification";
 
-export interface Question {
+export type Question = {
   id: string;
   type: QuestionType;
   text: string;
-
   options: string[];
   correctAnswer: number;
-
   correctTextAnswer?: string;
-}
+};
 
-export interface Quiz {
+export type Quiz = {
   id: string;
   title: string;
   description: string;
@@ -20,59 +21,50 @@ export interface Quiz {
   createdAt: Date;
   createdBy: string;
   published: boolean;
-  status?: "draft" | "published" | "active";
-}
+  status: "draft" | "published";
+};
 
-export type SessionApprovalStatus = "pending" | "approved" | "rejected";
+export type SessionEventType =
+  | "join-requested"
+  | "approved"
+  | "rejected"
+  | "started"
+  | "tab-left"
+  | "tab-returned"
+  | "fullscreen-exit"
+  | "copy-attempt"
+  | "paste-attempt"
+  | "completed";
 
-export interface QuizSession {
+export type SessionEvent = {
+  type: SessionEventType;
+  timestamp: Date | string;
+  description?: string;
+  durationSeconds?: number;
+};
+
+export type ReportVisibility = "locked" | "summary" | "full";
+
+export type QuizSession = {
   id: string;
   quizId: string;
-  studentName: string;
   studentId: string;
-  startedAt: Date;
-  completedAt?: Date;
+  studentName: string;
+  startedAt: Date | string;
+  completedAt?: Date | string;
   currentQuestion: number;
-
   answers: Record<number, number | string>;
-
-  score?: number;
   tabSwitches: number;
   events: SessionEvent[];
-
+  score?: number;
   status: "in-progress" | "completed";
-  approvalStatus: SessionApprovalStatus;
-}
+  approvalStatus: "pending" | "approved" | "rejected";
+  reportVisibility: ReportVisibility;
+};
 
-export interface SessionEvent {
-  type:
-    | "join-requested"
-    | "approved"
-    | "rejected"
-    | "tab-left"
-    | "tab-returned"
-    | "started"
-    | "completed";
-  timestamp: Date;
-  description?: string;
-}
-
-export interface TeacherAccount {
+export type TeacherAccount = {
   id: string;
-  email: string;
   name: string;
-  password?: string;
-}
-
-export interface AppState {
-  currentUser: {
-    id: string;
-    name: string;
-    role: "teacher" | "student";
-    email?: string;
-  } | null;
-  quizzes: Quiz[];
-  sessions: QuizSession[];
-  currentQuiz: Quiz | null;
-  currentSession: QuizSession | null;
-}
+  email: string;
+  password: string;
+};
