@@ -24,29 +24,46 @@ export function useQuizBuilder() {
 
   useEffect(() => {
     async function loadQuiz() {
-      const data = await getQuizById(quizId);
+      try {
+        const data = await getQuizById(quizId);
 
-      if (!data) {
-        router.push("/teacher/dashboard");
-        return;
+        if (!data) {
+          router.push("/teacher/dashboard");
+          return;
+        }
+
+        setQuiz(data);
+        setTitle(data.title);
+        setDescription(data.description);
+        setQuestions(
+          data.questions.map((question) => ({
+            ...question,
+            type: question.type || "multiple_choice",
+            correctTextAnswer: question.correctTextAnswer || "",
+          }))
+        );
+      } finally {
+        setIsLoading(false);
       }
-
-      setQuiz(data);
-      setTitle(data.title);
-      setDescription(data.description);
-      setQuestions(
-        data.questions.map((question) => ({
-          ...question,
-          type: question.type || "multiple_choice",
-          correctTextAnswer: question.correctTextAnswer || "",
-        })),
-      );
-
-      setIsLoading(false);
     }
 
     loadQuiz();
   }, [quizId, router]);
+
+  function isQuestionComplete(question: Question | undefined) {
+    if (!question) return true;
+
+    if (!question.text.trim()) return false;
+
+    if (question.type === "identification") {
+      return !!question.correctTextAnswer?.trim();
+    }
+
+    return question.options.every((option) => option.trim() !== "");
+  }
+
+  const currentQuestion = questions[activeQuestion];
+  const canAddQuestion = isQuestionComplete(currentQuestion);
 
   async function handleSaveQuiz() {
     if (!title.trim()) {
@@ -78,6 +95,16 @@ export function useQuizBuilder() {
       return;
     }
 
+    const incompleteQuestionIndex = questions.findIndex(
+      (question) => !isQuestionComplete(question)
+    );
+
+    if (incompleteQuestionIndex !== -1) {
+      setActiveQuestion(incompleteQuestionIndex);
+      alert(`Please complete Question ${incompleteQuestionIndex + 1}.`);
+      return;
+    }
+
     setIsPublishing(true);
 
     try {
@@ -94,6 +121,11 @@ export function useQuizBuilder() {
   }
 
   function addQuestion() {
+    if (!canAddQuestion) {
+      alert("Please complete the current question before adding another one.");
+      return;
+    }
+
     const newQuestion: Question = {
       id: Date.now().toString(),
       type: "multiple_choice",
@@ -103,23 +135,29 @@ export function useQuizBuilder() {
       correctTextAnswer: "",
     };
 
-    setQuestions((prev) => [...prev, newQuestion]);
-    setActiveQuestion(questions.length);
+    setQuestions((prev) => {
+      setActiveQuestion(prev.length);
+      return [...prev, newQuestion];
+    });
   }
 
   function updateQuestion(index: number, updates: Partial<Question>) {
-    const updated = [...questions];
-
-    updated[index] = {
-      ...updated[index],
-      ...updates,
-    };
-
-    setQuestions(updated);
+    setQuestions((prev) =>
+      prev.map((question, questionIndex) =>
+        questionIndex === index
+          ? {
+              ...question,
+              ...updates,
+            }
+          : question
+      )
+    );
   }
 
   function handleChangeQuestionType(index: number, type: QuestionType) {
     const current = questions[index];
+
+    if (!current) return;
 
     if (type === "multiple_choice") {
       updateQuestion(index, {
@@ -157,48 +195,74 @@ export function useQuizBuilder() {
   function updateOption(
     questionIndex: number,
     optionIndex: number,
-    value: string,
+    value: string
   ) {
-    const updated = [...questions];
+    setQuestions((prev) =>
+      prev.map((question, index) => {
+        if (index !== questionIndex) return question;
 
-    updated[questionIndex].options[optionIndex] = value;
-
-    setQuestions(updated);
+        return {
+          ...question,
+          options: question.options.map((option, currentOptionIndex) =>
+            currentOptionIndex === optionIndex ? value : option
+          ),
+        };
+      })
+    );
   }
 
   function removeQuestion(index: number) {
-    const updated = questions.filter(
-      (_, questionIndex) => questionIndex !== index,
-    );
+    setQuestions((prev) => {
+      const updated = prev.filter(
+        (_, questionIndex) => questionIndex !== index
+      );
 
-    setQuestions(updated);
-    setActiveQuestion(Math.max(0, index - 1));
+      setActiveQuestion((current) => {
+        if (updated.length === 0) return 0;
+        if (current >= updated.length) return updated.length - 1;
+        if (index <= current) return Math.max(0, current - 1);
+        return current;
+      });
+
+      return updated;
+    });
   }
 
   function addOption(questionIndex: number) {
-    const updated = [...questions];
+    setQuestions((prev) =>
+      prev.map((question, index) => {
+        if (index !== questionIndex) return question;
 
-    updated[questionIndex].options.push("");
-
-    setQuestions(updated);
+        return {
+          ...question,
+          options: [...question.options, ""],
+        };
+      })
+    );
   }
 
   function removeOption(questionIndex: number, optionIndex: number) {
-    const updated = [...questions];
+    setQuestions((prev) =>
+      prev.map((question, index) => {
+        if (index !== questionIndex) return question;
+        if (question.options.length <= 2) return question;
 
-    if (updated[questionIndex].options.length <= 2) return;
+        const updatedOptions = question.options.filter(
+          (_, currentOptionIndex) => currentOptionIndex !== optionIndex
+        );
 
-    updated[questionIndex].options.splice(optionIndex, 1);
+        const updatedCorrectAnswer =
+          question.correctAnswer >= updatedOptions.length
+            ? updatedOptions.length - 1
+            : question.correctAnswer;
 
-    if (
-      updated[questionIndex].correctAnswer >=
-      updated[questionIndex].options.length
-    ) {
-      updated[questionIndex].correctAnswer =
-        updated[questionIndex].options.length - 1;
-    }
-
-    setQuestions(updated);
+        return {
+          ...question,
+          options: updatedOptions,
+          correctAnswer: updatedCorrectAnswer,
+        };
+      })
+    );
   }
 
   async function handleCopyCode() {
@@ -216,8 +280,6 @@ export function useQuizBuilder() {
     router.push(`/teacher/quiz/${quizId}/monitor`);
   }
 
-  const currentQuestion = questions[activeQuestion];
-
   return {
     quiz,
     title,
@@ -225,6 +287,7 @@ export function useQuizBuilder() {
     questions,
     activeQuestion,
     currentQuestion,
+    canAddQuestion,
 
     isLoading,
     isSaving,

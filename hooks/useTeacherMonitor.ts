@@ -3,7 +3,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
-import { getQuizById, getQuizSessions } from "@/lib/actions";
+import {
+  approveSession,
+  getQuizById,
+  getQuizSessions,
+  rejectSession,
+} from "@/lib/actions";
 import type { Quiz, QuizSession } from "@/lib/types";
 
 export function useTeacherMonitor() {
@@ -58,9 +63,49 @@ export function useTeacherMonitor() {
     return new Date(value).toLocaleTimeString();
   }
 
-  const inProgress = sessions.filter((s) => s.status === "in-progress");
-  const completed = sessions.filter((s) => s.status === "completed");
-  const suspicious = sessions.filter((s) => s.tabSwitches > 0);
+  async function handleApproveSession(sessionId: string) {
+    const updatedSession = await approveSession(sessionId);
+
+    setSessions((prev) =>
+      prev.map((session) =>
+        session.id === sessionId ? updatedSession : session
+      )
+    );
+  }
+
+  async function handleRejectSession(sessionId: string) {
+    const updatedSession = await rejectSession(sessionId);
+
+    setSessions((prev) =>
+      prev.map((session) =>
+        session.id === sessionId ? updatedSession : session
+      )
+    );
+  }
+
+  const pendingRequests = sessions.filter(
+    (session) => session.approvalStatus === "pending"
+  );
+
+  const approvedSessions = sessions.filter(
+    (session) => session.approvalStatus === "approved"
+  );
+
+  const rejectedSessions = sessions.filter(
+    (session) => session.approvalStatus === "rejected"
+  );
+
+  const inProgress = approvedSessions.filter(
+    (session) => session.status === "in-progress"
+  );
+
+  const completed = approvedSessions.filter(
+    (session) => session.status === "completed"
+  );
+
+  const suspicious = approvedSessions.filter(
+    (session) => session.tabSwitches > 0
+  );
 
   const selectedSession = sessions.find(
     (session) => session.id === openSessionId
@@ -69,6 +114,9 @@ export function useTeacherMonitor() {
   return {
     quiz,
     sessions,
+    pendingRequests,
+    approvedSessions,
+    rejectedSessions,
     inProgress,
     completed,
     suspicious,
@@ -83,6 +131,8 @@ export function useTeacherMonitor() {
     goBack,
     toggleAutoRefresh,
     formatTime,
+    handleApproveSession,
+    handleRejectSession,
     setOpenSessionId,
   };
 }
