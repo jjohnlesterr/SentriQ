@@ -25,7 +25,6 @@ export default function StudentQuizPage() {
     );
   }
 
-  // waiting approval screen
   if (quizState.session?.approvalStatus === "pending") {
     return (
       <PageShell>
@@ -52,7 +51,6 @@ export default function StudentQuizPage() {
     );
   }
 
-  // rejected screen
   if (quizState.session?.approvalStatus === "rejected") {
     return (
       <PageShell>
@@ -71,11 +69,7 @@ export default function StudentQuizPage() {
     );
   }
 
-  if (
-    !quizState.quiz ||
-    !quizState.session ||
-    !quizState.currentQuestion
-  ) {
+  if (!quizState.quiz || !quizState.session || !quizState.currentQuestion) {
     return null;
   }
 
@@ -90,21 +84,36 @@ export default function StudentQuizPage() {
           progress={quizState.progress}
         />
 
-        <TabWarning tabWarnings={quizState.tabWarnings} />
-
-        <QuestionCard
-          question={quizState.currentQuestion}
-          currentIndex={quizState.currentIndex}
-          totalQuestions={quizState.quiz.questions.length}
-          selectedAnswer={quizState.selectedAnswer}
-          answeredCount={quizState.answeredCount}
-          isCurrentAnswered={quizState.isCurrentAnswered}
-          isSubmitting={quizState.isSubmitting}
-          onAnswer={quizState.handleAnswer}
-          onPrevious={quizState.goPrevious}
-          onNext={quizState.goNext}
-          onSubmit={quizState.handleSubmit}
+        <TabWarning
+          tabWarnings={quizState.tabWarnings}
+          fullscreenExits={quizState.fullscreenExits}
+          copyAttempts={quizState.copyAttempts}
+          pasteAttempts={quizState.pasteAttempts}
+          isFullscreenActive={quizState.isFullscreenActive}
+          onReturnFullscreen={quizState.requestFullscreen}
         />
+
+        <div
+          className={
+            quizState.isFullscreenActive
+              ? ""
+              : "pointer-events-none opacity-40 blur-[1px]"
+          }
+        >
+          <QuestionCard
+            question={quizState.currentQuestion}
+            currentIndex={quizState.currentIndex}
+            totalQuestions={quizState.quiz.questions.length}
+            selectedAnswer={quizState.selectedAnswer}
+            answeredCount={quizState.answeredCount}
+            isCurrentAnswered={quizState.isCurrentAnswered}
+            isSubmitting={quizState.isSubmitting}
+            onAnswer={quizState.handleAnswer}
+            onPrevious={quizState.goPrevious}
+            onNext={quizState.goNext}
+            onSubmit={quizState.handleSubmit}
+          />
+        </div>
       </section>
     </PageShell>
   );

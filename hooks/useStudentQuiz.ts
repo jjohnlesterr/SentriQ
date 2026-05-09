@@ -1,16 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import {
   completeSession,
   getQuizById,
   getSessionById,
-  recordTabSwitch,
+  recordSessionEvent,
   updateSessionAnswer,
 } from "@/lib/actions";
-
+import { calculateQuizScore } from "@/lib/scoring";
 import type { Quiz, QuizSession } from "@/lib/types";
 
 export function useStudentQuiz() {
@@ -18,6 +18,7 @@ export function useStudentQuiz() {
   const params = useParams();
 
   const sessionId = params.id as string;
+  const leftTabAtRef = useRef<number | null>(null);
 
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [session, setSession] = useState<QuizSession | null>(null);
@@ -26,6 +27,63 @@ export function useStudentQuiz() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tabWarnings, setTabWarnings] = useState(0);
+  const [fullscreenExits, setFullscreenExits] = useState(0);
+  const [copyAttempts, setCopyAttempts] = useState(0);
+  const [pasteAttempts, setPasteAttempts] = useState(0);
+  const [isFullscreenActive, setIsFullscreenActive] = useState(false);
+
+  function syncViolationCounts(sessionData: QuizSession) {
+    setTabWarnings(sessionData.tabSwitches || 0);
+    setFullscreenExits(
+      sessionData.events.filter((event) => event.type === "fullscreen-exit")
+        .length
+    );
+    setCopyAttempts(
+      sessionData.events.filter((event) => event.type === "copy-attempt")
+        .length
+    );
+    setPasteAttempts(
+      sessionData.events.filter((event) => event.type === "paste-attempt")
+        .length
+    );
+  }
+
+  async function addSessionEvent(
+    type:
+      | "tab-left"
+      | "tab-returned"
+      | "fullscreen-exit"
+      | "copy-attempt"
+      | "paste-attempt",
+    description: string,
+    durationSeconds?: number
+  ) {
+    const updatedSession = await recordSessionEvent(sessionId, {
+      type,
+      description,
+      durationSeconds,
+    });
+
+    setSession(updatedSession);
+    syncViolationCounts(updatedSession);
+  }
+
+  async function requestFullscreen() {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      }
+
+      setIsFullscreenActive(true);
+    } catch {
+      setIsFullscreenActive(false);
+
+      await addSessionEvent(
+        "fullscreen-exit",
+        "Fullscreen request was blocked or cancelled."
+      );
+    }
+  }
 
   async function loadQuizSession() {
     try {
@@ -37,6 +95,7 @@ export function useStudentQuiz() {
       }
 
       setSession(sessionData);
+      syncViolationCounts(sessionData);
 
       if (sessionData.approvalStatus === "rejected") {
         setIsLoading(false);
@@ -63,7 +122,7 @@ export function useStudentQuiz() {
       setQuiz(quizData);
       setAnswers(sessionData.answers || {});
       setCurrentIndex(sessionData.currentQuestion || 0);
-      setTabWarnings(sessionData.tabSwitches || 0);
+      setIsFullscreenActive(!!document.fullscreenElement);
     } finally {
       setIsLoading(false);
     }
@@ -82,6 +141,7 @@ export function useStudentQuiz() {
       if (!sessionData) return;
 
       setSession(sessionData);
+      syncViolationCounts(sessionData);
 
       if (sessionData.approvalStatus === "approved") {
         const quizData = await getQuizById(sessionData.quizId);
@@ -94,7 +154,6 @@ export function useStudentQuiz() {
         setQuiz(quizData);
         setAnswers(sessionData.answers || {});
         setCurrentIndex(sessionData.currentQuestion || 0);
-        setTabWarnings(sessionData.tabSwitches || 0);
       }
     }, 2000);
 
@@ -102,21 +161,91 @@ export function useStudentQuiz() {
   }, [session, sessionId, router]);
 
   useEffect(() => {
+    if (session?.approvalStatus !== "approved") return;
+
+    requestFullscreen();
+  }, [session?.approvalStatus, sessionId]);
+
+  useEffect(() => {
+    if (session?.approvalStatus !== "approved") return;
+
     function handleVisibilityChange() {
-      if (document.hidden && session?.approvalStatus === "approved") {
-        setTabWarnings((prev) => prev + 1);
-        recordTabSwitch(sessionId);
+      if (document.hidden) {
+        leftTabAtRef.current = Date.now();
+        addSessionEvent("tab-left", "Student left the quiz tab.");
+        return;
+      }
+
+      if (leftTabAtRef.current) {
+        const durationSeconds = Math.round(
+          (Date.now() - leftTabAtRef.current) / 1000
+        );
+
+        addSessionEvent(
+          "tab-returned",
+          `Student returned after ${durationSeconds} second${
+            durationSeconds !== 1 ? "s" : ""
+          }.`,
+          durationSeconds
+        );
+
+        leftTabAtRef.current = null;
       }
     }
 
+    function handleFullscreenChange() {
+      const active = !!document.fullscreenElement;
+      setIsFullscreenActive(active);
+
+      if (!active) {
+        addSessionEvent("fullscreen-exit", "Student exited fullscreen mode.");
+      }
+    }
+
+    function handleCopy(event: ClipboardEvent) {
+      event.preventDefault();
+
+      const selectedText = window.getSelection()?.toString() || "";
+
+      addSessionEvent(
+        "copy-attempt",
+        selectedText
+          ? `Student attempted to copy: "${selectedText.slice(0, 80)}"`
+          : "Student attempted to copy quiz content."
+      );
+    }
+
+    function handlePaste(event: ClipboardEvent) {
+      event.preventDefault();
+
+      const pastedText = event.clipboardData?.getData("text") || "";
+
+      addSessionEvent(
+        "paste-attempt",
+        pastedText
+          ? `Student attempted to paste ${pastedText.length} character${
+              pastedText.length !== 1 ? "s" : ""
+            }.`
+          : "Student attempted to paste content."
+      );
+    }
+
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("copy", handleCopy);
+    document.addEventListener("paste", handlePaste);
 
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener("copy", handleCopy);
+      document.removeEventListener("paste", handlePaste);
     };
-  }, [sessionId, session?.approvalStatus]);
+  }, [session?.approvalStatus, sessionId]);
 
   async function handleAnswer(answer: number | string) {
+    if (!isFullscreenActive) return;
+
     const updatedAnswers = {
       ...answers,
       [currentIndex]: answer,
@@ -124,11 +253,17 @@ export function useStudentQuiz() {
 
     setAnswers(updatedAnswers);
 
-    await updateSessionAnswer(sessionId, currentIndex, answer);
+    const updatedSession = await updateSessionAnswer(
+      sessionId,
+      currentIndex,
+      answer
+    );
+
+    setSession(updatedSession);
   }
 
   function goNext() {
-    if (!quiz) return;
+    if (!quiz || !isFullscreenActive) return;
 
     if (currentIndex < quiz.questions.length - 1) {
       setCurrentIndex((prev) => prev + 1);
@@ -136,39 +271,20 @@ export function useStudentQuiz() {
   }
 
   function goPrevious() {
+    if (!isFullscreenActive) return;
+
     if (currentIndex > 0) {
       setCurrentIndex((prev) => prev - 1);
     }
   }
 
   async function handleSubmit() {
-    if (!quiz || !session) return;
+    if (!quiz || !session || !isFullscreenActive) return;
 
     setIsSubmitting(true);
 
     try {
-      let score = 0;
-
-      quiz.questions.forEach((question, index) => {
-        const answer = answers[index];
-
-        if (question.type === "identification") {
-          if (
-            typeof answer === "string" &&
-            answer.trim().toLowerCase() ===
-              question.correctTextAnswer?.trim().toLowerCase()
-          ) {
-            score++;
-          }
-
-          return;
-        }
-
-        if (Number(answer) === question.correctAnswer) {
-          score++;
-        }
-      });
-
+      const score = calculateQuizScore(quiz, answers);
       const completedSession = await completeSession(sessionId, score);
 
       sessionStorage.setItem(
@@ -208,6 +324,11 @@ export function useStudentQuiz() {
     isLoading,
     isSubmitting,
     tabWarnings,
+    fullscreenExits,
+    copyAttempts,
+    pasteAttempts,
+    isFullscreenActive,
+    requestFullscreen,
     handleAnswer,
     goPrevious,
     goNext,
