@@ -4,6 +4,11 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { getQuizById, publishQuiz, updateQuiz } from "@/lib/actions";
+import {
+  createEmptyQuestion,
+  getQuestionTypeDefaults,
+  isQuestionComplete,
+} from "@/lib/quiz-builder";
 import type { Question, QuestionType, Quiz } from "@/lib/types";
 
 export function useQuizBuilder() {
@@ -49,18 +54,6 @@ export function useQuizBuilder() {
 
     loadQuiz();
   }, [quizId, router]);
-
-  function isQuestionComplete(question: Question | undefined) {
-    if (!question) return true;
-
-    if (!question.text.trim()) return false;
-
-    if (question.type === "identification") {
-      return !!question.correctTextAnswer?.trim();
-    }
-
-    return question.options.every((option) => option.trim() !== "");
-  }
 
   const currentQuestion = questions[activeQuestion];
   const canAddQuestion = isQuestionComplete(currentQuestion);
@@ -126,14 +119,7 @@ export function useQuizBuilder() {
       return;
     }
 
-    const newQuestion: Question = {
-      id: Date.now().toString(),
-      type: "multiple_choice",
-      text: "",
-      options: ["", "", "", ""],
-      correctAnswer: 0,
-      correctTextAnswer: "",
-    };
+    const newQuestion = createEmptyQuestion();
 
     setQuestions((prev) => {
       setActiveQuestion(prev.length);
@@ -159,37 +145,7 @@ export function useQuizBuilder() {
 
     if (!current) return;
 
-    if (type === "multiple_choice") {
-      updateQuestion(index, {
-        type,
-        options:
-          current.options && current.options.length > 0
-            ? current.options
-            : ["", "", "", ""],
-        correctAnswer: 0,
-        correctTextAnswer: "",
-      });
-
-      return;
-    }
-
-    if (type === "true_false") {
-      updateQuestion(index, {
-        type,
-        options: ["True", "False"],
-        correctAnswer: 0,
-        correctTextAnswer: "",
-      });
-
-      return;
-    }
-
-    updateQuestion(index, {
-      type,
-      options: [],
-      correctAnswer: 0,
-      correctTextAnswer: "",
-    });
+    updateQuestion(index, getQuestionTypeDefaults(current, type));
   }
 
   function updateOption(
