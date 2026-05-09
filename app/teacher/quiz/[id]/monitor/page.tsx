@@ -32,9 +32,13 @@ export default function TeacherMonitorPage() {
           quiz={monitor.quiz}
           autoRefresh={monitor.autoRefresh}
           lastUpdated={monitor.lastUpdated}
+          reportVisibilityState={monitor.reportVisibilityState}
           onBack={monitor.goBack}
           onRefresh={monitor.loadData}
           onToggleAutoRefresh={monitor.toggleAutoRefresh}
+          onBulkUpdateReportVisibility={
+            monitor.handleBulkUpdateReportVisibility
+          }
         />
 
         <MonitorStats

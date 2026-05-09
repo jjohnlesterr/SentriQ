@@ -8,8 +8,16 @@ import {
   getQuizById,
   getQuizSessions,
   rejectSession,
+  updateSessionReportVisibility,
 } from "@/lib/actions";
-import type { Quiz, QuizSession } from "@/lib/types";
+import type { Quiz, QuizSession, ReportVisibility } from "@/lib/types";
+
+const VIOLATION_TYPES = [
+  "tab-left",
+  "fullscreen-exit",
+  "copy-attempt",
+  "paste-attempt",
+];
 
 export function useTeacherMonitor() {
   const router = useRouter();
@@ -83,6 +91,46 @@ export function useTeacherMonitor() {
     );
   }
 
+  async function handleUpdateReportVisibility(
+    sessionId: string,
+    visibility: ReportVisibility
+  ) {
+    const updatedSession = await updateSessionReportVisibility(
+      sessionId,
+      visibility
+    );
+
+    setSessions((prev) =>
+      prev.map((session) =>
+        session.id === sessionId ? updatedSession : session
+      )
+    );
+  }
+
+  async function handleBulkUpdateReportVisibility(
+    visibility: ReportVisibility
+  ) {
+    const approved = sessions.filter(
+      (session) => session.approvalStatus === "approved"
+    );
+
+    const updatedSessions = await Promise.all(
+      approved.map((session) =>
+        updateSessionReportVisibility(session.id, visibility)
+      )
+    );
+
+    setSessions((prev) =>
+      prev.map((session) => {
+        const updated = updatedSessions.find(
+          (item) => item.id === session.id
+        );
+
+        return updated ?? session;
+      })
+    );
+  }
+
   const pendingRequests = sessions.filter(
     (session) => session.approvalStatus === "pending"
   );
@@ -103,13 +151,30 @@ export function useTeacherMonitor() {
     (session) => session.status === "completed"
   );
 
-  const suspicious = approvedSessions.filter(
-    (session) => session.tabSwitches > 0
+  const suspicious = approvedSessions.filter((session) =>
+    session.events.some((event) => VIOLATION_TYPES.includes(event.type))
   );
 
   const selectedSession = sessions.find(
     (session) => session.id === openSessionId
   );
+
+  const reportVisibilityState: ReportVisibility | "mixed" =
+    approvedSessions.length === 0
+      ? "locked"
+      : approvedSessions.every(
+          (session) => session.reportVisibility === "locked"
+        )
+      ? "locked"
+      : approvedSessions.every(
+          (session) => session.reportVisibility === "summary"
+        )
+      ? "summary"
+      : approvedSessions.every(
+          (session) => session.reportVisibility === "full"
+        )
+      ? "full"
+      : "mixed";
 
   return {
     quiz,
@@ -121,6 +186,7 @@ export function useTeacherMonitor() {
     completed,
     suspicious,
     selectedSession,
+    reportVisibilityState,
 
     isLoading,
     autoRefresh,
@@ -133,6 +199,8 @@ export function useTeacherMonitor() {
     formatTime,
     handleApproveSession,
     handleRejectSession,
+    handleUpdateReportVisibility,
+    handleBulkUpdateReportVisibility,
     setOpenSessionId,
   };
 }
