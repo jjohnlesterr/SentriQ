@@ -1,4 +1,8 @@
-import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,6 +18,51 @@ type Props = {
   formatTime: (value: Date | string | undefined) => string;
 };
 
+function countEvents(session: QuizSession, type: string) {
+  return session.events.filter((event) => event.type === type).length;
+}
+
+function getRiskLevel(session: QuizSession) {
+  const tabLeft = countEvents(session, "tab-left");
+  const fullscreenExit = countEvents(session, "fullscreen-exit");
+  const copyAttempt = countEvents(session, "copy-attempt");
+  const pasteAttempt = countEvents(session, "paste-attempt");
+
+  const riskScore =
+    tabLeft * 10 + fullscreenExit * 15 + copyAttempt * 20 + pasteAttempt * 20;
+
+  if (riskScore >= 40) {
+    return {
+      label: "High Risk",
+      className: "border-red-400/20 bg-red-500/10 text-red-200",
+    };
+  }
+
+  if (riskScore >= 15) {
+    return {
+      label: "Medium Risk",
+      className: "border-orange-400/20 bg-orange-500/10 text-orange-200",
+    };
+  }
+
+  return {
+    label: "Low Risk",
+    className: "border-emerald-400/20 bg-emerald-500/10 text-emerald-200",
+  };
+}
+
+function getReportClass(reportVisibility: QuizSession["reportVisibility"]) {
+  if (reportVisibility === "full") {
+    return "text-blue-300";
+  }
+
+  if (reportVisibility === "summary") {
+    return "text-violet-300";
+  }
+
+  return "text-slate-400";
+}
+
 export default function SessionCard({
   session,
   onView,
@@ -28,6 +77,12 @@ export default function SessionCard({
   const isPending = session.approvalStatus === "pending";
   const isRejected = session.approvalStatus === "rejected";
   const isApproved = session.approvalStatus === "approved";
+
+  const tabLeft = countEvents(session, "tab-left");
+  const fullscreenExit = countEvents(session, "fullscreen-exit");
+  const copyAttempt = countEvents(session, "copy-attempt");
+  const pasteAttempt = countEvents(session, "paste-attempt");
+  const risk = getRiskLevel(session);
 
   return (
     <Card className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl md:p-6">
@@ -51,30 +106,28 @@ export default function SessionCard({
             )}
 
             {isApproved && (
-              <Badge
-                className={
-                  session.status === "completed"
-                    ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-200"
-                    : "border-blue-400/20 bg-blue-500/10 text-blue-200"
-                }
-              >
-                {session.status === "completed" ? "Completed" : "In Progress"}
-              </Badge>
-            )}
+              <>
+                <Badge
+                  className={
+                    session.status === "completed"
+                      ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-200"
+                      : "border-blue-400/20 bg-blue-500/10 text-blue-200"
+                  }
+                >
+                  {session.status === "completed" ? "Completed" : "In Progress"}
+                </Badge>
 
-            {session.tabSwitches > 0 && (
-              <Badge className="border-red-400/20 bg-red-500/10 text-red-200">
-                <AlertTriangle className="mr-1 h-3 w-3" />
-                {session.tabSwitches} tab switch
-                {session.tabSwitches !== 1 ? "es" : ""}
-              </Badge>
+                <Badge className={risk.className}>
+                  <AlertTriangle className="mr-1 h-3 w-3" />
+                  {risk.label}
+                </Badge>
+              </>
             )}
           </div>
 
           <div className="grid gap-3 text-sm md:grid-cols-4">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <p className="text-slate-400">Current Question</p>
-
               <p className="mt-1 font-mono text-white">
                 {isApproved ? `Q${session.currentQuestion + 1}` : "—"}
               </p>
@@ -82,29 +135,13 @@ export default function SessionCard({
 
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <p className="text-slate-400">Requested</p>
-
               <p className="mt-1 text-white">
                 {formatTime(session.startedAt)}
               </p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="text-slate-400">Tab Switches</p>
-
-              <p
-                className={
-                  session.tabSwitches > 0
-                    ? "mt-1 font-bold text-red-300"
-                    : "mt-1 font-bold text-cyan-300"
-                }
-              >
-                {session.tabSwitches}
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <p className="text-slate-400">Score</p>
-
               <p
                 className={
                   session.status === "completed"
@@ -117,7 +154,44 @@ export default function SessionCard({
                   : "Pending"}
               </p>
             </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <p className="text-slate-400">Report</p>
+              <p
+                className={`mt-1 font-semibold capitalize ${getReportClass(
+                  session.reportVisibility
+                )}`}
+              >
+                {session.reportVisibility}
+              </p>
+            </div>
           </div>
+
+          {isApproved && (
+            <div className="mt-3 grid gap-2 text-xs sm:grid-cols-4">
+              <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-slate-300">
+                Tab Left:{" "}
+                <span className="font-bold text-red-300">{tabLeft}</span>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-slate-300">
+                Fullscreen:{" "}
+                <span className="font-bold text-orange-300">
+                  {fullscreenExit}
+                </span>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-slate-300">
+                Copy:{" "}
+                <span className="font-bold text-red-300">{copyAttempt}</span>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-slate-300">
+                Paste:{" "}
+                <span className="font-bold text-red-300">{pasteAttempt}</span>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
@@ -144,7 +218,7 @@ export default function SessionCard({
             </>
           ) : (
             <Button
-              variant="secondary"
+              variant="ghost"
               onClick={() => onView(session.id)}
               className="h-11 border-white/10 bg-white/5 hover:bg-white/10 hover:text-white"
             >
