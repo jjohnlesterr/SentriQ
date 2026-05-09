@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
 import PageShell from "@/components/layout/PageShell";
@@ -28,7 +28,6 @@ export default function StudentResultsPage() {
 
           if (savedResult) {
             const parsed = JSON.parse(savedResult);
-
             setSession(parsed.session);
             setQuiz(parsed.quiz);
           }
@@ -44,7 +43,6 @@ export default function StudentResultsPage() {
 
           if (savedResult) {
             const parsed = JSON.parse(savedResult);
-
             setSession(parsed.session);
             setQuiz(parsed.quiz);
           }
@@ -84,7 +82,6 @@ export default function StudentResultsPage() {
         <div className="flex min-h-screen items-center justify-center px-4">
           <div className="rounded-3xl border border-red-400/20 bg-red-500/10 px-6 py-5 text-center text-red-200 backdrop-blur-xl">
             <p className="text-lg font-semibold">Result not found</p>
-
             <p className="mt-2 text-sm text-red-200/80">
               Your session may have expired or failed to load.
             </p>
@@ -117,6 +114,10 @@ export default function StudentResultsPage() {
         percentage={percentage}
         passed={passed}
         tabSwitches={session.tabSwitches}
+        reportVisibility={session.reportVisibility}
+        events={session.events}
+        quiz={quiz}
+        answers={session.answers}
         onReturnHome={() => router.replace("/")}
       />
     </PageShell>
