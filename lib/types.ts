@@ -5,11 +5,9 @@ export interface Question {
   type: QuestionType;
   text: string;
 
-  // For multiple choice and true/false
   options: string[];
   correctAnswer: number;
 
-  // For identification
   correctTextAnswer?: string;
 }
 
@@ -25,6 +23,8 @@ export interface Quiz {
   status?: "draft" | "published" | "active";
 }
 
+export type SessionApprovalStatus = "pending" | "approved" | "rejected";
+
 export interface QuizSession {
   id: string;
   quizId: string;
@@ -34,18 +34,25 @@ export interface QuizSession {
   completedAt?: Date;
   currentQuestion: number;
 
-  // number = multiple choice / true-false answer index
-  // string = identification answer
   answers: Record<number, number | string>;
 
   score?: number;
   tabSwitches: number;
   events: SessionEvent[];
+
   status: "in-progress" | "completed";
+  approvalStatus: SessionApprovalStatus;
 }
 
 export interface SessionEvent {
-  type: "tab-left" | "tab-returned" | "started" | "completed";
+  type:
+    | "join-requested"
+    | "approved"
+    | "rejected"
+    | "tab-left"
+    | "tab-returned"
+    | "started"
+    | "completed";
   timestamp: Date;
   description?: string;
 }

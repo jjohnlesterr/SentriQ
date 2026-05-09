@@ -181,22 +181,26 @@ export async function joinQuiz(
     throw new Error("Quiz code not found or quiz not published");
   }
 
+  const now = new Date();
+
   const session: QuizSession = {
     id: Date.now().toString(),
     quizId: quiz.id,
     studentName,
     studentId: `student-${Date.now()}`,
-    startedAt: new Date(),
+    startedAt: now,
     currentQuestion: 0,
     answers: {},
     tabSwitches: 0,
     events: [
       {
-        type: "started",
-        timestamp: new Date(),
+        type: "join-requested",
+        timestamp: now,
+        description: `${studentName} requested to join the quiz.`,
       },
     ],
     status: "in-progress",
+    approvalStatus: "pending",
   };
 
   sessions.push(session);
@@ -205,6 +209,42 @@ export async function joinQuiz(
     session,
     quiz,
   };
+}
+
+export async function approveSession(sessionId: string): Promise<QuizSession> {
+  const session = sessions.find((session) => session.id === sessionId);
+
+  if (!session) {
+    throw new Error("Session not found");
+  }
+
+  session.approvalStatus = "approved";
+
+  session.events.push({
+    type: "approved",
+    timestamp: new Date(),
+    description: "Teacher approved the join request.",
+  });
+
+  return session;
+}
+
+export async function rejectSession(sessionId: string): Promise<QuizSession> {
+  const session = sessions.find((session) => session.id === sessionId);
+
+  if (!session) {
+    throw new Error("Session not found");
+  }
+
+  session.approvalStatus = "rejected";
+
+  session.events.push({
+    type: "rejected",
+    timestamp: new Date(),
+    description: "Teacher rejected the join request.",
+  });
+
+  return session;
 }
 
 export async function getQuizSessions(quizId: string): Promise<QuizSession[]> {
@@ -216,6 +256,10 @@ export async function recordTabSwitch(sessionId: string): Promise<void> {
 
   if (!session) {
     throw new Error("Session not found");
+  }
+
+  if (session.approvalStatus !== "approved") {
+    return;
   }
 
   session.tabSwitches += 1;
@@ -237,6 +281,10 @@ export async function updateSessionAnswer(
     throw new Error("Session not found");
   }
 
+  if (session.approvalStatus !== "approved") {
+    throw new Error("Session is not approved yet");
+  }
+
   session.answers[questionIndex] = answer;
   session.currentQuestion = Math.max(session.currentQuestion, questionIndex);
 }
@@ -249,6 +297,10 @@ export async function completeSession(
 
   if (!session) {
     throw new Error("Session not found");
+  }
+
+  if (session.approvalStatus !== "approved") {
+    throw new Error("Session is not approved yet");
   }
 
   const quiz = quizzes.find((quiz) => quiz.id === session.quizId);
@@ -274,10 +326,8 @@ export async function completeSession(
         ) {
           score += 1;
         }
-      } else {
-        if (Number(answer) === question.correctAnswer) {
-          score += 1;
-        }
+      } else if (Number(answer) === question.correctAnswer) {
+        score += 1;
       }
     }
   }
