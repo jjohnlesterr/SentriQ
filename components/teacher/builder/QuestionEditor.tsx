@@ -35,8 +35,8 @@ export default function QuestionEditor({
   onRemoveOption,
 }: Props) {
   return (
-    <Card className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl">
-      <div className="mb-6 flex items-center justify-between gap-4">
+    <Card className="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-5 md:p-6">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h3 className="text-lg font-semibold text-white md:text-xl">
           Question {activeQuestion + 1}
         </h3>
@@ -46,26 +46,29 @@ export default function QuestionEditor({
           onClick={() => onRemoveQuestion(activeQuestion)}
           variant="secondary"
           size="sm"
-          className="cursor-pointer"
+          className="h-10 w-full cursor-pointer border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white sm:w-auto"
         >
           <Trash2 className="h-4 w-4" />
           Delete
         </Button>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-5">
         <div className="space-y-2">
           <Label>Question Type</Label>
 
           <select
             value={question.type}
             onChange={(e) =>
-              onChangeQuestionType(activeQuestion, e.target.value as QuestionType)
+              onChangeQuestionType(
+                activeQuestion,
+                e.target.value as QuestionType
+              )
             }
-            className="w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-3 text-sm text-white outline-none transition focus:border-blue-400/50"
+            className="h-11 w-full rounded-xl border border-white/10 bg-slate-900 px-3 text-sm text-white outline-none transition focus:border-blue-400/50"
           >
             <option value="multiple_choice">Multiple Choice</option>
-            <option value="true_false">True/False</option>
+            <option value="true_false">True / False</option>
             <option value="identification">Identification</option>
           </select>
         </div>
@@ -82,12 +85,13 @@ export default function QuestionEditor({
             }
             placeholder="Enter your question"
             rows={3}
+            className="min-h-[110px]"
           />
         </div>
 
         {question.type !== "identification" ? (
           <div>
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <Label>Answer Options</Label>
 
               {question.type === "multiple_choice" && (
@@ -96,7 +100,7 @@ export default function QuestionEditor({
                   onClick={() => onAddOption(activeQuestion)}
                   variant="secondary"
                   size="sm"
-                  className="cursor-pointer border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white"
+                  className="h-10 w-full cursor-pointer border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white sm:w-auto"
                 >
                   <Plus className="h-3 w-3" />
                   Add Option
@@ -108,7 +112,7 @@ export default function QuestionEditor({
               {question.options.map((option, optionIndex) => (
                 <div
                   key={optionIndex}
-                  className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-3"
+                  className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 p-3"
                 >
                   <Checkbox
                     checked={question.correctAnswer === optionIndex}
@@ -117,17 +121,21 @@ export default function QuestionEditor({
                         correctAnswer: optionIndex,
                       })
                     }
-                    className="cursor-pointer"
+                    className="shrink-0 cursor-pointer"
                   />
 
                   <Input
                     value={option}
                     onChange={(e) =>
-                      onUpdateOption(activeQuestion, optionIndex, e.target.value)
+                      onUpdateOption(
+                        activeQuestion,
+                        optionIndex,
+                        e.target.value
+                      )
                     }
                     placeholder={`Option ${optionIndex + 1}`}
                     disabled={question.type === "true_false"}
-                    className="flex-1 bg-transparent"
+                    className="h-10 flex-1 bg-transparent text-sm"
                   />
 
                   {question.type === "multiple_choice" &&
@@ -139,7 +147,7 @@ export default function QuestionEditor({
                         }
                         variant="ghost"
                         size="sm"
-                        className="cursor-pointer hover:bg-white/10"
+                        className="h-9 w-9 shrink-0 cursor-pointer p-0 hover:bg-white/10"
                       >
                         <Trash2 className="h-4 w-4 text-red-400" />
                       </Button>
@@ -148,8 +156,8 @@ export default function QuestionEditor({
               ))}
             </div>
 
-            <div className="mt-6 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4">
-              <p className="text-sm text-emerald-100">
+            <div className="mt-5 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4">
+              <p className="text-sm leading-6 text-emerald-100">
                 Correct answer:{" "}
                 <span className="font-semibold text-emerald-300">
                   {question.options[question.correctAnswer] ||
@@ -159,7 +167,7 @@ export default function QuestionEditor({
             </div>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Label>Correct Answer</Label>
 
             <Input
@@ -170,10 +178,11 @@ export default function QuestionEditor({
                 })
               }
               placeholder="Enter correct answer"
+              className="h-11"
             />
 
             <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4">
-              <p className="text-sm text-emerald-100">
+              <p className="text-sm leading-6 text-emerald-100">
                 Correct answer:{" "}
                 <span className="font-semibold text-emerald-300">
                   {question.correctTextAnswer || "No answer entered"}

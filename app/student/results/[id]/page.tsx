@@ -24,34 +24,78 @@ export default function StudentResultsPage() {
         const sessionData = await getSessionById(sessionId);
 
         if (!sessionData) {
-          router.push("/");
+          const savedResult = sessionStorage.getItem("lastResult");
+
+          if (savedResult) {
+            const parsed = JSON.parse(savedResult);
+
+            setSession(parsed.session);
+            setQuiz(parsed.quiz);
+          }
+
+          setIsLoading(false);
           return;
         }
 
         const quizData = await getQuizById(sessionData.quizId);
 
         if (!quizData) {
-          router.push("/");
+          const savedResult = sessionStorage.getItem("lastResult");
+
+          if (savedResult) {
+            const parsed = JSON.parse(savedResult);
+
+            setSession(parsed.session);
+            setQuiz(parsed.quiz);
+          }
+
+          setIsLoading(false);
           return;
         }
 
         setSession(sessionData);
         setQuiz(quizData);
+      } catch (error) {
+        console.error(error);
       } finally {
         setIsLoading(false);
       }
     }
 
     loadResults();
-  }, [sessionId, router]);
+  }, [sessionId]);
 
-  if (isLoading || !session || !quiz) {
+  if (isLoading) {
     return (
       <PageShell>
-        <div className="flex min-h-screen items-center justify-center">
+        <div className="flex min-h-screen items-center justify-center px-4">
           <div className="inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-slate-200 backdrop-blur-md">
             <Loader2 className="h-5 w-5 animate-spin text-violet-300" />
             Loading results...
+          </div>
+        </div>
+      </PageShell>
+    );
+  }
+
+  if (!session || !quiz) {
+    return (
+      <PageShell>
+        <div className="flex min-h-screen items-center justify-center px-4">
+          <div className="rounded-3xl border border-red-400/20 bg-red-500/10 px-6 py-5 text-center text-red-200 backdrop-blur-xl">
+            <p className="text-lg font-semibold">Result not found</p>
+
+            <p className="mt-2 text-sm text-red-200/80">
+              Your session may have expired or failed to load.
+            </p>
+
+            <button
+              type="button"
+              onClick={() => router.replace("/")}
+              className="mt-5 rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/15"
+            >
+              Return Home
+            </button>
           </div>
         </div>
       </PageShell>
@@ -73,7 +117,7 @@ export default function StudentResultsPage() {
         percentage={percentage}
         passed={passed}
         tabSwitches={session.tabSwitches}
-        onReturnHome={() => router.push("/")}
+        onReturnHome={() => router.replace("/")}
       />
     </PageShell>
   );

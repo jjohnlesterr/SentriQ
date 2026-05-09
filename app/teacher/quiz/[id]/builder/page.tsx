@@ -9,7 +9,6 @@ import QuestionSidebar from "@/components/teacher/builder/QuestionSidebar";
 import QuestionEditor from "@/components/teacher/builder/QuestionEditor";
 import EmptyQuestionState from "@/components/teacher/builder/EmptyQuestionState";
 import PublishCodeDialog from "@/components/teacher/builder/PublishCodeDialog";
-import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuizBuilder } from "@/hooks/useQuizBuilder";
 
@@ -19,8 +18,8 @@ export default function QuizBuilderPage() {
   if (builder.isLoading) {
     return (
       <PageShell>
-        <div className="flex min-h-screen items-center justify-center">
-          <div className="inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-slate-200 backdrop-blur-md">
+        <div className="flex min-h-screen items-center justify-center px-4">
+          <div className="inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-slate-200 backdrop-blur-md">
             <Loader2 className="h-5 w-5 animate-spin text-blue-300" />
             Loading quiz...
           </div>
@@ -42,18 +41,25 @@ export default function QuizBuilderPage() {
         onPublish={builder.handlePublishQuiz}
       />
 
-      <section className="relative mx-auto max-w-7xl px-6 py-8 md:px-10 lg:px-16">
+      <section className="relative mx-auto max-w-7xl px-4 py-5 sm:px-6 md:px-10 md:py-8 lg:px-16">
         <Tabs defaultValue="details" className="w-full">
-          <TabsList className="mb-6 border border-white/10 bg-white/5 backdrop-blur-md">
-            <TabsTrigger value="details" className="cursor-pointer">
+          <TabsList className="mb-5 h-auto w-full rounded-2xl border border-white/10 bg-white/5 p-1 backdrop-blur-md sm:w-auto md:mb-6">
+            <TabsTrigger
+              value="details"
+              className="flex-1 cursor-pointer rounded-xl px-3 py-2 text-xs sm:text-sm"
+            >
               Quiz Details
             </TabsTrigger>
-            <TabsTrigger value="questions" className="cursor-pointer">
+
+            <TabsTrigger
+              value="questions"
+              className="flex-1 cursor-pointer rounded-xl px-3 py-2 text-xs sm:text-sm"
+            >
               Questions ({builder.questions.length})
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="details" className="space-y-6">
+          <TabsContent value="details" className="space-y-5 md:space-y-6">
             <QuizDetailsForm
               title={builder.title}
               description={builder.description}
@@ -62,16 +68,17 @@ export default function QuizBuilderPage() {
             />
           </TabsContent>
 
-          <TabsContent value="questions" className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-3">
+          <TabsContent value="questions" className="space-y-5 md:space-y-6">
+            <div className="grid gap-5 lg:grid-cols-3 lg:gap-6">
               <QuestionSidebar
                 questions={builder.questions}
                 activeQuestion={builder.activeQuestion}
+                canAddQuestion={builder.canAddQuestion}
                 onSelectQuestion={builder.setActiveQuestion}
                 onAddQuestion={builder.addQuestion}
               />
 
-              <div className="md:col-span-2">
+              <div className="lg:col-span-2">
                 {builder.questions.length === 0 ? (
                   <EmptyQuestionState onAddQuestion={builder.addQuestion} />
                 ) : builder.currentQuestion ? (

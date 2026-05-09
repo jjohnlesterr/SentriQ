@@ -39,18 +39,19 @@ export default function CreateQuizDialog({
       <DialogTrigger asChild>
         <Button
           type="button"
-          className="h-full min-h-[120px] w-full cursor-pointer rounded-3xl hover:scale-[1.02] lg:min-w-[220px]"
+          className="h-full min-h-[128px] w-full cursor-pointer rounded-3xl text-sm hover:scale-[1.02] md:min-h-[148px] lg:min-w-[220px]"
         >
           <Plus className="h-4 w-4" />
           Create New Quiz
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="border border-white/10 bg-slate-950/95 text-white backdrop-blur-2xl">
+      <DialogContent className="w-[calc(100%-2rem)] border border-white/10 bg-slate-950/95 text-white backdrop-blur-2xl">
         <DialogHeader>
           <DialogTitle className="bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-2xl font-bold text-transparent">
             Create New Quiz
           </DialogTitle>
+
           <DialogDescription className="text-slate-400">
             Create a new quiz draft and add questions in the builder.
           </DialogDescription>
@@ -59,6 +60,7 @@ export default function CreateQuizDialog({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="title">Quiz Title</Label>
+
             <Input
               id="title"
               placeholder="e.g. Chemistry Quiz"
@@ -69,6 +71,7 @@ export default function CreateQuizDialog({
 
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
+
             <Textarea
               id="description"
               placeholder="Optional instructions"

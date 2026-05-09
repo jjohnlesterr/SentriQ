@@ -2,15 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  ArrowLeft,
-  Eye,
-  EyeOff,
-  LockKeyhole,
-  ShieldCheck,
-} from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, LockKeyhole, ShieldCheck } from "lucide-react";
 
-import FeaturedBadge from "@/components/shared/FeaturedBadge";
+import SectionHeading from "@/components/shared/SectionHeading";
 import { GlassCard } from "@/components/shared/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,34 +26,32 @@ export default function TeacherLoginForm() {
   }
 
   return (
-    <section className="flex min-h-screen items-center justify-center px-6 py-12">
+    <section className="flex min-h-screen items-center justify-center px-4 py-5 sm:px-6 md:py-12">
       <div className="w-full max-w-md">
         <Button
           variant="ghost"
-          className="mb-6"
+          className="mb-4 h-10 border border-white/10 bg-white/5 px-4 text-sm md:mb-6"
           onClick={() => router.push("/")}
         >
           <ArrowLeft className="h-4 w-4" />
           Back
         </Button>
 
-        <GlassCard className="p-8">
-          <FeaturedBadge
+        <GlassCard className="p-5 sm:p-6 md:p-8">
+          <SectionHeading
             icon={ShieldCheck}
-            label="Teacher Access Portal"
-            className="mb-4 border border-cyan-400/20 bg-cyan-400/10 px-3 py-1.5 text-xs text-cyan-200 [&_svg]:h-3.5 [&_svg]:w-3.5"
+            badge="Teacher Access Portal"
+            title="Teacher Login"
+            description="Sign in to manage quizzes, monitor assessments, and access your dashboard."
+            variant="page"
+            className="mb-6 md:mb-8"
+            badgeClassName="mb-4 border-cyan-400/20 bg-cyan-400/10 px-3 py-1.5 text-xs text-cyan-200 md:mb-4"
+            iconClassName="h-3.5 w-3.5"
+            titleClassName="text-3xl md:text-4xl"
+            descriptionClassName="mt-2 text-sm leading-6 text-slate-300 md:mt-3"
           />
 
-          <h1 className="bg-gradient-to-r from-cyan-300 via-blue-400 to-violet-400 bg-clip-text text-3xl font-extrabold text-transparent">
-            Teacher Login
-          </h1>
-
-          <p className="mt-3 text-sm leading-6 text-slate-300">
-            Sign in to manage quizzes, monitor assessments, and access your
-            dashboard.
-          </p>
-
-          <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
             <div className="space-y-2">
               <label className="text-sm text-slate-200">Email Address</label>
 
@@ -68,6 +60,7 @@ export default function TeacherLoginForm() {
                 placeholder="teacher@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="h-11"
                 required
               />
             </div>
@@ -83,14 +76,14 @@ export default function TeacherLoginForm() {
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-11 pr-12"
+                  className="h-11 pl-11 pr-12"
                   required
                 />
 
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-black"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -101,7 +94,7 @@ export default function TeacherLoginForm() {
               </div>
             </div>
 
-            <Button type="submit" variant="primary" className="w-full">
+            <Button type="submit" variant="primary" className="h-11 w-full">
               Sign In
             </Button>
           </form>

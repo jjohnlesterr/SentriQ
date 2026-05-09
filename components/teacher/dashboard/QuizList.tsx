@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Edit, Eye } from "lucide-react";
 
-import EmptyQuizState from "@/components/teacher/dashboard/EmptyQuizState";
+import EmptyState from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { Quiz } from "@/lib/types";
@@ -16,7 +16,12 @@ export default function QuizList({ items }: Props) {
   const router = useRouter();
 
   if (items.length === 0) {
-    return <EmptyQuizState />;
+    return (
+      <EmptyState
+        title="No quizzes found."
+        description="Create your first quiz to get started."
+      />
+    );
   }
 
   return (
@@ -72,7 +77,9 @@ export default function QuizList({ items }: Props) {
               {quiz.published && (
                 <Button
                   type="button"
-                  onClick={() => router.push(`/teacher/quiz/${quiz.id}/monitor`)}
+                  onClick={() =>
+                    router.push(`/teacher/quiz/${quiz.id}/monitor`)
+                  }
                   className="cursor-pointer hover:scale-[1.02]"
                 >
                   <Eye className="h-4 w-4" />

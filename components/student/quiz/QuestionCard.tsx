@@ -35,8 +35,8 @@ export default function QuestionCard({
   onSubmit,
 }: QuestionCardProps) {
   return (
-    <Card className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl md:p-8">
-      <p className="mb-3 font-mono text-xs uppercase tracking-[0.3em] text-violet-300">
+    <Card className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl md:p-8">
+      <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.25em] text-violet-300 md:text-xs md:tracking-[0.3em]">
         Question {currentIndex + 1} ·{" "}
         {question.type === "multiple_choice"
           ? "Multiple Choice"
@@ -45,17 +45,17 @@ export default function QuestionCard({
           : "Identification"}
       </p>
 
-      <h2 className="text-2xl font-bold leading-snug text-white md:text-3xl">
+      <h2 className="text-xl font-bold leading-snug text-white md:text-3xl">
         {question.text}
       </h2>
 
-      <div className="mt-8 space-y-4">
+      <div className="mt-6 space-y-3 md:mt-8 md:space-y-4">
         {question.type === "identification" ? (
           <Input
             value={typeof selectedAnswer === "string" ? selectedAnswer : ""}
             onChange={(e) => onAnswer(e.target.value)}
             placeholder="Type your answer"
-            className="rounded-2xl border-white/10 bg-white/5 p-5 text-base text-white"
+            className="h-12 rounded-2xl border-white/10 bg-white/5 px-4 text-base text-white"
           />
         ) : (
           question.options.map((option, index) => {
@@ -68,16 +68,16 @@ export default function QuestionCard({
                 onClick={() => onAnswer(index)}
                 className={
                   isSelected
-                    ? "w-full cursor-pointer rounded-2xl border border-violet-400/50 bg-violet-500/20 p-5 text-left text-white shadow-lg transition hover:bg-violet-500/25"
-                    : "w-full cursor-pointer rounded-2xl border border-white/10 bg-white/5 p-5 text-left text-slate-300 transition hover:border-violet-400/30 hover:bg-white/10 hover:text-white"
+                    ? "w-full cursor-pointer rounded-2xl border border-violet-400/50 bg-violet-500/20 p-4 text-left text-white shadow-lg transition hover:bg-violet-500/25 md:p-5"
+                    : "w-full cursor-pointer rounded-2xl border border-white/10 bg-white/5 p-4 text-left text-slate-300 transition hover:border-violet-400/30 hover:bg-white/10 hover:text-white md:p-5"
                 }
               >
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 md:gap-4">
                   <div
                     className={
                       isSelected
-                        ? "flex h-9 w-9 items-center justify-center rounded-xl bg-violet-500 text-white"
-                        : "flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-400"
+                        ? "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-500 text-white"
+                        : "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-400"
                     }
                   >
                     {isSelected ? (
@@ -87,7 +87,9 @@ export default function QuestionCard({
                     )}
                   </div>
 
-                  <span className="text-base">{option}</span>
+                  <span className="min-w-0 text-sm md:text-base">
+                    {option}
+                  </span>
                 </div>
               </button>
             );
@@ -95,50 +97,48 @@ export default function QuestionCard({
         )}
       </div>
 
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-6 grid grid-cols-2 gap-3 md:mt-8 md:flex md:items-center md:justify-between">
         <Button
           type="button"
           variant="secondary"
           onClick={onPrevious}
           disabled={currentIndex === 0}
-          className="cursor-pointer border-white/10 bg-white/5 hover:bg-white/10 hover:text-white"
+          className="h-11 cursor-pointer border-white/10 bg-white/5 hover:bg-white/10 hover:text-white"
         >
           Previous
         </Button>
 
-        <div className="flex gap-3">
-          {currentIndex < totalQuestions - 1 ? (
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={onNext}
-              disabled={!isCurrentAnswered}
-              className="cursor-pointer"
-            >
-              Next Question
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              variant="primary"
-              onClick={onSubmit}
-              disabled={isSubmitting || answeredCount < totalQuestions}
-              className="cursor-pointer"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4" />
-                  Submit Quiz
-                </>
-              )}
-            </Button>
-          )}
-        </div>
+        {currentIndex < totalQuestions - 1 ? (
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onNext}
+            disabled={!isCurrentAnswered}
+            className="h-11 cursor-pointer"
+          >
+            Next
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            variant="primary"
+            onClick={onSubmit}
+            disabled={isSubmitting || answeredCount < totalQuestions}
+            className="h-11 cursor-pointer"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              <>
+                <Send className="h-4 w-4" />
+                Submit
+              </>
+            )}
+          </Button>
+        )}
       </div>
 
       {answeredCount < totalQuestions && (

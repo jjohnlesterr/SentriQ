@@ -25,34 +25,35 @@ export default function BuilderHeader({
 }: Props) {
   return (
     <div className="relative border-b border-white/10 bg-white/5 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-6 md:px-10 lg:px-16">
-        <div className="flex items-center gap-4">
+      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 md:flex-row md:items-center md:justify-between md:px-10 md:py-6 lg:px-16">
+        <div className="flex min-w-0 items-center gap-3">
           <Button
             variant="ghost"
             size="sm"
             onClick={onBack}
-            className="cursor-pointer rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
+            className="h-10 w-10 shrink-0 cursor-pointer rounded-xl border border-white/10 bg-white/5 p-0 text-slate-300 hover:bg-white/10 hover:text-white"
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
 
-          <div>
-            <h1 className="text-2xl font-bold text-white md:text-3xl">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold leading-tight text-white md:text-3xl">
               Quiz Builder
             </h1>
+
             <p className="text-sm text-slate-300">
               {questionCount} question{questionCount !== 1 ? "s" : ""}
             </p>
           </div>
         </div>
 
-        <div className="flex gap-3">
+        <div className="grid grid-cols-2 gap-3 md:flex">
           <Button
             type="button"
             onClick={onSave}
             disabled={isSaving}
             variant="secondary"
-            className="cursor-pointer border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white"
+            className="h-10 cursor-pointer border-white/10 bg-white/5 text-xs text-slate-200 hover:bg-white/10 hover:text-white sm:text-sm md:h-11"
           >
             {isSaving ? (
               <>
@@ -71,7 +72,7 @@ export default function BuilderHeader({
             type="button"
             onClick={onPublish}
             disabled={isPublishing || disablePublish}
-            className="cursor-pointer bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg hover:from-blue-600 hover:to-cyan-600"
+            className="h-10 cursor-pointer bg-gradient-to-r from-blue-500 to-cyan-500 text-xs text-white shadow-lg hover:from-blue-600 hover:to-cyan-600 sm:text-sm md:h-11"
           >
             {isPublishing ? (
               <>
@@ -83,7 +84,7 @@ export default function BuilderHeader({
             ) : (
               <>
                 <Rocket className="h-4 w-4" />
-                Publish Quiz
+                Publish
               </>
             )}
           </Button>
