@@ -18,7 +18,7 @@ export default function QuizBuilderPage() {
   if (builder.isLoading) {
     return (
       <PageShell>
-        <div className="flex min-h-screen items-center justify-center px-4">
+        <div className="flex min-h-screen items-center justify-center overflow-x-hidden px-4">
           <div className="inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-slate-200 backdrop-blur-md">
             <Loader2 className="h-5 w-5 animate-spin text-blue-300" />
             Loading quiz...
@@ -30,74 +30,82 @@ export default function QuizBuilderPage() {
 
   return (
     <PageShell>
-      <BuilderHeader
-        questionCount={builder.questions.length}
-        isSaving={builder.isSaving}
-        isPublishing={builder.isPublishing}
-        isPublished={builder.quiz?.published}
-        disablePublish={builder.questions.length === 0}
-        onBack={builder.goBack}
-        onSave={builder.handleSaveQuiz}
-        onPublish={builder.handlePublishQuiz}
-      />
+      <div className="min-h-screen overflow-x-hidden px-4 py-4 sm:px-6 md:px-8 lg:px-10">
+        <div className="mx-auto w-full max-w-7xl overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-4 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl md:p-6">
+          <BuilderHeader
+            questionCount={builder.questions.length}
+            isSaving={builder.isSaving}
+            isPublishing={builder.isPublishing}
+            isPublished={builder.quiz?.published}
+            disablePublish={builder.questions.length === 0}
+            onBack={builder.goBack}
+            onSave={builder.handleSaveQuiz}
+            onPublish={builder.handlePublishQuiz}
+          />
 
-      <section className="relative mx-auto max-w-7xl px-4 py-5 sm:px-6 md:px-10 md:py-8 lg:px-16">
-        <Tabs defaultValue="details" className="w-full">
-          <TabsList className="mb-5 h-auto w-full rounded-2xl border border-white/10 bg-white/5 p-1 backdrop-blur-md sm:w-auto md:mb-6">
-            <TabsTrigger
-              value="details"
-              className="flex-1 cursor-pointer rounded-xl px-3 py-2 text-xs sm:text-sm"
-            >
-              Quiz Details
-            </TabsTrigger>
+          <div className="mt-5 grid min-w-0 max-w-full gap-5 lg:grid-cols-[360px_minmax(0,1fr)] xl:grid-cols-[380px_minmax(0,1fr)]">
+            <div className="min-w-0 overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-3 backdrop-blur-xl md:p-4">
+              <Tabs defaultValue="questions" className="w-full min-w-0">
+                <TabsList className="mb-4 h-auto w-full rounded-2xl border border-white/10 bg-slate-950/50 p-1 backdrop-blur-md">
+                  <TabsTrigger
+                    value="details"
+                    className="min-w-0 flex-1 cursor-pointer rounded-xl px-3 py-2.5 text-xs sm:text-sm"
+                  >
+                    Quiz Details
+                  </TabsTrigger>
 
-            <TabsTrigger
-              value="questions"
-              className="flex-1 cursor-pointer rounded-xl px-3 py-2 text-xs sm:text-sm"
-            >
-              Questions ({builder.questions.length})
-            </TabsTrigger>
-          </TabsList>
+                  <TabsTrigger
+                    value="questions"
+                    className="min-w-0 flex-1 cursor-pointer rounded-xl px-3 py-2.5 text-xs sm:text-sm"
+                  >
+                    Questions ({builder.questions.length})
+                  </TabsTrigger>
+                </TabsList>
 
-          <TabsContent value="details" className="space-y-5 md:space-y-6">
-            <QuizDetailsForm
-              title={builder.title}
-              description={builder.description}
-              onTitleChange={builder.setTitle}
-              onDescriptionChange={builder.setDescription}
-            />
-          </TabsContent>
-
-          <TabsContent value="questions" className="space-y-5 md:space-y-6">
-            <div className="grid gap-5 lg:grid-cols-3 lg:gap-6">
-              <QuestionSidebar
-                questions={builder.questions}
-                activeQuestion={builder.activeQuestion}
-                canAddQuestion={builder.canAddQuestion}
-                onSelectQuestion={builder.setActiveQuestion}
-                onAddQuestion={builder.addQuestion}
-              />
-
-              <div className="lg:col-span-2">
-                {builder.questions.length === 0 ? (
-                  <EmptyQuestionState onAddQuestion={builder.addQuestion} />
-                ) : builder.currentQuestion ? (
-                  <QuestionEditor
-                    question={builder.currentQuestion}
-                    activeQuestion={builder.activeQuestion}
-                    onRemoveQuestion={builder.removeQuestion}
-                    onUpdateQuestion={builder.updateQuestion}
-                    onChangeQuestionType={builder.handleChangeQuestionType}
-                    onUpdateOption={builder.updateOption}
-                    onAddOption={builder.addOption}
-                    onRemoveOption={builder.removeOption}
+                <TabsContent value="details">
+                  <QuizDetailsForm
+                    title={builder.title}
+                    description={builder.description}
+                    onTitleChange={builder.setTitle}
+                    onDescriptionChange={builder.setDescription}
                   />
-                ) : null}
-              </div>
+                </TabsContent>
+
+                <TabsContent value="questions">
+                  <QuestionSidebar
+                    questions={builder.questions}
+                    activeQuestion={builder.activeQuestion}
+                    canAddQuestion={builder.canAddQuestion}
+                    onSelectQuestion={builder.setActiveQuestion}
+                    onAddQuestion={builder.addQuestion}
+                    onMoveQuestionUp={builder.moveQuestionUp}
+                    onMoveQuestionDown={builder.moveQuestionDown}
+                    onDuplicateQuestion={builder.duplicateQuestion}
+                    onRemoveQuestion={builder.removeQuestion}
+                  />
+                </TabsContent>
+              </Tabs>
             </div>
-          </TabsContent>
-        </Tabs>
-      </section>
+
+            <div className="min-w-0 overflow-hidden">
+              {builder.questions.length > 0 && builder.currentQuestion ? (
+                <QuestionEditor
+                  question={builder.currentQuestion}
+                  activeQuestion={builder.activeQuestion}
+                  onRemoveQuestion={builder.removeQuestion}
+                  onUpdateQuestion={builder.updateQuestion}
+                  onChangeQuestionType={builder.handleChangeQuestionType}
+                  onUpdateOption={builder.updateOption}
+                  onAddOption={builder.addOption}
+                  onRemoveOption={builder.removeOption}
+                />
+              ) : (
+                <EmptyQuestionState />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
 
       <PublishCodeDialog
         open={builder.showCodeDialog}

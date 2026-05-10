@@ -1,7 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { useState } from "react";
+import {
+  ArrowDown,
+  ArrowUp,
+  Copy,
+  GripVertical,
+  MoreVertical,
+  Plus,
+  Trash2,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -13,9 +21,14 @@ type Props = {
   canAddQuestion: boolean;
   onSelectQuestion: (index: number) => void;
   onAddQuestion: () => void;
+  onMoveQuestionUp: (index: number) => void;
+  onMoveQuestionDown: (index: number) => void;
+  onDuplicateQuestion: (index: number) => void;
+  onRemoveQuestion: (index: number) => void;
 };
 
-const QUESTIONS_PER_PAGE = 4;
+const INITIAL_VISIBLE_QUESTIONS = 3;
+const QUESTIONS_LOAD_STEP = 10;
 
 export default function QuestionSidebar({
   questions,
@@ -23,112 +36,189 @@ export default function QuestionSidebar({
   canAddQuestion,
   onSelectQuestion,
   onAddQuestion,
+  onMoveQuestionUp,
+  onMoveQuestionDown,
+  onDuplicateQuestion,
+  onRemoveQuestion,
 }: Props) {
-  const [page, setPage] = useState(0);
+  const [openMenuIndex, setOpenMenuIndex] = useState<number | null>(null);
+  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_QUESTIONS);
 
-  const totalPages = Math.ceil(questions.length / QUESTIONS_PER_PAGE);
-  const startIndex = page * QUESTIONS_PER_PAGE;
-  const visibleQuestions = questions.slice(
-    startIndex,
-    startIndex + QUESTIONS_PER_PAGE
-  );
+  const visibleQuestions = questions.slice(0, visibleCount);
 
-  useEffect(() => {
-    const activePage = Math.floor(activeQuestion / QUESTIONS_PER_PAGE);
-    setPage(activePage);
-  }, [activeQuestion]);
-
-  function goPreviousPage() {
-    setPage((prev) => Math.max(0, prev - 1));
+  function getQuestionTypeLabel(question: Question) {
+    if (question.type === "multiple_choice") return "Multiple Choice";
+    if (question.type === "true_false") return "True/False";
+    return "Identification";
   }
 
-  function goNextPage() {
-    setPage((prev) => Math.min(totalPages - 1, prev + 1));
+  function handleAddQuestion() {
+    onAddQuestion();
+    setVisibleCount((prev) => Math.max(prev, INITIAL_VISIBLE_QUESTIONS));
   }
 
   return (
-    <div className="lg:col-span-1">
-      <Card className="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl">
-        <div className="mb-4 grid grid-cols-2 gap-2 lg:block lg:space-y-2">
-          {visibleQuestions.map((question, visibleIndex) => {
-            const index = startIndex + visibleIndex;
+    <div>
+      <div className="mb-4 flex items-center justify-between">
+        <p className="text-sm font-semibold text-white">Questions</p>
 
-            return (
+        <p className="text-xs text-slate-400">
+          {questions.length} question{questions.length !== 1 ? "s" : ""}
+        </p>
+      </div>
+
+      {questions.length === 0 ? (
+        <Card className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center backdrop-blur-xl">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-violet-400/20 bg-violet-500/10 text-violet-300">
+            <Plus className="h-6 w-6" />
+          </div>
+
+          <p className="font-semibold text-white">No questions yet</p>
+
+          <p className="mt-2 text-sm leading-6 text-slate-400">
+            Start building your quiz by adding your first question.
+          </p>
+
+          <Button
+            type="button"
+            data-add-question-trigger
+            onClick={handleAddQuestion}
+            className="mt-5 h-11 w-full cursor-pointer rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-600 hover:to-blue-600"
+          >
+            <Plus className="h-4 w-4" />
+            Add Question
+          </Button>
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {visibleQuestions.map((question, index) => (
+            <div key={question.id} className="relative">
               <button
-                key={question.id}
                 type="button"
                 onClick={() => onSelectQuestion(index)}
-                className={`min-w-0 cursor-pointer rounded-2xl border p-3 text-left transition-all lg:w-full ${
+                className={`group flex w-full cursor-pointer items-start gap-3 rounded-2xl border p-3 pr-12 text-left transition ${
                   activeQuestion === index
-                    ? "border-blue-400/40 bg-blue-500/10"
-                    : "border-white/10 bg-white/5 hover:bg-white/10"
+                    ? "border-violet-400/70 bg-violet-500/10"
+                    : "border-white/10 bg-white/[0.03] hover:bg-white/5"
                 }`}
               >
-                <p className="truncate font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400 sm:text-xs">
-                  Q{index + 1} ·{" "}
-                  {question.type === "multiple_choice"
-                    ? "Multiple Choice"
-                    : question.type === "true_false"
-                    ? "True/False"
-                    : "Identification"}
-                </p>
+                <GripVertical className="mt-1 h-5 w-5 shrink-0 text-slate-500" />
 
-                <p className="truncate text-sm text-white">
-                  {question.text || "Untitled question"}
-                </p>
+                <div className="min-w-0 flex-1">
+                  <p className="break-words text-xs text-slate-400">
+                    Question {index + 1} · {getQuestionTypeLabel(question)}
+                  </p>
+
+                  <p className="mt-1 break-words text-sm font-semibold text-white">
+                    {question.text || "Untitled question"}
+                  </p>
+                </div>
               </button>
-            );
-          })}
-        </div>
 
-        {totalPages > 1 && (
-          <div className="mb-4 flex items-center justify-between gap-2 rounded-2xl border border-white/10 bg-white/5 p-2">
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setOpenMenuIndex((current) =>
+                    current === index ? null : index
+                  );
+                }}
+                className="absolute right-2 top-3 flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 transition hover:bg-white/10 hover:text-white"
+              >
+                <MoreVertical className="h-5 w-5" />
+              </button>
+
+              {openMenuIndex === index && (
+                <div className="absolute right-2 top-12 z-30 w-44 overflow-hidden rounded-2xl border border-white/10 bg-slate-950/95 p-1 shadow-2xl backdrop-blur-xl">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onMoveQuestionUp(index);
+                      setOpenMenuIndex(null);
+                    }}
+                    disabled={index === 0}
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm text-slate-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <ArrowUp className="h-4 w-4" />
+                    Move Up
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onMoveQuestionDown(index);
+                      setOpenMenuIndex(null);
+                    }}
+                    disabled={index === questions.length - 1}
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm text-slate-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <ArrowDown className="h-4 w-4" />
+                    Move Down
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onDuplicateQuestion(index);
+                      setOpenMenuIndex(null);
+                    }}
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm text-slate-300 transition hover:bg-white/10 hover:text-white"
+                  >
+                    <Copy className="h-4 w-4" />
+                    Duplicate
+                  </button>
+
+                  <div className="my-1 h-px bg-white/10" />
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onRemoveQuestion(index);
+                      setOpenMenuIndex(null);
+                    }}
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm text-red-300 transition hover:bg-red-500/10 hover:text-red-200"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+
+          {visibleCount < questions.length && (
             <Button
               type="button"
               variant="ghost"
-              size="sm"
-              onClick={goPreviousPage}
-              disabled={page === 0}
-              className="h-9 w-9 p-0"
+              onClick={() =>
+                setVisibleCount((prev) =>
+                  Math.min(prev + QUESTIONS_LOAD_STEP, questions.length)
+                )
+              }
+              className="h-10 w-full rounded-xl border border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/10 hover:text-white"
             >
-              <ChevronLeft className="h-4 w-4" />
+              See More ({questions.length - visibleCount})
             </Button>
+          )}
 
-            <p className="text-xs text-slate-400">
-              Page{" "}
-              <span className="font-medium text-white">{page + 1}</span> of{" "}
-              {totalPages}
+          <Button
+            type="button"
+            data-add-question-trigger
+            onClick={handleAddQuestion}
+            disabled={!canAddQuestion}
+            className="h-11 w-full cursor-pointer rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:bg-black/30 disabled:from-black/30 disabled:to-black/30 disabled:text-slate-500"
+          >
+            <Plus className="h-4 w-4" />
+            Add Question
+          </Button>
+
+          {!canAddQuestion && (
+            <p className="text-center text-xs text-slate-500">
+              Complete the current question first.
             </p>
-
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={goNextPage}
-              disabled={page >= totalPages - 1}
-              className="h-9 w-9 p-0"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
-
-        <Button
-          type="button"
-          onClick={onAddQuestion}
-          disabled={!canAddQuestion}
-          className="h-11 w-full cursor-pointer bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:from-violet-600 hover:to-fuchsia-600 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <Plus className="h-4 w-4" />
-          Add Question
-        </Button>
-
-        {!canAddQuestion && (
-          <p className="mt-3 text-center text-xs text-slate-500">
-            Complete the current question first.
-          </p>
-        )}
-      </Card>
+          )}
+        </div>
+      )}
     </div>
   );
 }

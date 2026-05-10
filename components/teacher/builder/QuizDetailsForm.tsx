@@ -19,24 +19,22 @@ export default function QuizDetailsForm({
   onDescriptionChange,
 }: Props) {
   return (
-    <Card className="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-5 md:p-6">
-      <div className="mb-5 flex items-center gap-3 md:mb-6">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-blue-400/20 bg-blue-500/10 text-blue-300 md:h-12 md:w-12">
-          <FileText className="h-5 w-5 md:h-6 md:w-6" />
+    <Card className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-xl">
+      <div className="mb-5 flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-500/10 text-cyan-300">
+          <FileText className="h-5 w-5" />
         </div>
 
-        <div>
-          <h2 className="text-lg font-semibold text-white md:text-xl">
-            Quiz Details
-          </h2>
+        <div className="min-w-0">
+          <h2 className="text-lg font-bold text-white">Quiz Details</h2>
 
-          <p className="text-sm text-slate-300">
+          <p className="text-sm text-slate-400">
             Set your quiz title and instructions.
           </p>
         </div>
       </div>
 
-      <div className="space-y-4 md:space-y-5">
+      <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="quiz-title">Quiz Title</Label>
 
@@ -45,7 +43,7 @@ export default function QuizDetailsForm({
             value={title}
             onChange={(e) => onTitleChange(e.target.value)}
             placeholder="e.g. Chemistry Quiz"
-            className="h-11"
+            className="h-11 rounded-xl bg-slate-950/40"
           />
         </div>
 
@@ -57,8 +55,8 @@ export default function QuizDetailsForm({
             value={description}
             onChange={(e) => onDescriptionChange(e.target.value)}
             placeholder="Add instructions for students"
-            rows={4}
-            className="min-h-[120px]"
+            rows={3}
+            className="min-h-[92px] resize-none rounded-xl bg-slate-950/40"
           />
         </div>
       </div>

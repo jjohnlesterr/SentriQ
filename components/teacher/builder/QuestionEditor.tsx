@@ -1,4 +1,4 @@
-import { Plus, Trash2 } from "lucide-react";
+import { CheckCircle2, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -35,25 +35,24 @@ export default function QuestionEditor({
   onRemoveOption,
 }: Props) {
   return (
-    <Card className="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-5 md:p-6">
-      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h3 className="text-lg font-semibold text-white md:text-xl">
+    <Card className="w-full min-w-0 overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-4 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl md:p-7">
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <h3 className="min-w-0 break-words text-xl font-extrabold text-white md:text-2xl">
           Question {activeQuestion + 1}
         </h3>
 
         <Button
           type="button"
           onClick={() => onRemoveQuestion(activeQuestion)}
-          variant="secondary"
+          variant="ghost"
           size="sm"
-          className="h-10 w-full cursor-pointer border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white sm:w-auto"
+          className="h-10 w-10 shrink-0 cursor-pointer rounded-xl border border-red-400/20 bg-red-500/10 p-0 text-red-300 hover:bg-red-500/20 hover:text-red-200"
         >
           <Trash2 className="h-4 w-4" />
-          Delete
         </Button>
       </div>
 
-      <div className="space-y-5">
+      <div className="min-w-0 space-y-5">
         <div className="space-y-2">
           <Label>Question Type</Label>
 
@@ -65,54 +64,58 @@ export default function QuestionEditor({
                 e.target.value as QuestionType
               )
             }
-            className="h-11 w-full rounded-xl border border-white/10 bg-slate-900 px-3 text-sm text-white outline-none transition focus:border-blue-400/50"
+            className="h-11 w-full min-w-0 rounded-xl border border-white/10 bg-slate-950 px-3 text-sm text-white outline-none transition focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20"
           >
-            <option value="multiple_choice">Multiple Choice</option>
-            <option value="true_false">True / False</option>
-            <option value="identification">Identification</option>
+            <option className="bg-slate-950 text-white" value="multiple_choice">
+              Multiple Choice
+            </option>
+            <option className="bg-slate-950 text-white" value="true_false">
+              True / False
+            </option>
+            <option className="bg-slate-950 text-white" value="identification">
+              Identification
+            </option>
           </select>
         </div>
 
-        <div className="space-y-2">
-          <Label>Question Text</Label>
+        <div className="min-w-0 space-y-2">
+          <div className="flex items-center justify-between gap-3">
+            <Label>Question Text</Label>
+
+            <span className="shrink-0 text-xs text-slate-500">
+              {question.text.length}/500
+            </span>
+          </div>
 
           <Textarea
             value={question.text}
+            wrap="soft"
             onChange={(e) =>
               onUpdateQuestion(activeQuestion, {
-                text: e.target.value,
+                text: e.target.value.slice(0, 500),
               })
             }
             placeholder="Enter your question"
             rows={3}
-            className="min-h-[110px]"
+            className="box-border min-h-[92px] w-full min-w-0 max-w-full resize-none overflow-hidden rounded-xl break-all bg-slate-950/40 whitespace-pre-wrap [overflow-wrap:anywhere]"
           />
         </div>
 
         {question.type !== "identification" ? (
-          <div>
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <div className="mb-3 flex items-center justify-between gap-3">
               <Label>Answer Options</Label>
 
-              {question.type === "multiple_choice" && (
-                <Button
-                  type="button"
-                  onClick={() => onAddOption(activeQuestion)}
-                  variant="secondary"
-                  size="sm"
-                  className="h-10 w-full cursor-pointer border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white sm:w-auto"
-                >
-                  <Plus className="h-3 w-3" />
-                  Add Option
-                </Button>
-              )}
+              <span className="shrink-0 text-xs text-slate-500">
+                {question.options.length}/10
+              </span>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {question.options.map((option, optionIndex) => (
                 <div
                   key={optionIndex}
-                  className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 p-3"
+                  className="flex min-w-0 items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-2"
                 >
                   <Checkbox
                     checked={question.correctAnswer === optionIndex}
@@ -135,7 +138,7 @@ export default function QuestionEditor({
                     }
                     placeholder={`Option ${optionIndex + 1}`}
                     disabled={question.type === "true_false"}
-                    className="h-10 flex-1 bg-transparent text-sm"
+                    className="h-10 min-w-0 flex-1 rounded-xl bg-slate-950/40 px-3 text-sm"
                   />
 
                   {question.type === "multiple_choice" &&
@@ -147,7 +150,7 @@ export default function QuestionEditor({
                         }
                         variant="ghost"
                         size="sm"
-                        className="h-9 w-9 shrink-0 cursor-pointer p-0 hover:bg-white/10"
+                        className="h-10 w-10 shrink-0 cursor-pointer rounded-xl border border-red-400/10 bg-red-500/5 p-0 hover:bg-red-500/10"
                       >
                         <Trash2 className="h-4 w-4 text-red-400" />
                       </Button>
@@ -156,15 +159,51 @@ export default function QuestionEditor({
               ))}
             </div>
 
+            {question.type === "multiple_choice" && (
+              <Button
+                type="button"
+                onClick={() => onAddOption(activeQuestion)}
+                disabled={question.options.length >= 10}
+                variant="ghost"
+                className="mt-3 h-11 w-full cursor-pointer rounded-xl border border-dashed border-violet-400/30 bg-transparent text-violet-300 hover:bg-violet-500/10 hover:text-violet-200 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-black/20 disabled:text-slate-500"
+              >
+                <Plus className="h-4 w-4" />
+                Add Option
+              </Button>
+            )}
+
             <div className="mt-5 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4">
-              <p className="text-sm leading-6 text-emerald-100">
-                Correct answer:{" "}
-                <span className="font-semibold text-emerald-300">
-                  {question.options[question.correctAnswer] ||
-                    "No answer selected"}
-                </span>
-              </p>
+              <div className="flex gap-3">
+                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" />
+
+                <div className="min-w-0">
+                  <p className="break-words text-sm font-semibold text-emerald-200">
+                    Correct Answer
+                  </p>
+
+                  <p className="mt-1 break-all text-sm text-emerald-100/70 [overflow-wrap:anywhere]">
+                    {question.options[question.correctAnswer]?.trim()
+                      ? question.options[question.correctAnswer]
+                      : "No answer selected yet"}
+                  </p>
+                </div>
+              </div>
             </div>
+
+            <Button
+              type="button"
+              onClick={() => {
+                const trigger = document.querySelector<HTMLButtonElement>(
+                  "[data-add-question-trigger]"
+                );
+
+                trigger?.click();
+              }}
+              className="mt-5 h-12 w-full cursor-pointer rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-600 hover:to-blue-600"
+            >
+              <Plus className="h-4 w-4" />
+              Add Another Question
+            </Button>
           </div>
         ) : (
           <div className="space-y-3">
@@ -178,17 +217,40 @@ export default function QuestionEditor({
                 })
               }
               placeholder="Enter correct answer"
-              className="h-11"
+              className="h-11 min-w-0 rounded-xl bg-slate-950/40"
             />
 
             <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4">
-              <p className="text-sm leading-6 text-emerald-100">
-                Correct answer:{" "}
-                <span className="font-semibold text-emerald-300">
-                  {question.correctTextAnswer || "No answer entered"}
-                </span>
-              </p>
+              <div className="flex gap-3">
+                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" />
+
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-emerald-200">
+                    Correct Answer
+                  </p>
+
+                  <p className="mt-1 break-all text-sm text-emerald-100/70 [overflow-wrap:anywhere]">
+                    {question.correctTextAnswer?.trim() ||
+                      "No answer entered yet"}
+                  </p>
+                </div>
+              </div>
             </div>
+
+            <Button
+              type="button"
+              onClick={() => {
+                const trigger = document.querySelector<HTMLButtonElement>(
+                  "[data-add-question-trigger]"
+                );
+
+                trigger?.click();
+              }}
+              className="h-12 w-full cursor-pointer rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-600 hover:to-blue-600"
+            >
+              <Plus className="h-4 w-4" />
+              Add Another Question
+            </Button>
           </div>
         )}
       </div>

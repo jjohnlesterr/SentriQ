@@ -184,6 +184,61 @@ export function useQuizBuilder() {
     });
   }
 
+  function moveQuestionUp(index: number) {
+    if (index <= 0) return;
+
+    setQuestions((prev) => {
+      const updated = [...prev];
+      const current = updated[index];
+      const previous = updated[index - 1];
+
+      updated[index - 1] = current;
+      updated[index] = previous;
+
+      return updated;
+    });
+
+    setActiveQuestion(index - 1);
+  }
+
+  function moveQuestionDown(index: number) {
+    if (index >= questions.length - 1) return;
+
+    setQuestions((prev) => {
+      const updated = [...prev];
+      const current = updated[index];
+      const next = updated[index + 1];
+
+      updated[index + 1] = current;
+      updated[index] = next;
+
+      return updated;
+    });
+
+    setActiveQuestion(index + 1);
+  }
+
+  function duplicateQuestion(index: number) {
+    const question = questions[index];
+
+    if (!question) return;
+
+    const duplicate: Question = {
+      ...question,
+      id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      text: question.text ? `${question.text} (Copy)` : "",
+      options: [...question.options],
+    };
+
+    setQuestions((prev) => {
+      const updated = [...prev];
+      updated.splice(index + 1, 0, duplicate);
+      return updated;
+    });
+
+    setActiveQuestion(index + 1);
+  }
+
   function addOption(questionIndex: number) {
     setQuestions((prev) =>
       prev.map((question, index) => {
@@ -262,6 +317,9 @@ export function useQuizBuilder() {
     handleChangeQuestionType,
     updateOption,
     removeQuestion,
+    moveQuestionUp,
+    moveQuestionDown,
+    duplicateQuestion,
     addOption,
     removeOption,
     handleCopyCode,
