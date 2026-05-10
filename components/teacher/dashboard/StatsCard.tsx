@@ -9,29 +9,35 @@ type Props = {
 };
 
 export default function StatsCard({ type, label, value }: Props) {
-  const icon =
-    type === "total" ? (
-      <BookOpen className="mb-3 h-7 w-7 text-cyan-300 md:mb-4 md:h-8 md:w-8" />
-    ) : type === "published" ? (
-      <Eye className="mb-3 h-7 w-7 text-blue-300 md:mb-4 md:h-8 md:w-8" />
-    ) : (
-      <FileText className="mb-3 h-7 w-7 text-violet-300 md:mb-4 md:h-8 md:w-8" />
-    );
+  const Icon =
+    type === "total"
+      ? BookOpen
+      : type === "published"
+      ? Eye
+      : FileText;
 
-  const valueClass =
-    type === "published"
+  const iconClass =
+    type === "total"
+      ? "text-cyan-300"
+      : type === "published"
       ? "text-blue-300"
-      : type === "draft"
-      ? "text-violet-300"
-      : "text-white";
+      : "text-violet-300";
 
   return (
-    <Card className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl md:p-6">
-      {icon}
+    <Card className="flex min-h-[118px] flex-col justify-between rounded-3xl border border-white/10 bg-white/5 p-3 backdrop-blur-xl md:min-h-[130px] md:p-5">
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-xs leading-5 text-slate-400 md:text-sm">
+          {label}
+        </p>
 
-      <p className="text-sm text-slate-400">{label}</p>
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/5 md:h-12 md:w-12">
+          <Icon className={`h-5 w-5 md:h-6 md:w-6 ${iconClass}`} />
+        </div>
+      </div>
 
-      <p className={`mt-2 text-3xl font-bold ${valueClass}`}>{value}</p>
+      <p className="text-3xl font-extrabold leading-none text-white md:text-4xl">
+        {value}
+      </p>
     </Card>
   );
 }

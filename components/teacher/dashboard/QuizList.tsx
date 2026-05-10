@@ -1,9 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Edit, Eye } from "lucide-react";
+import { Edit, Eye, FileText, Plus } from "lucide-react";
 
-import EmptyState from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { Quiz } from "@/lib/types";
@@ -17,10 +16,35 @@ export default function QuizList({ items }: Props) {
 
   if (items.length === 0) {
     return (
-      <EmptyState
-        title="No quizzes found."
-        description="Create your first quiz to get started."
-      />
+      <Card className="rounded-3xl border border-white/10 bg-white/5 p-8 text-center backdrop-blur-xl md:p-12">
+        <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-white/5 text-slate-500 md:h-24 md:w-24">
+          <FileText className="h-9 w-9 md:h-10 md:w-10" />
+        </div>
+
+        <h3 className="text-lg font-bold text-white md:text-xl">
+          No quizzes yet
+        </h3>
+
+        <p className="mt-2 text-sm text-slate-400">
+          Create your first quiz to get started.
+        </p>
+
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => {
+            const trigger = document.querySelector<HTMLButtonElement>(
+              "[data-create-quiz-trigger]"
+            );
+
+            trigger?.click();
+          }}
+          className="mx-auto mt-5 h-11 rounded-2xl border border-white/10 bg-white/5 px-5 text-sm text-white hover:bg-white/10"
+        >
+          <Plus className="h-4 w-4" />
+          Create Quiz
+        </Button>
+      </Card>
     );
   }
 
@@ -29,12 +53,14 @@ export default function QuizList({ items }: Props) {
       {items.map((quiz) => (
         <Card
           key={quiz.id}
-          className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl"
+          className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl transition hover:border-white/20 md:p-6"
         >
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-            <div>
+            <div className="min-w-0">
               <div className="mb-3 flex flex-wrap items-center gap-3">
-                <h3 className="text-xl font-bold text-white">{quiz.title}</h3>
+                <h3 className="truncate text-lg font-bold text-white md:text-xl">
+                  {quiz.title}
+                </h3>
 
                 <span
                   className={
@@ -47,17 +73,16 @@ export default function QuizList({ items }: Props) {
                 </span>
               </div>
 
-              <p className="text-sm text-slate-400">
+              <p className="text-sm leading-6 text-slate-400">
                 {quiz.description || "No description provided."}
               </p>
 
               <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-400">
-                <span>Questions: {quiz.questions.length}</span>
-                <span>Status: {quiz.published ? "Published" : "Draft"}</span>
+                <span>{quiz.questions.length} Questions</span>
 
                 {quiz.published && (
                   <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 font-mono text-cyan-200">
-                    Code: {quiz.code}
+                    {quiz.code}
                   </span>
                 )}
               </div>
@@ -68,7 +93,7 @@ export default function QuizList({ items }: Props) {
                 type="button"
                 variant="secondary"
                 onClick={() => router.push(`/teacher/quiz/${quiz.id}/builder`)}
-                className="cursor-pointer border-white/10 bg-white/5 hover:bg-white/10 hover:text-white"
+                className="h-10 cursor-pointer border-white/10 bg-white/5 hover:bg-white/10 hover:text-white"
               >
                 <Edit className="h-4 w-4" />
                 Edit
@@ -80,7 +105,7 @@ export default function QuizList({ items }: Props) {
                   onClick={() =>
                     router.push(`/teacher/quiz/${quiz.id}/monitor`)
                   }
-                  className="cursor-pointer hover:scale-[1.02]"
+                  className="h-10 cursor-pointer"
                 >
                   <Eye className="h-4 w-4" />
                   Monitor

@@ -1,49 +1,51 @@
-import { LogOut, ShieldCheck } from "lucide-react";
+import { Menu, ShieldCheck } from "lucide-react";
 
-import SectionHeading from "@/components/shared/SectionHeading";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 type Props = {
   teacherName: string;
-  onLogout: () => void;
+  onOpenSidebar: () => void;
 };
 
-export default function DashboardHeader({ teacherName, onLogout }: Props) {
+export default function DashboardHeader({
+  teacherName,
+  onOpenSidebar,
+}: Props) {
   return (
-    <Card className="mb-4 overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-0 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl md:mb-6">
-      <div className="relative p-5 md:p-8">
-        <div className="absolute right-0 top-0 h-28 w-28 rounded-full bg-blue-500/10 blur-2xl md:h-32 md:w-32" />
+    <header>
+      <div className="mb-6 flex items-center justify-between lg:hidden">
+        <button
+          type="button"
+          onClick={onOpenSidebar}
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-200 transition hover:bg-white/10"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
 
-        <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <SectionHeading
-            icon={ShieldCheck}
-            badge="Teacher Control Center"
-            title="Dashboard"
-            description={
-              <>
-                Welcome back,{""}
-                <span className="font-medium text-white">{teacherName}</span>
-              </>
-            }
-            variant="page"
-            badgeClassName="mb-3 border-sky-400/20 bg-sky-400/10 px-3 py-1.5 text-xs text-sky-200"
-            iconClassName="h-3.5 w-3.5"
-            titleClassName="text-3xl md:text-4xl"
-            descriptionClassName="mt-2 text-sm text-slate-300 md:text-base"
-          />
+        <h1 className="bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-400 bg-clip-text text-2xl font-extrabold text-transparent">
+          SentriQ
+        </h1>
 
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={onLogout}
-            className="h-10 w-full cursor-pointer border-white/10 bg-white/5 text-sm hover:bg-white/10 hover:text-white sm:w-auto"
-          >
-            <LogOut className="h-4 w-4" />
-            Logout
-          </Button>
-        </div>
+        <div className="h-10 w-10" />
       </div>
-    </Card>
+
+      <div>
+        <Badge className="mb-3 px-4 py-2 text-slate-300">
+          <ShieldCheck className="h-4 w-4 text-cyan-300" />
+          Teacher quiz management dashboard
+        </Badge>
+
+        <h2 className="text-3xl font-extrabold tracking-tight text-white md:text-4xl">
+          Dashboard
+        </h2>
+
+        <p className="mt-2 text-sm text-slate-400 md:text-base">
+          Welcome back,{" "}
+          <span className="text-blue-300">
+            {teacherName || "Teacher"}
+          </span>
+        </p>
+      </div>
+    </header>
   );
 }

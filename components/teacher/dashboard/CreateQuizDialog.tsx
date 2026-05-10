@@ -39,14 +39,15 @@ export default function CreateQuizDialog({
       <DialogTrigger asChild>
         <Button
           type="button"
-          className="h-full min-h-[128px] w-full cursor-pointer rounded-3xl text-sm hover:scale-[1.02] md:min-h-[148px] lg:min-w-[220px]"
+          data-create-quiz-trigger
+          className="h-12 w-full cursor-pointer rounded-full px-6 text-sm font-semibold shadow-[0_20px_60px_rgba(59,130,246,0.25)] transition hover:scale-[1.01] md:h-14 md:w-auto md:min-w-[260px] md:text-base"
         >
           <Plus className="h-4 w-4" />
           Create New Quiz
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="w-[calc(100%-2rem)] border border-white/10 bg-slate-950/95 text-white backdrop-blur-2xl">
+      <DialogContent className="w-[calc(100%-2rem)] border border-white/10 bg-slate-950/95 text-white backdrop-blur-2xl sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-2xl font-bold text-transparent">
             Create New Quiz
