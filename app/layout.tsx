@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SentriQ - Quiz Monitoring & Management",
+  title: "SentriQ - Quiz Monitoring",
   description:
     "A smart quiz and monitoring platform designed to ensure integrity and fairness during digital assessments.",
 };
