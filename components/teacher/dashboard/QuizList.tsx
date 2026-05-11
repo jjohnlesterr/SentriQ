@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Edit, Eye, FileText, Plus } from "lucide-react";
+import { Edit, Eye, FileText, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -9,9 +9,10 @@ import type { Quiz } from "@/lib/types";
 
 type Props = {
   items: Quiz[];
+  onDeleteQuiz: (quizId: string) => void;
 };
 
-export default function QuizList({ items }: Props) {
+export default function QuizList({ items, onDeleteQuiz }: Props) {
   const router = useRouter();
 
   if (items.length === 0) {
@@ -111,6 +112,16 @@ export default function QuizList({ items }: Props) {
                   Monitor
                 </Button>
               )}
+
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => onDeleteQuiz(quiz.id)}
+                className="h-10 cursor-pointer border-red-400/20 bg-red-500/10 text-red-200 hover:bg-red-500/20 hover:text-red-100"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </Button>
             </div>
           </div>
         </Card>

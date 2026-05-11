@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
 import PageShell from "@/components/layout/PageShell";
+import TeacherAppSidebar from "@/components/layout/sidebar/TeacherAppSidebar";
 import BuilderHeader from "@/components/teacher/builder/BuilderHeader";
-import QuizBuilderSidebar from "@/components/teacher/builder/QuizBuilderSidebar";
 import QuizDetailsForm from "@/components/teacher/builder/QuizDetailsForm";
 import QuestionSidebar from "@/components/teacher/builder/QuestionSidebar";
 import QuestionEditor from "@/components/teacher/builder/QuestionEditor";
@@ -56,7 +56,7 @@ export default function QuizBuilderPage() {
       const quiz = await createQuiz(
         newQuizTitle.trim(),
         newQuizDescription.trim(),
-        teacherId,
+        teacherId
       );
 
       setNewQuizTitle("");
@@ -78,14 +78,6 @@ export default function QuizBuilderPage() {
     router.push("/");
   }
 
-  function goDashboard() {
-    router.push("/teacher/dashboard");
-  }
-
-  function goDrafts() {
-    router.push("/teacher/drafts");
-  }
-
   function openNewQuiz() {
     const hasUnsavedChanges =
       builder.title.trim() ||
@@ -94,7 +86,7 @@ export default function QuizBuilderPage() {
 
     if (hasUnsavedChanges) {
       const confirmed = window.confirm(
-        "Do you want to discard your current quiz progress?",
+        "Do you want to discard your current quiz progress?"
       );
 
       if (!confirmed) return;
@@ -141,25 +133,14 @@ export default function QuizBuilderPage() {
 
   return (
     <PageShell>
-      <QuizBuilderSidebar
+      <TeacherAppSidebar
         teacherName={teacherName}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
         onLogout={handleLogout}
-        onDashboard={goDashboard}
-        onDrafts={goDrafts}
         onNewQuiz={openNewQuiz}
+        activePage="quiz-builder"
       />
-
-      {sidebarOpen && (
-        <QuizBuilderSidebar
-          teacherName={teacherName}
-          open={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-          onLogout={handleLogout}
-          onDashboard={goDashboard}
-          onDrafts={goDrafts}
-          onNewQuiz={openNewQuiz}
-        />
-      )}
 
       <div className="min-h-screen px-4 py-4 sm:px-6 md:px-8 lg:pl-[304px] lg:pr-8 xl:pr-10">
         <div className="mx-auto w-full max-w-7xl">
@@ -175,7 +156,6 @@ export default function QuizBuilderPage() {
             onOpenSidebar={() => setSidebarOpen(true)}
           />
 
-          {/* MOBILE */}
           <div className="mt-5 lg:hidden">
             <Tabs defaultValue="questions" className="w-full">
               <TabsList className="grid h-auto w-full grid-cols-2 rounded-2xl border border-white/10 bg-white/[0.04] p-1 backdrop-blur-xl">
@@ -209,7 +189,6 @@ export default function QuizBuilderPage() {
             </Tabs>
           </div>
 
-          {/* DESKTOP */}
           <div className="mt-5 hidden gap-5 lg:grid lg:grid-cols-[340px_minmax(0,1fr)] xl:grid-cols-[360px_minmax(0,1fr)]">
             <aside className="min-w-0">
               <div className="sticky top-4 space-y-4">
@@ -264,7 +243,6 @@ export default function QuizBuilderPage() {
         </div>
       </div>
 
-      {/* Mobile selector only */}
       <div className="lg:hidden">
         <QuestionSidebar
           questions={builder.questions}

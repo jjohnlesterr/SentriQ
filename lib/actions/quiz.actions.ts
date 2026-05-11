@@ -88,6 +88,22 @@ export async function publishQuiz(quizId: string): Promise<Quiz> {
   return updatedQuiz;
 }
 
+export async function deleteQuiz(quizId: string): Promise<void> {
+  const index = quizzes.findIndex((quiz) => quiz.id === quizId);
+
+  if (index === -1) {
+    throw new Error("Quiz not found");
+  }
+
+  quizzes.splice(index, 1);
+
+  for (let i = sessions.length - 1; i >= 0; i--) {
+    if (sessions[i].quizId === quizId) {
+      sessions.splice(i, 1);
+    }
+  }
+}
+
 export async function getTeacherQuizzes(teacherId: string): Promise<Quiz[]> {
   return quizzes.filter((quiz) => quiz.createdBy === teacherId);
 }

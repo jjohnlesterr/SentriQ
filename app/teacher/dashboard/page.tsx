@@ -5,16 +5,16 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
 import PageShell from "@/components/layout/PageShell";
+import TeacherAppSidebar from "@/components/layout/sidebar/TeacherAppSidebar";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import DashboardHeader from "@/components/teacher/dashboard/DashboardHeader";
-import TeacherSidebar from "@/components/teacher/dashboard/TeacherSidebar";
 import StatsCard from "@/components/teacher/dashboard/StatsCard";
 import QuizList from "@/components/teacher/dashboard/QuizList";
 import CreateQuizDialog from "@/components/teacher/dashboard/CreateQuizDialog";
 
-import { createQuiz, getTeacherQuizzes } from "@/lib/actions";
+import { createQuiz, deleteQuiz, getTeacherQuizzes } from "@/lib/actions";
 import type { Quiz } from "@/lib/types";
 
 export default function TeacherDashboardPage() {
@@ -85,6 +85,21 @@ export default function TeacherDashboardPage() {
     }
   }
 
+  async function handleDeleteQuiz(quizId: string) {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this quiz? This will also delete its sessions."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await deleteQuiz(quizId);
+      setQuizzes((prev) => prev.filter((quiz) => quiz.id !== quizId));
+    } catch {
+      alert("Failed to delete quiz.");
+    }
+  }
+
   function handleLogout() {
     sessionStorage.removeItem("teacherId");
     sessionStorage.removeItem("teacherName");
@@ -97,25 +112,18 @@ export default function TeacherDashboardPage() {
   return (
     <PageShell>
       <div className="min-h-screen lg:pl-64">
-        <TeacherSidebar
+        <TeacherAppSidebar
           teacherName={teacherName}
+          quizzes={quizzes}
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
           onLogout={handleLogout}
-          onNewQuiz={() => setDialogOpen(true)}
-          onDrafts={() => router.push("/teacher/drafts")}
+          onNewQuiz={() => {
+            setDialogOpen(true);
+            setSidebarOpen(false);
+          }}
           activePage="dashboard"
         />
-
-        {sidebarOpen && (
-          <TeacherSidebar
-            teacherName={teacherName}
-            open={sidebarOpen}
-            onClose={() => setSidebarOpen(false)}
-            onLogout={handleLogout}
-            onNewQuiz={() => setDialogOpen(true)}
-            onDrafts={() => router.push("/teacher/drafts")}
-            activePage="dashboard"
-          />
-        )}
 
         <main className="min-w-0 px-4 py-5 sm:px-6 md:px-10 lg:px-8 xl:px-10">
           <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
@@ -194,15 +202,21 @@ export default function TeacherDashboardPage() {
                 </TabsList>
 
                 <TabsContent value="all">
-                  <QuizList items={quizzes} />
+                  <QuizList items={quizzes} onDeleteQuiz={handleDeleteQuiz} />
                 </TabsContent>
 
                 <TabsContent value="published">
-                  <QuizList items={publishedQuizzes} />
+                  <QuizList
+                    items={publishedQuizzes}
+                    onDeleteQuiz={handleDeleteQuiz}
+                  />
                 </TabsContent>
 
                 <TabsContent value="drafts">
-                  <QuizList items={draftQuizzes} />
+                  <QuizList
+                    items={draftQuizzes}
+                    onDeleteQuiz={handleDeleteQuiz}
+                  />
                 </TabsContent>
               </Tabs>
             )}

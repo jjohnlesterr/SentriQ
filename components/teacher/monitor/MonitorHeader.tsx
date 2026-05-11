@@ -1,5 +1,9 @@
+"use client";
+
+import { useState } from "react";
 import {
   ArrowLeft,
+  ChevronDown,
   Lock,
   RefreshCw,
   ShieldCheck,
@@ -32,10 +36,18 @@ export default function MonitorHeader({
   onToggleAutoRefresh,
   onBulkUpdateReportVisibility,
 }: Props) {
+  const [reportOpen, setReportOpen] = useState(false);
+
   function buttonClass(visibility: ReportVisibility) {
     return reportVisibilityState === visibility
       ? "h-11"
       : "h-11 border-white/10 bg-white/5 hover:bg-white/10 hover:text-white";
+  }
+
+  function mobileButtonClass(visibility: ReportVisibility) {
+    return reportVisibilityState === visibility
+      ? "h-16 w-full justify-start rounded-2xl px-5 text-left"
+      : "h-16 w-full justify-start rounded-2xl border-white/10 bg-white/5 px-5 text-left hover:bg-white/10 hover:text-white";
   }
 
   function buttonVariant(visibility: ReportVisibility) {
@@ -112,7 +124,75 @@ export default function MonitorHeader({
           </div>
         </div>
 
-        <div className="relative z-10 mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
+        {/* MOBILE REPORT RELEASE */}
+        <div className="relative z-10 mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 md:hidden">
+          <button
+            type="button"
+            onClick={() => setReportOpen((prev) => !prev)}
+            className="flex w-full items-center justify-between gap-4"
+          >
+            <div className="min-w-0">
+              <h3 className="text-left font-semibold text-white">
+                Student Report Release
+              </h3>
+
+              <p className="mt-1 text-left text-sm text-slate-400">
+                Control what students can see after the quiz.
+              </p>
+            </div>
+
+            <div className="shrink-0 rounded-2xl border border-white/10 bg-white/5 p-3">
+              <ChevronDown
+                className={`h-5 w-5 transition ${
+                  reportOpen ? "rotate-180" : ""
+                }`}
+              />
+            </div>
+          </button>
+
+          {reportVisibilityState === "mixed" && (
+            <span className="mt-3 inline-flex rounded-full border border-orange-400/20 bg-orange-500/10 px-3 py-1 text-xs font-semibold text-orange-200">
+              Mixed
+            </span>
+          )}
+
+          {reportOpen && (
+            <div className="mt-4 grid gap-3">
+              <Button
+                type="button"
+                variant={buttonVariant("locked")}
+                onClick={() => onBulkUpdateReportVisibility("locked")}
+                className={mobileButtonClass("locked")}
+              >
+                <Lock className="mr-3 h-5 w-5" />
+                Lock All Reports
+              </Button>
+
+              <Button
+                type="button"
+                variant={buttonVariant("summary")}
+                onClick={() => onBulkUpdateReportVisibility("summary")}
+                className={mobileButtonClass("summary")}
+              >
+                <Unlock className="mr-3 h-5 w-5" />
+                Release Summary
+              </Button>
+
+              <Button
+                type="button"
+                variant={buttonVariant("full")}
+                onClick={() => onBulkUpdateReportVisibility("full")}
+                className={mobileButtonClass("full")}
+              >
+                <Unlock className="mr-3 h-5 w-5" />
+                Release Full Review
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* DESKTOP REPORT RELEASE - OLD STYLE */}
+        <div className="relative z-10 mt-6 hidden rounded-2xl border border-white/10 bg-white/5 p-4 md:block">
           <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="font-semibold text-white">

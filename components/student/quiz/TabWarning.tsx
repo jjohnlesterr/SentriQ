@@ -1,9 +1,4 @@
-import {
-  AlertTriangle,
-  Clipboard,
-  ClipboardPaste,
-  Maximize,
-} from "lucide-react";
+import { AlertTriangle, Maximize } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -64,39 +59,6 @@ export default function TabWarning({
               Return to Fullscreen
             </Button>
           )}
-
-          {totalViolations > 0 && (
-            <div className="mt-3 grid gap-2 text-xs sm:grid-cols-2">
-              <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-                Tab Switches:{" "}
-                <span className="font-bold text-red-300">{tabWarnings}</span>
-              </div>
-
-              <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-                Fullscreen Exits:{" "}
-                <span className="font-bold text-orange-300">
-                  {fullscreenExits}
-                </span>
-              </div>
-
-              <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-                <Clipboard className="mr-1 inline h-3 w-3" />
-                Copy Attempts:{" "}
-                <span className="font-bold text-red-300">{copyAttempts}</span>
-              </div>
-
-              <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-                <ClipboardPaste className="mr-1 inline h-3 w-3" />
-                Paste Attempts:{" "}
-                <span className="font-bold text-red-300">{pasteAttempts}</span>
-              </div>
-            </div>
-          )}
-
-          <div className="mt-3 flex items-center gap-2 text-xs text-slate-400">
-            <Maximize className="h-3 w-3" />
-            Fullscreen mode is required during the quiz.
-          </div>
         </div>
       </div>
     </div>

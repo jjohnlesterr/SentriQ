@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import {
   ChevronDown,
+  Eye,
   FileText,
   LayoutDashboard,
   LogOut,
@@ -13,15 +14,19 @@ import { useRouter } from "next/navigation";
 
 import AppLogo from "@/components/shared/AppLogo";
 import { cn } from "@/lib/utils";
+import type { Quiz } from "@/lib/types";
+
+type ActivePage = "dashboard" | "quiz-builder" | "drafts" | "monitor";
 
 type Props = {
-  teacherName: string;
+  teacherName?: string;
+  quizzes?: Quiz[];
+  activePage?: ActivePage;
+  activeQuizId?: string;
   open?: boolean;
   onClose?: () => void;
   onLogout: () => void;
   onNewQuiz?: () => void;
-  onDrafts?: () => void;
-  activePage?: "dashboard" | "quiz-builder" | "drafts";
 };
 
 const mainNavButtonClass =
@@ -30,44 +35,67 @@ const mainNavButtonClass =
 const subNavButtonClass =
   "flex w-full items-center rounded-xl px-3 py-2 text-sm transition";
 
-export default function TeacherSidebar({
+export default function TeacherAppSidebar({
   teacherName,
+  quizzes = [],
+  activePage = "dashboard",
+  activeQuizId,
   open = false,
   onClose,
   onLogout,
   onNewQuiz,
-  onDrafts,
-  activePage = "dashboard",
 }: Props) {
   const router = useRouter();
 
   const isQuizActive =
     activePage === "quiz-builder" || activePage === "drafts";
 
+  const isMonitorActive = activePage === "monitor";
+
   const [builderOpen, setBuilderOpen] = useState(isQuizActive);
+  const [monitorOpen, setMonitorOpen] = useState(true);
+
+  const liveQuizzes = quizzes.filter((quiz) => quiz.published);
 
   useEffect(() => {
-    if (isQuizActive) setBuilderOpen(true);
+    if (isQuizActive) {
+      setBuilderOpen(true);
+    }
   }, [isQuizActive]);
 
-  function goDashboard() {
-    router.push("/teacher/dashboard");
+  useEffect(() => {
+    if (isMonitorActive) {
+      setMonitorOpen(true);
+    }
+  }, [isMonitorActive, activeQuizId]);
+
+  function closeSidebar() {
     onClose?.();
   }
 
-  function goDrafts() {
-    if (onDrafts) {
-      onDrafts();
-    } else {
-      router.push("/teacher/drafts");
-    }
+  function goDashboard() {
+    router.push("/teacher/dashboard");
+    closeSidebar();
+  }
 
-    onClose?.();
+  function goDrafts() {
+    router.push("/teacher/drafts");
+    closeSidebar();
   }
 
   function createNew() {
     onNewQuiz?.();
-    onClose?.();
+    closeSidebar();
+  }
+
+  function goMonitor(quizId: string) {
+    router.push(`/teacher/quiz/${quizId}/monitor`);
+    closeSidebar();
+  }
+
+  function handleLogout() {
+    onLogout();
+    closeSidebar();
   }
 
   return (
@@ -76,7 +104,7 @@ export default function TeacherSidebar({
         <button
           type="button"
           aria-label="Close sidebar overlay"
-          onClick={onClose}
+          onClick={closeSidebar}
           className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
         />
       )}
@@ -109,8 +137,8 @@ export default function TeacherSidebar({
             <button
               type="button"
               aria-label="Close sidebar"
-              onClick={onClose}
-              className="rounded-xl border border-white/10 bg-white/5 p-2 text-slate-300 hover:bg-white/10 hover:text-white lg:hidden"
+              onClick={closeSidebar}
+              className="rounded-xl border border-white/10 bg-white/5 p-2 text-slate-300 transition hover:bg-white/10 hover:text-white lg:hidden"
             >
               <X className="h-4 w-4" />
             </button>
@@ -193,6 +221,64 @@ export default function TeacherSidebar({
               </div>
             )}
           </div>
+
+          <div
+            className={cn(
+              "rounded-2xl p-2",
+              isMonitorActive
+                ? "border border-cyan-400/20 bg-cyan-500/10"
+                : "transition hover:bg-white/[0.03]"
+            )}
+          >
+            <button
+              type="button"
+              onClick={() => setMonitorOpen((prev) => !prev)}
+              className={cn(
+                "flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold transition",
+                isMonitorActive
+                  ? "text-white"
+                  : "text-slate-300 hover:text-white"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <Eye className="h-4 w-4" />
+                Live Monitor
+              </div>
+
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 transition",
+                  monitorOpen && "rotate-180"
+                )}
+              />
+            </button>
+
+            {monitorOpen && (
+              <div className="mt-2 max-h-56 space-y-1 overflow-y-auto pl-9 pr-1">
+                {liveQuizzes.length === 0 ? (
+                  <p className="rounded-xl px-3 py-2 text-xs text-slate-500">
+                    No published quizzes yet.
+                  </p>
+                ) : (
+                  liveQuizzes.map((quiz) => (
+                    <button
+                      key={quiz.id}
+                      type="button"
+                      onClick={() => goMonitor(quiz.id)}
+                      className={cn(
+                        subNavButtonClass,
+                        activeQuizId === quiz.id
+                          ? "bg-white/10 font-semibold text-white"
+                          : "font-medium text-cyan-200 hover:bg-white/10 hover:text-white"
+                      )}
+                    >
+                      <span className="truncate">{quiz.title}</span>
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
         </nav>
 
         <div className="mt-auto space-y-3">
@@ -213,7 +299,7 @@ export default function TeacherSidebar({
 
           <button
             type="button"
-            onClick={onLogout}
+            onClick={handleLogout}
             className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300 transition hover:bg-white/10 hover:text-white"
           >
             <LogOut className="h-4 w-4" />

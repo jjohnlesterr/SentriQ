@@ -221,7 +221,7 @@ export default function QuestionSidebar({
             data-add-question-trigger
             onClick={handleAddQuestion}
             disabled={!canAddQuestion}
-            className="h-11 w-full cursor-pointer rounded-2xl bg-white/5 text-violet-200 hover:bg-white/10 disabled:cursor-not-allowed disabled:bg-black/30 disabled:text-slate-500"
+            className="h-11 w-full cursor-pointer rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/10 hover:from-cyan-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:bg-black/30 disabled:from-black/30 disabled:to-black/30 disabled:text-slate-500"
           >
             <Plus className="h-4 w-4" />
             Add Question

@@ -7,10 +7,14 @@ import {
   approveSession,
   getQuizById,
   getQuizSessions,
+  getTeacherQuizzes,
   rejectSession,
   updateSessionReportVisibility,
 } from "@/lib/actions";
 import type { Quiz, QuizSession, ReportVisibility } from "@/lib/types";
+
+const TEACHER_ID = "demo-teacher";
+const TEACHER_NAME = "Teacher";
 
 const VIOLATION_TYPES = [
   "tab-left",
@@ -25,19 +29,25 @@ export function useTeacherMonitor() {
   const quizId = params.id as string;
 
   const [quiz, setQuiz] = useState<Quiz | null>(null);
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [sessions, setSessions] = useState<QuizSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [openSessionId, setOpenSessionId] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   async function loadData() {
     try {
-      const quizData = await getQuizById(quizId);
-      const sessionData = await getQuizSessions(quizId);
+      const [quizData, sessionData, teacherQuizzes] = await Promise.all([
+        getQuizById(quizId),
+        getQuizSessions(quizId),
+        getTeacherQuizzes(TEACHER_ID),
+      ]);
 
       setQuiz(quizData);
       setSessions(sessionData);
+      setQuizzes(teacherQuizzes);
       setLastUpdated(new Date());
     } finally {
       setIsLoading(false);
@@ -60,6 +70,26 @@ export function useTeacherMonitor() {
 
   function goBack() {
     router.push("/teacher/dashboard");
+  }
+
+  function goDashboard() {
+    router.push("/teacher/dashboard");
+  }
+
+  function goDrafts() {
+    router.push("/teacher/drafts");
+  }
+
+  function goNewQuiz() {
+    router.push("/teacher/quiz/new/builder");
+  }
+
+  function goMonitorQuiz(id: string) {
+    router.push(`/teacher/quiz/${id}/monitor`);
+  }
+
+  function logout() {
+    router.push("/teacher/login");
   }
 
   function toggleAutoRefresh() {
@@ -91,22 +121,6 @@ export function useTeacherMonitor() {
     );
   }
 
-  async function handleUpdateReportVisibility(
-    sessionId: string,
-    visibility: ReportVisibility
-  ) {
-    const updatedSession = await updateSessionReportVisibility(
-      sessionId,
-      visibility
-    );
-
-    setSessions((prev) =>
-      prev.map((session) =>
-        session.id === sessionId ? updatedSession : session
-      )
-    );
-  }
-
   async function handleBulkUpdateReportVisibility(
     visibility: ReportVisibility
   ) {
@@ -122,10 +136,7 @@ export function useTeacherMonitor() {
 
     setSessions((prev) =>
       prev.map((session) => {
-        const updated = updatedSessions.find(
-          (item) => item.id === session.id
-        );
-
+        const updated = updatedSessions.find((item) => item.id === session.id);
         return updated ?? session;
       })
     );
@@ -137,10 +148,6 @@ export function useTeacherMonitor() {
 
   const approvedSessions = sessions.filter(
     (session) => session.approvalStatus === "approved"
-  );
-
-  const rejectedSessions = sessions.filter(
-    (session) => session.approvalStatus === "rejected"
   );
 
   const inProgress = approvedSessions.filter(
@@ -170,37 +177,42 @@ export function useTeacherMonitor() {
           (session) => session.reportVisibility === "summary"
         )
       ? "summary"
-      : approvedSessions.every(
-          (session) => session.reportVisibility === "full"
-        )
+      : approvedSessions.every((session) => session.reportVisibility === "full")
       ? "full"
       : "mixed";
 
   return {
     quiz,
+    quizzes,
     sessions,
     pendingRequests,
     approvedSessions,
-    rejectedSessions,
     inProgress,
     completed,
     suspicious,
     selectedSession,
     reportVisibilityState,
 
+    teacherName: TEACHER_NAME,
     isLoading,
     autoRefresh,
     lastUpdated,
     openSessionId,
+    sidebarOpen,
 
     loadData,
     goBack,
+    goDashboard,
+    goDrafts,
+    goNewQuiz,
+    goMonitorQuiz,
+    logout,
     toggleAutoRefresh,
     formatTime,
     handleApproveSession,
     handleRejectSession,
-    handleUpdateReportVisibility,
     handleBulkUpdateReportVisibility,
     setOpenSessionId,
+    setSidebarOpen,
   };
 }
