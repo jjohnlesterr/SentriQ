@@ -1,6 +1,5 @@
 import { FileText } from "lucide-react";
 
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,19 +18,22 @@ export default function QuizDetailsForm({
   onDescriptionChange,
 }: Props) {
   return (
-    <Card className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-xl">
-      <div className="mb-5 flex items-center gap-3">
+    <section className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
+      <div className="mb-5 hidden items-center gap-3 sm:flex">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-500/10 text-cyan-300">
           <FileText className="h-5 w-5" />
         </div>
 
         <div className="min-w-0">
           <h2 className="text-lg font-bold text-white">Quiz Details</h2>
-
-          <p className="text-sm text-slate-400">
-            Set your quiz title and instructions.
+          <p className="text-sm text-slate-500">
+            Set the title and student instructions.
           </p>
         </div>
+      </div>
+
+      <div className="mb-4 sm:hidden">
+        <h2 className="text-base font-bold text-white">Quiz Details</h2>
       </div>
 
       <div className="space-y-4">
@@ -43,7 +45,7 @@ export default function QuizDetailsForm({
             value={title}
             onChange={(e) => onTitleChange(e.target.value)}
             placeholder="e.g. Chemistry Quiz"
-            className="h-11 rounded-xl bg-slate-950/40"
+            className="h-12 rounded-2xl border-white/10 bg-slate-950/40 px-4"
           />
         </div>
 
@@ -55,11 +57,11 @@ export default function QuizDetailsForm({
             value={description}
             onChange={(e) => onDescriptionChange(e.target.value)}
             placeholder="Add instructions for students"
-            rows={3}
-            className="min-h-[92px] resize-none rounded-xl bg-slate-950/40"
+            rows={4}
+            className="min-h-[132px] resize-none rounded-2xl border-white/10 bg-slate-950/40 px-4 py-3"
           />
         </div>
       </div>
-    </Card>
+    </section>
   );
 }
