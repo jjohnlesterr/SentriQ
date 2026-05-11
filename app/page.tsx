@@ -63,13 +63,13 @@ export default function LandingPage() {
         <SiteHeader />
 
         <main className="relative flex flex-1 overflow-hidden">
-          <div className="pointer-events-none absolute left-1/2 top-20 h-72 w-72 -translate-x-1/2 rounded-full bg-cyan-500/10 blur-3xl" />
-          <div className="pointer-events-none absolute right-16 top-44 h-80 w-80 rounded-full bg-violet-500/10 blur-3xl" />
+          <div className="pointer-events-none absolute left-1/2 top-16 h-72 w-72 -translate-x-1/2 rounded-full bg-cyan-500/10 blur-3xl" />
+          <div className="pointer-events-none absolute right-16 top-36 h-80 w-80 rounded-full bg-violet-500/10 blur-3xl" />
 
-          <section className="relative mx-auto flex w-full max-w-7xl flex-1 px-4 pb-12 pt-10 sm:px-6 sm:pb-14 sm:pt-12 md:px-10 md:pb-16 md:pt-14 lg:px-16 lg:pb-20 lg:pt-16">
-            <div className="flex w-full flex-col">
+          <section className="relative mx-auto flex w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 sm:py-9 md:px-10 md:py-10 lg:px-16 lg:py-12">
+            <div className="flex w-full flex-col justify-center">
               <div className="mx-auto max-w-5xl text-center">
-                <Badge className="mb-5 px-4 py-2 text-slate-300 sm:mb-6">
+                <Badge className="mb-4 px-4 py-2 text-slate-300">
                   <ShieldCheck className="h-4 w-4 text-cyan-300" />
                   Secure quiz monitoring for modern classrooms
                 </Badge>
@@ -80,10 +80,10 @@ export default function LandingPage() {
                   variant="hero"
                   align="center"
                   titleClassName="text-4xl sm:text-5xl md:text-6xl"
-                  descriptionClassName="mx-auto mt-2 max-w-2xl text-sm leading-6 sm:text-base md:mt-3 md:text-lg"
+                  descriptionClassName="mx-auto mt-2 max-w-2xl text-sm leading-6 sm:text-base md:text-lg"
                 />
 
-                <div className="mx-auto mt-7 grid max-w-md gap-3 md:hidden">
+                <div className="mx-auto mt-6 grid max-w-md gap-3 md:hidden">
                   {portals.map((portal) => (
                     <Button
                       key={portal.key}
@@ -100,8 +100,8 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <div className="relative mx-auto mt-9 hidden w-full max-w-5xl grid-cols-2 gap-5 md:grid lg:mt-10 xl:mt-11">
-                <div className="pointer-events-none absolute left-1/2 top-1/2 hidden h-px w-12 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-cyan-400/40 to-violet-400/40 lg:block" />
+              <div className="relative mx-auto mt-7 hidden w-full max-w-5xl grid-cols-2 gap-5 md:grid lg:mt-8">
+                <div className="pointer-events-none absolute left-1/2 top-1/2 hidden h-px w-10 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-cyan-400/40 to-violet-400/40 lg:block" />
 
                 {portals.map((portal) => (
                   <PortalCard
@@ -120,7 +120,7 @@ export default function LandingPage() {
                 ))}
               </div>
 
-              <div className="mx-auto mt-6 grid max-w-md gap-3 md:hidden">
+              <div className="mx-auto mt-5 grid max-w-md gap-3 md:hidden">
                 {portals.map((portal) => {
                   const Icon = portal.icon;
 
