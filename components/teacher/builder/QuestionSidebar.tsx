@@ -106,7 +106,7 @@ export default function QuestionSidebar({
               return (
                 <div
                   key={question.id}
-                  className={isMenuOpen ? "relative mb-36" : "relative"}
+                  className={`relative ${isMenuOpen ? "lg:mb-0 mb-36" : ""}`}
                 >
                   <button
                     type="button"

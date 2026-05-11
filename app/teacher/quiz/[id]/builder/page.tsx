@@ -265,20 +265,22 @@ export default function QuizBuilderPage() {
       </div>
 
       {/* Mobile selector only */}
-      <QuestionSidebar
-        questions={builder.questions}
-        activeQuestion={builder.activeQuestion}
-        canAddQuestion={builder.canAddQuestion}
-        mobileOpen={questionPanelOpen}
-        onMobileOpenChange={setQuestionPanelOpen}
-        onSelectQuestion={builder.setActiveQuestion}
-        onAddQuestion={builder.addQuestion}
-        onMoveQuestionUp={builder.moveQuestionUp}
-        onMoveQuestionDown={builder.moveQuestionDown}
-        onDuplicateQuestion={builder.duplicateQuestion}
-        onRemoveQuestion={builder.removeQuestion}
-        onReorderQuestions={builder.reorderQuestions}
-      />
+      <div className="lg:hidden">
+        <QuestionSidebar
+          questions={builder.questions}
+          activeQuestion={builder.activeQuestion}
+          canAddQuestion={builder.canAddQuestion}
+          mobileOpen={questionPanelOpen}
+          onMobileOpenChange={setQuestionPanelOpen}
+          onSelectQuestion={builder.setActiveQuestion}
+          onAddQuestion={builder.addQuestion}
+          onMoveQuestionUp={builder.moveQuestionUp}
+          onMoveQuestionDown={builder.moveQuestionDown}
+          onDuplicateQuestion={builder.duplicateQuestion}
+          onRemoveQuestion={builder.removeQuestion}
+          onReorderQuestions={builder.reorderQuestions}
+        />
+      </div>
 
       <CreateQuizDialog
         open={dialogOpen}
