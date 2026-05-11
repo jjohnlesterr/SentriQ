@@ -9,18 +9,18 @@ import {
   LogOut,
   X,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 import AppLogo from "@/components/shared/AppLogo";
 import { cn } from "@/lib/utils";
 
 type Props = {
-  teacherName: string;
+  teacherName?: string;
   open?: boolean;
   onClose?: () => void;
   onLogout: () => void;
-  onNewQuiz?: () => void;
-  onDrafts?: () => void;
+  onDashboard: () => void;
+  onDrafts: () => void;
+  onNewQuiz: () => void;
   activePage?: "dashboard" | "quiz-builder" | "drafts";
 };
 
@@ -30,17 +30,16 @@ const mainNavButtonClass =
 const subNavButtonClass =
   "flex w-full items-center rounded-xl px-3 py-2 text-sm transition";
 
-export default function TeacherSidebar({
+export default function QuizBuilderSidebar({
   teacherName,
   open = false,
   onClose,
   onLogout,
-  onNewQuiz,
+  onDashboard,
   onDrafts,
-  activePage = "dashboard",
+  onNewQuiz,
+  activePage = "quiz-builder",
 }: Props) {
-  const router = useRouter();
-
   const isQuizActive =
     activePage === "quiz-builder" || activePage === "drafts";
 
@@ -49,26 +48,6 @@ export default function TeacherSidebar({
   useEffect(() => {
     if (isQuizActive) setBuilderOpen(true);
   }, [isQuizActive]);
-
-  function goDashboard() {
-    router.push("/teacher/dashboard");
-    onClose?.();
-  }
-
-  function goDrafts() {
-    if (onDrafts) {
-      onDrafts();
-    } else {
-      router.push("/teacher/drafts");
-    }
-
-    onClose?.();
-  }
-
-  function createNew() {
-    onNewQuiz?.();
-    onClose?.();
-  }
 
   return (
     <>
@@ -120,7 +99,7 @@ export default function TeacherSidebar({
         <nav className="space-y-2">
           <button
             type="button"
-            onClick={goDashboard}
+            onClick={onDashboard}
             className={cn(
               mainNavButtonClass,
               activePage === "dashboard"
@@ -167,7 +146,7 @@ export default function TeacherSidebar({
               <div className="mt-2 space-y-1 pl-9">
                 <button
                   type="button"
-                  onClick={goDrafts}
+                  onClick={onDrafts}
                   className={cn(
                     subNavButtonClass,
                     activePage === "drafts"
@@ -180,7 +159,7 @@ export default function TeacherSidebar({
 
                 <button
                   type="button"
-                  onClick={createNew}
+                  onClick={onNewQuiz}
                   className={cn(
                     subNavButtonClass,
                     activePage === "quiz-builder"
