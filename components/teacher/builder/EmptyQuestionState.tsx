@@ -1,8 +1,13 @@
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, Plus } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
-export default function EmptyQuestionState() {
+type Props = {
+  onAddQuestion?: () => void;
+};
+
+export default function EmptyQuestionState({ onAddQuestion }: Props) {
   return (
     <Card className="flex min-h-[300px] items-center justify-center rounded-3xl border border-dashed border-white/10 bg-white/5 p-6 text-center shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl md:min-h-[420px] md:p-10">
       <div className="max-w-sm">
@@ -17,6 +22,17 @@ export default function EmptyQuestionState() {
         <p className="mt-2 text-sm leading-6 text-slate-400">
           Add your first question to start building this quiz.
         </p>
+
+        {onAddQuestion && (
+          <Button
+            type="button"
+            onClick={onAddQuestion}
+            className="mx-auto mt-6 h-11 rounded-2xl px-6"
+          >
+            <Plus className="h-4 w-4" />
+            Add First Question
+          </Button>
+        )}
       </div>
     </Card>
   );

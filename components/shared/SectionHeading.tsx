@@ -31,11 +31,12 @@ export default function SectionHeading({
   descriptionClassName,
 }: SectionHeadingProps) {
   const titleVariants = {
-    hero:
-      "bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-400 bg-clip-text text-5xl font-extrabold tracking-tight text-transparent md:text-7xl",
-    page:
-      "bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-400 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent md:text-4xl",
+    hero: "bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-400 bg-clip-text text-5xl font-extrabold tracking-tight text-transparent md:text-7xl",
+
+    page: "bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-400 bg-clip-text text-4xl font-extrabold tracking-tight text-transparent md:text-6xl",
+
     section: "text-3xl font-bold tracking-tight text-white md:text-4xl",
+
     card: "text-xl font-semibold text-white md:text-2xl",
   };
 
@@ -44,11 +45,20 @@ export default function SectionHeading({
       {badge && (
         <Badge
           className={cn(
-            "mb-4 border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-sm text-cyan-200",
-            badgeClassName
+            `
+            mb-4
+            border-cyan-400/20
+            bg-cyan-400/10
+            px-4
+            py-2
+            text-sm
+            text-cyan-200
+            `,
+            badgeClassName,
           )}
         >
           {Icon && <Icon className={cn("h-4 w-4", iconClassName)} />}
+
           {badge}
         </Badge>
       )}
@@ -58,9 +68,15 @@ export default function SectionHeading({
       {description && (
         <p
           className={cn(
-            "mt-3 max-w-2xl text-sm leading-6 text-slate-300 md:text-base",
-            align === "center" && "mx-auto",
-            descriptionClassName
+            `
+            mt-4
+            text-sm
+            leading-7
+            text-slate-300
+            md:text-lg
+            `,
+            align === "center" && "mx-auto max-w-3xl",
+            descriptionClassName,
           )}
         >
           {description}

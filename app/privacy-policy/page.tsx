@@ -1,6 +1,6 @@
 import MarketingPageShell from "@/components/layout/MarketingPageShell";
-import PageTitle from "@/components/marketing/PageTitle";
-import { Card } from "@/components/ui/card";
+import { GlassCard } from "@/components/shared/GlassCard";
+import SectionHeading from "@/components/shared/SectionHeading";
 
 const sections = [
   {
@@ -28,22 +28,25 @@ const sections = [
 export default function PrivacyPolicyPage() {
   return (
     <MarketingPageShell>
-      <PageTitle
-        eyebrow="Privacy Policy"
+      <SectionHeading
+        badge="Privacy Policy"
         title="How SentriQ handles information"
         description="This page explains the basic information SentriQ may collect and how it is used to support secure digital assessments."
+        variant="page"
+        align="center"
+        className="mx-auto mb-10 max-w-3xl md:mb-14"
       />
 
-      <Card className="mx-auto max-w-4xl rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl md:p-8">
+      <GlassCard className="mx-auto max-w-4xl p-6 md:p-8">
         <div className="space-y-7">
           {sections.map((section) => (
             <section key={section.title}>
-              <h2 className="text-xl font-bold text-white">
-                {section.title}
-              </h2>
-              <p className="mt-2 text-sm leading-7 text-slate-300">
-                {section.body}
-              </p>
+              <SectionHeading
+                title={section.title}
+                description={section.body}
+                variant="card"
+                descriptionClassName="mt-2 text-sm leading-7 text-slate-300 md:text-sm"
+              />
             </section>
           ))}
         </div>
@@ -51,7 +54,7 @@ export default function PrivacyPolicyPage() {
         <p className="mt-8 border-t border-white/10 pt-5 text-xs text-slate-500">
           Last updated: 2026
         </p>
-      </Card>
+      </GlassCard>
     </MarketingPageShell>
   );
 }

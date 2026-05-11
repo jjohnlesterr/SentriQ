@@ -96,8 +96,14 @@ export default function TeacherDashboardPage() {
 
   return (
     <PageShell>
-      <div className="flex min-h-screen">
-        <TeacherSidebar teacherName={teacherName} onLogout={handleLogout} />
+      <div className="min-h-screen lg:pl-64">
+        <TeacherSidebar
+          teacherName={teacherName}
+          onLogout={handleLogout}
+          onNewQuiz={() => setDialogOpen(true)}
+          onDrafts={() => router.push("/teacher/drafts")}
+          activePage="dashboard"
+        />
 
         {sidebarOpen && (
           <TeacherSidebar
@@ -105,10 +111,13 @@ export default function TeacherDashboardPage() {
             open={sidebarOpen}
             onClose={() => setSidebarOpen(false)}
             onLogout={handleLogout}
+            onNewQuiz={() => setDialogOpen(true)}
+            onDrafts={() => router.push("/teacher/drafts")}
+            activePage="dashboard"
           />
         )}
 
-        <main className="min-w-0 flex-1 px-4 py-5 sm:px-6 md:px-10 lg:px-8 xl:px-10">
+        <main className="min-w-0 px-4 py-5 sm:px-6 md:px-10 lg:px-8 xl:px-10">
           <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
             <DashboardHeader
               teacherName={teacherName}

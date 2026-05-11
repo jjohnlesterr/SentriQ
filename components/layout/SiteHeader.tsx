@@ -4,10 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
+import AppLogo from "@/components/shared/AppLogo";
 import { cn } from "@/lib/utils";
+import BurgerButton from "./BurgerButton";
 import DesktopNav from "./DesktopNav";
 import MobileMenu from "./MobileMenu";
-import BurgerButton from "./BurgerButton";
 
 type SiteHeaderProps = {
   className?: string;
@@ -20,7 +21,7 @@ export default function SiteHeader({ className }: SiteHeaderProps) {
     <header
       className={cn(
         "mx-auto w-full max-w-7xl px-4 pt-4 sm:px-6 md:px-10 lg:px-16",
-        className
+        className,
       )}
     >
       <nav className="relative rounded-3xl border border-white/10 bg-white/[0.03] px-4 py-3 shadow-[0_20px_80px_rgba(0,0,0,0.25)] backdrop-blur-xl md:px-6">
@@ -37,17 +38,12 @@ export default function SiteHeader({ className }: SiteHeaderProps) {
               />
             </div>
 
-            <span className="bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-400 bg-clip-text text-xl font-extrabold tracking-tight text-transparent sm:text-2xl">
-              SentriQ
-            </span>
+            <AppLogo className="text-xl tracking-tight sm:text-2xl" />
           </Link>
 
           <DesktopNav />
 
-          <BurgerButton
-            open={open}
-            onClick={() => setOpen((prev) => !prev)}
-          />
+          <BurgerButton open={open} onClick={() => setOpen((prev) => !prev)} />
         </div>
 
         <MobileMenu open={open} onClose={() => setOpen(false)} />

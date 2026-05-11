@@ -1,12 +1,14 @@
 import PageShell from "@/components/layout/PageShell";
-import SiteHeader from "@/components/layout/SiteHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
+import SiteHeader from "@/components/layout/SiteHeader";
 
 type Props = {
   children: React.ReactNode;
 };
 
-export default function MarketingPageShell({ children }: Props) {
+export default function MarketingPageShell({
+  children,
+}: Props) {
   return (
     <PageShell>
       <div className="flex min-h-screen flex-col">
