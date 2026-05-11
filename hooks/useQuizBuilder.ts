@@ -11,6 +11,13 @@ import {
 } from "@/lib/quiz-builder";
 import type { Question, QuestionType, Quiz } from "@/lib/types";
 
+function reorder<T>(items: T[], fromIndex: number, toIndex: number) {
+  const updated = [...items];
+  const [moved] = updated.splice(fromIndex, 1);
+  updated.splice(toIndex, 0, moved);
+  return updated;
+}
+
 export function useQuizBuilder() {
   const router = useRouter();
   const params = useParams();
@@ -130,19 +137,34 @@ export function useQuizBuilder() {
   function updateQuestion(index: number, updates: Partial<Question>) {
     setQuestions((prev) =>
       prev.map((question, questionIndex) =>
-        questionIndex === index
-          ? {
-              ...question,
-              ...updates,
-            }
-          : question
+        questionIndex === index ? { ...question, ...updates } : question
       )
     );
   }
 
+  function reorderQuestions(activeId: string, overId: string) {
+    if (activeId === overId) return;
+
+    setQuestions((prev) => {
+      const oldIndex = prev.findIndex((question) => question.id === activeId);
+      const newIndex = prev.findIndex((question) => question.id === overId);
+
+      if (oldIndex === -1 || newIndex === -1) return prev;
+
+      const activeQuestionId = prev[activeQuestion]?.id;
+      const updated = reorder(prev, oldIndex, newIndex);
+      const updatedActiveIndex = updated.findIndex(
+        (question) => question.id === activeQuestionId
+      );
+
+      setActiveQuestion(updatedActiveIndex === -1 ? 0 : updatedActiveIndex);
+
+      return updated;
+    });
+  }
+
   function handleChangeQuestionType(index: number, type: QuestionType) {
     const current = questions[index];
-
     if (!current) return;
 
     updateQuestion(index, getQuestionTypeDefaults(current, type));
@@ -165,78 +187,6 @@ export function useQuizBuilder() {
         };
       })
     );
-  }
-
-  function removeQuestion(index: number) {
-    setQuestions((prev) => {
-      const updated = prev.filter(
-        (_, questionIndex) => questionIndex !== index
-      );
-
-      setActiveQuestion((current) => {
-        if (updated.length === 0) return 0;
-        if (current >= updated.length) return updated.length - 1;
-        if (index <= current) return Math.max(0, current - 1);
-        return current;
-      });
-
-      return updated;
-    });
-  }
-
-  function moveQuestionUp(index: number) {
-    if (index <= 0) return;
-
-    setQuestions((prev) => {
-      const updated = [...prev];
-      const current = updated[index];
-      const previous = updated[index - 1];
-
-      updated[index - 1] = current;
-      updated[index] = previous;
-
-      return updated;
-    });
-
-    setActiveQuestion(index - 1);
-  }
-
-  function moveQuestionDown(index: number) {
-    if (index >= questions.length - 1) return;
-
-    setQuestions((prev) => {
-      const updated = [...prev];
-      const current = updated[index];
-      const next = updated[index + 1];
-
-      updated[index + 1] = current;
-      updated[index] = next;
-
-      return updated;
-    });
-
-    setActiveQuestion(index + 1);
-  }
-
-  function duplicateQuestion(index: number) {
-    const question = questions[index];
-
-    if (!question) return;
-
-    const duplicate: Question = {
-      ...question,
-      id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      text: question.text ? `${question.text} (Copy)` : "",
-      options: [...question.options],
-    };
-
-    setQuestions((prev) => {
-      const updated = [...prev];
-      updated.splice(index + 1, 0, duplicate);
-      return updated;
-    });
-
-    setActiveQuestion(index + 1);
   }
 
   function addOption(questionIndex: number) {
@@ -262,10 +212,13 @@ export function useQuizBuilder() {
           (_, currentOptionIndex) => currentOptionIndex !== optionIndex
         );
 
-        const updatedCorrectAnswer =
-          question.correctAnswer >= updatedOptions.length
-            ? updatedOptions.length - 1
-            : question.correctAnswer;
+        let updatedCorrectAnswer = question.correctAnswer;
+
+        if (optionIndex === question.correctAnswer) {
+          updatedCorrectAnswer = 0;
+        } else if (optionIndex < question.correctAnswer) {
+          updatedCorrectAnswer = question.correctAnswer - 1;
+        }
 
         return {
           ...question,
@@ -274,6 +227,141 @@ export function useQuizBuilder() {
         };
       })
     );
+  }
+
+  function moveOptionUp(questionIndex: number, optionIndex: number) {
+    if (optionIndex <= 0) return;
+
+    setQuestions((prev) =>
+      prev.map((question, index) => {
+        if (index !== questionIndex) return question;
+
+        const updatedOptions = reorder(
+          question.options,
+          optionIndex,
+          optionIndex - 1
+        );
+
+        let updatedCorrectAnswer = question.correctAnswer;
+
+        if (question.correctAnswer === optionIndex) {
+          updatedCorrectAnswer = optionIndex - 1;
+        } else if (question.correctAnswer === optionIndex - 1) {
+          updatedCorrectAnswer = optionIndex;
+        }
+
+        return {
+          ...question,
+          options: updatedOptions,
+          correctAnswer: updatedCorrectAnswer,
+        };
+      })
+    );
+  }
+
+  function moveOptionDown(questionIndex: number, optionIndex: number) {
+    const question = questions[questionIndex];
+    if (!question || optionIndex >= question.options.length - 1) return;
+
+    setQuestions((prev) =>
+      prev.map((item, index) => {
+        if (index !== questionIndex) return item;
+
+        const updatedOptions = reorder(
+          item.options,
+          optionIndex,
+          optionIndex + 1
+        );
+
+        let updatedCorrectAnswer = item.correctAnswer;
+
+        if (item.correctAnswer === optionIndex) {
+          updatedCorrectAnswer = optionIndex + 1;
+        } else if (item.correctAnswer === optionIndex + 1) {
+          updatedCorrectAnswer = optionIndex;
+        }
+
+        return {
+          ...item,
+          options: updatedOptions,
+          correctAnswer: updatedCorrectAnswer,
+        };
+      })
+    );
+  }
+
+  function duplicateOption(questionIndex: number, optionIndex: number) {
+    setQuestions((prev) =>
+      prev.map((question, index) => {
+        if (index !== questionIndex) return question;
+        if (question.options.length >= 10) return question;
+
+        const option = question.options[optionIndex] || "";
+        const updatedOptions = [...question.options];
+
+        updatedOptions.splice(
+          optionIndex + 1,
+          0,
+          option ? `${option} Copy` : ""
+        );
+
+        return {
+          ...question,
+          options: updatedOptions,
+        };
+      })
+    );
+  }
+
+  function removeQuestion(index: number) {
+    setQuestions((prev) => {
+      const updated = prev.filter(
+        (_, questionIndex) => questionIndex !== index
+      );
+
+      setActiveQuestion((current) => {
+        if (updated.length === 0) return 0;
+        if (current >= updated.length) return updated.length - 1;
+        if (index <= current) return Math.max(0, current - 1);
+        return current;
+      });
+
+      return updated;
+    });
+  }
+
+  function moveQuestionUp(index: number) {
+    if (index <= 0) return;
+
+    setQuestions((prev) => reorder(prev, index, index - 1));
+    setActiveQuestion(index - 1);
+  }
+
+  function moveQuestionDown(index: number) {
+    if (index >= questions.length - 1) return;
+
+    setQuestions((prev) => reorder(prev, index, index + 1));
+    setActiveQuestion(index + 1);
+  }
+
+  function duplicateQuestion(index: number) {
+    const question = questions[index];
+    if (!question) return;
+
+    const duplicate: Question = {
+      ...question,
+      id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      text: question.text ? `${question.text} (Copy)` : "",
+      options: [...question.options],
+    };
+
+    setQuestions((prev) => {
+      const updated = [...prev];
+      updated.splice(index + 1, 0, duplicate);
+      return updated;
+    });
+
+    setActiveQuestion(index + 1);
   }
 
   async function handleCopyCode() {
@@ -314,14 +402,18 @@ export function useQuizBuilder() {
     handlePublishQuiz,
     addQuestion,
     updateQuestion,
+    reorderQuestions,
     handleChangeQuestionType,
     updateOption,
+    addOption,
+    removeOption,
+    moveOptionUp,
+    moveOptionDown,
+    duplicateOption,
     removeQuestion,
     moveQuestionUp,
     moveQuestionDown,
     duplicateQuestion,
-    addOption,
-    removeOption,
     handleCopyCode,
     goBack,
     goToMonitor,
