@@ -3,12 +3,19 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
-import { getQuizById, publishQuiz, updateQuiz } from "@/lib/actions";
+import {
+  getQuizById,
+  getTeacherQuizzes,
+  publishQuiz,
+  updateQuiz,
+} from "@/lib/actions";
+
 import {
   createEmptyQuestion,
   getQuestionTypeDefaults,
   isQuestionComplete,
 } from "@/lib/quiz-builder";
+
 import type { Question, QuestionType, Quiz } from "@/lib/types";
 
 function reorder<T>(items: T[], fromIndex: number, toIndex: number) {
@@ -24,6 +31,9 @@ export function useQuizBuilder() {
   const quizId = params.id as string;
 
   const [quiz, setQuiz] = useState<Quiz | null>(null);
+
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -37,7 +47,12 @@ export function useQuizBuilder() {
   useEffect(() => {
     async function loadQuiz() {
       try {
-        const data = await getQuizById(quizId);
+        const teacherId = sessionStorage.getItem("teacherId");
+
+        const [data, teacherQuizzes] = await Promise.all([
+          getQuizById(quizId),
+          teacherId ? getTeacherQuizzes(teacherId) : Promise.resolve([]),
+        ]);
 
         if (!data) {
           router.push("/teacher/dashboard");
@@ -45,8 +60,11 @@ export function useQuizBuilder() {
         }
 
         setQuiz(data);
+        setQuizzes(teacherQuizzes);
+
         setTitle(data.title);
         setDescription(data.description);
+
         setQuestions(
           data.questions.map((question) => ({
             ...question,
@@ -74,8 +92,15 @@ export function useQuizBuilder() {
     setIsSaving(true);
 
     try {
-      const updated = await updateQuiz(quizId, title, description, questions);
+      const updated = await updateQuiz(
+        quizId,
+        title,
+        description,
+        questions
+      );
+
       setQuiz(updated);
+
       alert("Draft saved successfully.");
     } catch {
       alert("Failed to save draft.");
@@ -101,7 +126,9 @@ export function useQuizBuilder() {
 
     if (incompleteQuestionIndex !== -1) {
       setActiveQuestion(incompleteQuestionIndex);
+
       alert(`Please complete Question ${incompleteQuestionIndex + 1}.`);
+
       return;
     }
 
@@ -109,9 +136,19 @@ export function useQuizBuilder() {
 
     try {
       await updateQuiz(quizId, title, description, questions);
+
       const published = await publishQuiz(quizId);
 
       setQuiz(published);
+
+      const teacherId = sessionStorage.getItem("teacherId");
+
+      if (teacherId) {
+        const updatedQuizzes = await getTeacherQuizzes(teacherId);
+
+        setQuizzes(updatedQuizzes);
+      }
+
       setShowCodeDialog(true);
     } catch {
       alert("Failed to publish quiz.");
@@ -130,6 +167,7 @@ export function useQuizBuilder() {
 
     setQuestions((prev) => {
       setActiveQuestion(prev.length);
+
       return [...prev, newQuestion];
     });
   }
@@ -147,12 +185,15 @@ export function useQuizBuilder() {
 
     setQuestions((prev) => {
       const oldIndex = prev.findIndex((question) => question.id === activeId);
+
       const newIndex = prev.findIndex((question) => question.id === overId);
 
       if (oldIndex === -1 || newIndex === -1) return prev;
 
       const activeQuestionId = prev[activeQuestion]?.id;
+
       const updated = reorder(prev, oldIndex, newIndex);
+
       const updatedActiveIndex = updated.findIndex(
         (question) => question.id === activeQuestionId
       );
@@ -165,6 +206,7 @@ export function useQuizBuilder() {
 
   function handleChangeQuestionType(index: number, type: QuestionType) {
     const current = questions[index];
+
     if (!current) return;
 
     updateQuestion(index, getQuestionTypeDefaults(current, type));
@@ -206,6 +248,7 @@ export function useQuizBuilder() {
     setQuestions((prev) =>
       prev.map((question, index) => {
         if (index !== questionIndex) return question;
+
         if (question.options.length <= 2) return question;
 
         const updatedOptions = question.options.filter(
@@ -261,6 +304,7 @@ export function useQuizBuilder() {
 
   function moveOptionDown(questionIndex: number, optionIndex: number) {
     const question = questions[questionIndex];
+
     if (!question || optionIndex >= question.options.length - 1) return;
 
     setQuestions((prev) =>
@@ -294,9 +338,11 @@ export function useQuizBuilder() {
     setQuestions((prev) =>
       prev.map((question, index) => {
         if (index !== questionIndex) return question;
+
         if (question.options.length >= 10) return question;
 
         const option = question.options[optionIndex] || "";
+
         const updatedOptions = [...question.options];
 
         updatedOptions.splice(
@@ -321,8 +367,11 @@ export function useQuizBuilder() {
 
       setActiveQuestion((current) => {
         if (updated.length === 0) return 0;
+
         if (current >= updated.length) return updated.length - 1;
+
         if (index <= current) return Math.max(0, current - 1);
+
         return current;
       });
 
@@ -334,6 +383,7 @@ export function useQuizBuilder() {
     if (index <= 0) return;
 
     setQuestions((prev) => reorder(prev, index, index - 1));
+
     setActiveQuestion(index - 1);
   }
 
@@ -341,11 +391,13 @@ export function useQuizBuilder() {
     if (index >= questions.length - 1) return;
 
     setQuestions((prev) => reorder(prev, index, index + 1));
+
     setActiveQuestion(index + 1);
   }
 
   function duplicateQuestion(index: number) {
     const question = questions[index];
+
     if (!question) return;
 
     const duplicate: Question = {
@@ -357,7 +409,9 @@ export function useQuizBuilder() {
 
     setQuestions((prev) => {
       const updated = [...prev];
+
       updated.splice(index + 1, 0, duplicate);
+
       return updated;
     });
 
@@ -368,6 +422,7 @@ export function useQuizBuilder() {
     if (!quiz?.code) return;
 
     await navigator.clipboard.writeText(quiz.code);
+
     alert("Quiz code copied.");
   }
 
@@ -381,6 +436,8 @@ export function useQuizBuilder() {
 
   return {
     quiz,
+    quizzes,
+
     title,
     description,
     questions,

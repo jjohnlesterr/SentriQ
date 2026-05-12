@@ -56,7 +56,7 @@ export default function QuizBuilderPage() {
       const quiz = await createQuiz(
         newQuizTitle.trim(),
         newQuizDescription.trim(),
-        teacherId
+        teacherId,
       );
 
       setNewQuizTitle("");
@@ -86,7 +86,7 @@ export default function QuizBuilderPage() {
 
     if (hasUnsavedChanges) {
       const confirmed = window.confirm(
-        "Do you want to discard your current quiz progress?"
+        "Do you want to discard your current quiz progress?",
       );
 
       if (!confirmed) return;
@@ -135,6 +135,8 @@ export default function QuizBuilderPage() {
     <PageShell>
       <TeacherAppSidebar
         teacherName={teacherName}
+        quizzes={builder.quizzes}
+        activeQuizId={builder.quiz?.id}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         onLogout={handleLogout}

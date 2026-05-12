@@ -81,7 +81,7 @@ export function useTeacherMonitor() {
   }
 
   function goNewQuiz() {
-    router.push("/teacher/quiz/new/builder");
+    router.push("/teacher/dashboard?create=true");
   }
 
   function goMonitorQuiz(id: string) {
