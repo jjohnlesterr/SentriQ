@@ -7,8 +7,7 @@ import {
   Users,
 } from "lucide-react";
 
-import MarketingPageShell from "@/components/layout/MarketingPageShell";
-import { GlassCard } from "@/components/shared/GlassCard";
+import FeatureCard from "@/components/marketing/features/FeatureCard";
 import SectionHeading from "@/components/shared/SectionHeading";
 
 const features = [
@@ -50,9 +49,9 @@ const features = [
   },
 ];
 
-export default function FeaturesPage() {
+export default function FeaturesGrid() {
   return (
-    <MarketingPageShell>
+    <>
       <SectionHeading
         badge="Features"
         title="Tools for secure digital assessments"
@@ -64,20 +63,9 @@ export default function FeaturesPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {features.map((feature) => (
-          <GlassCard key={feature.title} className="p-6">
-            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-500/10 text-cyan-300">
-              <feature.icon className="h-6 w-6" />
-            </div>
-
-            <SectionHeading
-              title={feature.title}
-              description={feature.description}
-              variant="card"
-              descriptionClassName="mt-3 text-sm leading-6 text-slate-300 md:text-sm"
-            />
-          </GlassCard>
+          <FeatureCard key={feature.title} {...feature} />
         ))}
       </div>
-    </MarketingPageShell>
+    </>
   );
 }

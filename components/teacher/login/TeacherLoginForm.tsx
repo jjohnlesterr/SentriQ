@@ -8,6 +8,7 @@ import SectionHeading from "@/components/shared/SectionHeading";
 import { GlassCard } from "@/components/shared/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { setTeacherSession } from "@/lib/auth/teacher-session";
 
 export default function TeacherLoginForm() {
   const router = useRouter();
@@ -19,8 +20,10 @@ export default function TeacherLoginForm() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    sessionStorage.setItem("teacherId", "demo-teacher");
-    sessionStorage.setItem("teacherName", email || "Teacher");
+    setTeacherSession({
+      id: "demo-teacher",
+      name: email || "Teacher",
+    });
 
     router.push("/teacher/dashboard");
   }

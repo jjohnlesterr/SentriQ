@@ -5,8 +5,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-import MarketingPageShell from "@/components/layout/MarketingPageShell";
-import { GlassCard } from "@/components/shared/GlassCard";
+import StepCard from "@/components/marketing/how-it-works/StepCard";
 import SectionHeading from "@/components/shared/SectionHeading";
 
 const steps = [
@@ -36,9 +35,9 @@ const steps = [
   },
 ];
 
-export default function HowItWorksPage() {
+export default function HowItWorksSteps() {
   return (
-    <MarketingPageShell>
+    <>
       <SectionHeading
         badge="How It Works"
         title="A simple flow for secure digital assessments"
@@ -50,26 +49,9 @@ export default function HowItWorksPage() {
 
       <div className="grid gap-5 md:grid-cols-2">
         {steps.map((step, index) => (
-          <GlassCard key={step.title} className="p-6 md:p-8">
-            <div className="mb-5 flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-500/10 text-cyan-300">
-                <step.icon className="h-6 w-6" />
-              </div>
-
-              <span className="text-sm font-semibold text-slate-500">
-                Step {index + 1}
-              </span>
-            </div>
-
-            <SectionHeading
-              title={step.title}
-              description={step.description}
-              variant="card"
-              descriptionClassName="mt-3 text-sm leading-7 text-slate-300 md:text-sm"
-            />
-          </GlassCard>
+          <StepCard key={step.title} index={index} {...step} />
         ))}
       </div>
-    </MarketingPageShell>
+    </>
   );
 }

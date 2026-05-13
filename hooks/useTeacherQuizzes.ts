@@ -4,6 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { createQuiz, deleteQuiz, getTeacherQuizzes } from "@/lib/actions";
+import {
+  clearTeacherSession,
+  getTeacherSession,
+} from "@/lib/auth/teacher-session";
 import type { Quiz } from "@/lib/types";
 
 export function useTeacherQuizzes() {
@@ -13,11 +17,6 @@ export function useTeacherQuizzes() {
   const [teacherName, setTeacherName] = useState("Teacher");
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-  const [newQuizTitle, setNewQuizTitle] = useState("");
-  const [newQuizDescription, setNewQuizDescription] = useState("");
 
   const publishedQuizzes = useMemo(
     () => quizzes.filter((quiz) => quiz.published),
@@ -30,17 +29,16 @@ export function useTeacherQuizzes() {
   );
 
   useEffect(() => {
-    const storedTeacherId = sessionStorage.getItem("teacherId");
-    const storedTeacherName = sessionStorage.getItem("teacherName");
+    const session = getTeacherSession();
 
-    if (!storedTeacherId) {
+    if (!session) {
       router.push("/teacher/login");
       return;
     }
 
-    setTeacherId(storedTeacherId);
-    setTeacherName(storedTeacherName || "Teacher");
-    loadQuizzes(storedTeacherId);
+    setTeacherId(session.id);
+    setTeacherName(session.name);
+    loadQuizzes(session.id);
   }, [router]);
 
   async function loadQuizzes(id = teacherId) {
@@ -56,32 +54,16 @@ export function useTeacherQuizzes() {
     }
   }
 
-  async function handleCreateQuiz() {
-    if (!newQuizTitle.trim() || !teacherId) {
-      alert("Quiz title is required.");
+  async function createNewQuiz(title: string, description: string) {
+    if (!teacherId) {
+      alert("Teacher session not found.");
       return;
     }
 
-    setIsCreating(true);
+    const quiz = await createQuiz(title, description, teacherId);
 
-    try {
-      const quiz = await createQuiz(
-        newQuizTitle.trim(),
-        newQuizDescription.trim(),
-        teacherId
-      );
-
-      setQuizzes((prev) => [...prev, quiz]);
-      setNewQuizTitle("");
-      setNewQuizDescription("");
-      setDialogOpen(false);
-
-      router.push(`/teacher/quiz/${quiz.id}/builder`);
-    } catch {
-      alert("Failed to create quiz.");
-    } finally {
-      setIsCreating(false);
-    }
+    setQuizzes((prev) => [...prev, quiz]);
+    router.push(`/teacher/quiz/${quiz.id}/builder`);
   }
 
   async function handleDeleteQuiz(quizId: string) {
@@ -100,17 +82,8 @@ export function useTeacherQuizzes() {
   }
 
   function handleLogout() {
-    sessionStorage.removeItem("teacherId");
-    sessionStorage.removeItem("teacherName");
+    clearTeacherSession();
     router.push("/");
-  }
-
-  function openCreateDialog() {
-    setDialogOpen(true);
-  }
-
-  function closeCreateDialog() {
-    setDialogOpen(false);
   }
 
   return {
@@ -121,19 +94,8 @@ export function useTeacherQuizzes() {
     draftQuizzes,
     isLoading,
 
-    dialogOpen,
-    setDialogOpen,
-    openCreateDialog,
-    closeCreateDialog,
-
-    isCreating,
-    newQuizTitle,
-    newQuizDescription,
-    setNewQuizTitle,
-    setNewQuizDescription,
-
     loadQuizzes,
-    handleCreateQuiz,
+    createNewQuiz,
     handleDeleteQuiz,
     handleLogout,
   };

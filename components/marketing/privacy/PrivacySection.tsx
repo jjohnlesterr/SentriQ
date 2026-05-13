@@ -1,4 +1,3 @@
-import MarketingPageShell from "@/components/layout/MarketingPageShell";
 import { GlassCard } from "@/components/shared/GlassCard";
 import SectionHeading from "@/components/shared/SectionHeading";
 
@@ -25,9 +24,9 @@ const sections = [
   },
 ];
 
-export default function PrivacyPolicyPage() {
+export default function PrivacySection() {
   return (
-    <MarketingPageShell>
+    <>
       <SectionHeading
         badge="Privacy Policy"
         title="How SentriQ handles information"
@@ -55,6 +54,6 @@ export default function PrivacyPolicyPage() {
           Last updated: 2026
         </p>
       </GlassCard>
-    </MarketingPageShell>
+    </>
   );
 }

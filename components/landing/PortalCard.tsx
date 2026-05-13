@@ -1,6 +1,6 @@
 "use client";
 
-import { LucideIcon, ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, Loader2, LucideIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -58,8 +58,8 @@ export default function PortalCard({
             type="button"
             variant={variant}
             onClick={onClick}
-            className="mt-5 h-11 w-full cursor-pointer text-xs transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed sm:text-sm md:mt-8 md:h-12 md:text-base"
             disabled={disabled}
+            className="mt-5 h-11 w-full cursor-pointer text-xs transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed sm:text-sm md:mt-8 md:h-12 md:text-base"
           >
             {loading ? (
               <>

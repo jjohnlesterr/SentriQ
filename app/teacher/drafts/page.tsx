@@ -1,63 +1,59 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
 
-import PageShell from "@/components/layout/PageShell";
-import TeacherAppSidebar from "@/components/layout/sidebar/TeacherAppSidebar";
-import { Card } from "@/components/ui/card";
+import TeacherPageLayout from "@/components/layout/TeacherPageLayout";
+import PageLoader from "@/components/shared/PageLoader";
+
 import DraftHeader from "@/components/teacher/draft/DraftHeader";
 import QuizList from "@/components/teacher/dashboard/QuizList";
 import CreateQuizDialog from "@/components/teacher/dashboard/CreateQuizDialog";
+
+import { useCreateQuizDialog } from "@/hooks/teacher/useCreateQuizDialog";
 import { useTeacherQuizzes } from "@/hooks/useTeacherQuizzes";
 
 export default function TeacherDraftsPage() {
   const teacher = useTeacherQuizzes();
 
+  const createDialog = useCreateQuizDialog(teacher.createNewQuiz);
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <PageShell>
-      <div className="min-h-screen lg:pl-64">
-        <TeacherAppSidebar
-          teacherName={teacher.teacherName}
-          quizzes={teacher.quizzes}
-          open={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-          onLogout={teacher.handleLogout}
-          onNewQuiz={() => {
-            teacher.openCreateDialog();
-            setSidebarOpen(false);
-          }}
-          activePage="drafts"
-        />
-
+    <TeacherPageLayout
+      teacherName={teacher.teacherName}
+      quizzes={teacher.quizzes}
+      activePage="drafts"
+      sidebarOpen={sidebarOpen}
+      onCloseSidebar={() => setSidebarOpen(false)}
+      onLogout={teacher.handleLogout}
+      onNewQuiz={() => {
+        createDialog.setOpen(true);
+        setSidebarOpen(false);
+      }}
+    >
+      <div className="min-h-screen">
         <main className="min-w-0 px-4 py-5 sm:px-6 md:px-10 lg:px-8 xl:px-10">
           <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
             <DraftHeader onOpenSidebar={() => setSidebarOpen(true)} />
 
             <div className="w-full md:mt-[3.25rem] md:w-auto">
               <CreateQuizDialog
-                open={teacher.dialogOpen}
-                onOpenChange={teacher.setDialogOpen}
-                title={teacher.newQuizTitle}
-                description={teacher.newQuizDescription}
-                isCreating={teacher.isCreating}
-                onTitleChange={teacher.setNewQuizTitle}
-                onDescriptionChange={teacher.setNewQuizDescription}
-                onCreate={teacher.handleCreateQuiz}
+                open={createDialog.open}
+                onOpenChange={createDialog.setOpen}
+                title={createDialog.title}
+                description={createDialog.description}
+                isCreating={createDialog.isCreating}
+                onTitleChange={createDialog.setTitle}
+                onDescriptionChange={createDialog.setDescription}
+                onCreate={createDialog.handleCreateQuiz}
               />
             </div>
           </div>
 
           <div className="mt-7 md:mt-8">
             {teacher.isLoading ? (
-              <Card className="rounded-3xl border border-white/10 bg-white/5 p-8 text-center backdrop-blur-xl md:p-12">
-                <div className="flex items-center justify-center gap-3 text-slate-300">
-                  <Loader2 className="h-5 w-5 animate-spin text-cyan-300" />
-                  Loading drafts...
-                </div>
-              </Card>
+              <PageLoader label="Loading drafts..." variant="card" />
             ) : (
               <QuizList
                 items={teacher.draftQuizzes}
@@ -67,6 +63,6 @@ export default function TeacherDraftsPage() {
           </div>
         </main>
       </div>
-    </PageShell>
+    </TeacherPageLayout>
   );
 }

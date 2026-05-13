@@ -2,20 +2,24 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
 
 import PageShell from "@/components/layout/PageShell";
 import TeacherAppSidebar from "@/components/layout/sidebar/TeacherAppSidebar";
+import PageLoader from "@/components/shared/PageLoader";
 import BuilderHeader from "@/components/teacher/builder/BuilderHeader";
-import QuizDetailsForm from "@/components/teacher/builder/QuizDetailsForm";
-import QuestionSidebar from "@/components/teacher/builder/QuestionSidebar";
-import QuestionEditor from "@/components/teacher/builder/QuestionEditor";
-import EmptyQuestionState from "@/components/teacher/builder/EmptyQuestionState";
 import PublishCodeDialog from "@/components/teacher/builder/PublishCodeDialog";
 import CreateQuizDialog from "@/components/teacher/dashboard/CreateQuizDialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import BuilderDesktopLayout from "@/components/teacher/builder/layout/BuilderDesktopLayout";
+import BuilderEditorContent from "@/components/teacher/builder/layout/BuilderEditorContent";
+import BuilderMobileLayout from "@/components/teacher/builder/layout/BuilderMobileLayout";
+
 import { createQuiz } from "@/lib/actions";
-import { useQuizBuilder } from "@/hooks/useQuizBuilder";
+import {
+  clearTeacherSession,
+  getTeacherSession,
+} from "@/lib/auth/teacher-session";
+import { useQuizBuilder } from "@/hooks/builder/useQuizBuilder";
+import { useCreateQuizDialog } from "@/hooks/teacher/useCreateQuizDialog";
 
 export default function QuizBuilderPage() {
   const router = useRouter();
@@ -26,55 +30,32 @@ export default function QuizBuilderPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [questionPanelOpen, setQuestionPanelOpen] = useState(false);
 
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-  const [newQuizTitle, setNewQuizTitle] = useState("");
-  const [newQuizDescription, setNewQuizDescription] = useState("");
+  const createDialog = useCreateQuizDialog(async (title, description) => {
+    if (!teacherId) {
+      alert("Teacher session not found.");
+      return;
+    }
+
+    const quiz = await createQuiz(title, description, teacherId);
+
+    setSidebarOpen(false);
+    router.push(`/teacher/quiz/${quiz.id}/builder`);
+  });
 
   useEffect(() => {
-    const storedTeacherId = sessionStorage.getItem("teacherId");
-    const storedTeacherName = sessionStorage.getItem("teacherName");
+    const session = getTeacherSession();
 
-    if (!storedTeacherId) {
+    if (!session) {
       router.push("/teacher/login");
       return;
     }
 
-    setTeacherId(storedTeacherId);
-    setTeacherName(storedTeacherName || "Teacher");
+    setTeacherId(session.id);
+    setTeacherName(session.name);
   }, [router]);
 
-  async function handleCreateQuiz() {
-    if (!newQuizTitle.trim() || !teacherId) {
-      alert("Quiz title is required.");
-      return;
-    }
-
-    setIsCreating(true);
-
-    try {
-      const quiz = await createQuiz(
-        newQuizTitle.trim(),
-        newQuizDescription.trim(),
-        teacherId,
-      );
-
-      setNewQuizTitle("");
-      setNewQuizDescription("");
-      setDialogOpen(false);
-      setSidebarOpen(false);
-
-      router.push(`/teacher/quiz/${quiz.id}/builder`);
-    } catch {
-      alert("Failed to create quiz.");
-    } finally {
-      setIsCreating(false);
-    }
-  }
-
   function handleLogout() {
-    sessionStorage.removeItem("teacherId");
-    sessionStorage.removeItem("teacherName");
+    clearTeacherSession();
     router.push("/");
   }
 
@@ -92,44 +73,24 @@ export default function QuizBuilderPage() {
       if (!confirmed) return;
     }
 
-    setDialogOpen(true);
+    createDialog.setOpen(true);
     setSidebarOpen(false);
   }
 
   if (builder.isLoading) {
     return (
       <PageShell>
-        <div className="flex min-h-screen items-center justify-center px-4">
-          <div className="inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-slate-200 backdrop-blur-md">
-            <Loader2 className="h-5 w-5 animate-spin text-blue-300" />
-            Loading quiz...
-          </div>
-        </div>
+        <PageLoader label="Loading quiz builder..." />
       </PageShell>
     );
   }
 
-  const editorContent =
-    builder.questions.length > 0 && builder.currentQuestion ? (
-      <QuestionEditor
-        question={builder.currentQuestion}
-        questions={builder.questions}
-        activeQuestion={builder.activeQuestion}
-        onSelectQuestion={builder.setActiveQuestion}
-        onOpenQuestionSelector={() => setQuestionPanelOpen(true)}
-        onRemoveQuestion={builder.removeQuestion}
-        onUpdateQuestion={builder.updateQuestion}
-        onChangeQuestionType={builder.handleChangeQuestionType}
-        onUpdateOption={builder.updateOption}
-        onAddOption={builder.addOption}
-        onRemoveOption={builder.removeOption}
-        onMoveOptionUp={builder.moveOptionUp}
-        onMoveOptionDown={builder.moveOptionDown}
-        onDuplicateOption={builder.duplicateOption}
-      />
-    ) : (
-      <EmptyQuestionState onAddQuestion={builder.addQuestion} />
-    );
+  const editorContent = (
+    <BuilderEditorContent
+      builder={builder}
+      onOpenQuestionSelector={() => setQuestionPanelOpen(true)}
+    />
+  );
 
   return (
     <PageShell>
@@ -158,119 +119,29 @@ export default function QuizBuilderPage() {
             onOpenSidebar={() => setSidebarOpen(true)}
           />
 
-          <div className="mt-5 lg:hidden">
-            <Tabs defaultValue="questions" className="w-full">
-              <TabsList className="grid h-auto w-full grid-cols-2 rounded-2xl border border-white/10 bg-white/[0.04] p-1 backdrop-blur-xl">
-                <TabsTrigger
-                  value="details"
-                  className="rounded-xl px-3 py-2.5 text-xs sm:text-sm"
-                >
-                  Details
-                </TabsTrigger>
+          <BuilderMobileLayout
+            builder={builder}
+            questionPanelOpen={questionPanelOpen}
+            onQuestionPanelOpenChange={setQuestionPanelOpen}
+          >
+            {editorContent}
+          </BuilderMobileLayout>
 
-                <TabsTrigger
-                  value="questions"
-                  className="rounded-xl px-3 py-2.5 text-xs sm:text-sm"
-                >
-                  Questions
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="details" className="mt-4">
-                <QuizDetailsForm
-                  title={builder.title}
-                  description={builder.description}
-                  onTitleChange={builder.setTitle}
-                  onDescriptionChange={builder.setDescription}
-                />
-              </TabsContent>
-
-              <TabsContent value="questions" className="mt-4">
-                {editorContent}
-              </TabsContent>
-            </Tabs>
-          </div>
-
-          <div className="mt-5 hidden gap-5 lg:grid lg:grid-cols-[340px_minmax(0,1fr)] xl:grid-cols-[360px_minmax(0,1fr)]">
-            <aside className="min-w-0">
-              <div className="sticky top-4 space-y-4">
-                <Tabs defaultValue="questions" className="w-full">
-                  <TabsList className="grid h-auto w-full grid-cols-2 rounded-2xl border border-white/10 bg-white/[0.04] p-1 backdrop-blur-xl">
-                    <TabsTrigger
-                      value="details"
-                      className="rounded-xl px-3 py-2.5 text-xs sm:text-sm"
-                    >
-                      Details
-                    </TabsTrigger>
-
-                    <TabsTrigger
-                      value="questions"
-                      className="rounded-xl px-3 py-2.5 text-xs sm:text-sm"
-                    >
-                      Questions
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="details" className="mt-4">
-                    <QuizDetailsForm
-                      title={builder.title}
-                      description={builder.description}
-                      onTitleChange={builder.setTitle}
-                      onDescriptionChange={builder.setDescription}
-                    />
-                  </TabsContent>
-
-                  <TabsContent value="questions" className="mt-4">
-                    <QuestionSidebar
-                      questions={builder.questions}
-                      activeQuestion={builder.activeQuestion}
-                      canAddQuestion={builder.canAddQuestion}
-                      mobileOpen={questionPanelOpen}
-                      onMobileOpenChange={setQuestionPanelOpen}
-                      onSelectQuestion={builder.setActiveQuestion}
-                      onAddQuestion={builder.addQuestion}
-                      onMoveQuestionUp={builder.moveQuestionUp}
-                      onMoveQuestionDown={builder.moveQuestionDown}
-                      onDuplicateQuestion={builder.duplicateQuestion}
-                      onRemoveQuestion={builder.removeQuestion}
-                      onReorderQuestions={builder.reorderQuestions}
-                    />
-                  </TabsContent>
-                </Tabs>
-              </div>
-            </aside>
-
-            <main className="min-w-0">{editorContent}</main>
-          </div>
+          <BuilderDesktopLayout builder={builder}>
+            {editorContent}
+          </BuilderDesktopLayout>
         </div>
       </div>
 
-      <div className="lg:hidden">
-        <QuestionSidebar
-          questions={builder.questions}
-          activeQuestion={builder.activeQuestion}
-          canAddQuestion={builder.canAddQuestion}
-          mobileOpen={questionPanelOpen}
-          onMobileOpenChange={setQuestionPanelOpen}
-          onSelectQuestion={builder.setActiveQuestion}
-          onAddQuestion={builder.addQuestion}
-          onMoveQuestionUp={builder.moveQuestionUp}
-          onMoveQuestionDown={builder.moveQuestionDown}
-          onDuplicateQuestion={builder.duplicateQuestion}
-          onRemoveQuestion={builder.removeQuestion}
-          onReorderQuestions={builder.reorderQuestions}
-        />
-      </div>
-
       <CreateQuizDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        title={newQuizTitle}
-        description={newQuizDescription}
-        isCreating={isCreating}
-        onTitleChange={setNewQuizTitle}
-        onDescriptionChange={setNewQuizDescription}
-        onCreate={handleCreateQuiz}
+        open={createDialog.open}
+        onOpenChange={createDialog.setOpen}
+        title={createDialog.title}
+        description={createDialog.description}
+        isCreating={createDialog.isCreating}
+        onTitleChange={createDialog.setTitle}
+        onDescriptionChange={createDialog.setDescription}
+        onCreate={createDialog.handleCreateQuiz}
         hideTrigger
       />
 

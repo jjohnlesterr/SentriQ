@@ -11,10 +11,11 @@ import {
   rejectSession,
   updateSessionReportVisibility,
 } from "@/lib/actions";
+import {
+  clearTeacherSession,
+  getTeacherSession,
+} from "@/lib/auth/teacher-session";
 import type { Quiz, QuizSession, ReportVisibility } from "@/lib/types";
-
-const TEACHER_ID = "demo-teacher";
-const TEACHER_NAME = "Teacher";
 
 const VIOLATION_TYPES = [
   "tab-left",
@@ -28,6 +29,9 @@ export function useTeacherMonitor() {
   const params = useParams();
   const quizId = params.id as string;
 
+  const [teacherId, setTeacherId] = useState<string | null>(null);
+  const [teacherName, setTeacherName] = useState("Teacher");
+
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [sessions, setSessions] = useState<QuizSession[]>([]);
@@ -39,10 +43,20 @@ export function useTeacherMonitor() {
 
   async function loadData() {
     try {
+      const teacherSession = getTeacherSession();
+
+      if (!teacherSession) {
+        router.push("/teacher/login");
+        return;
+      }
+
+      setTeacherId(teacherSession.id);
+      setTeacherName(teacherSession.name);
+
       const [quizData, sessionData, teacherQuizzes] = await Promise.all([
         getQuizById(quizId),
         getQuizSessions(quizId),
-        getTeacherQuizzes(TEACHER_ID),
+        getTeacherQuizzes(teacherSession.id),
       ]);
 
       setQuiz(quizData);
@@ -89,6 +103,7 @@ export function useTeacherMonitor() {
   }
 
   function logout() {
+    clearTeacherSession();
     router.push("/teacher/login");
   }
 
@@ -193,7 +208,8 @@ export function useTeacherMonitor() {
     selectedSession,
     reportVisibilityState,
 
-    teacherName: TEACHER_NAME,
+    teacherId,
+    teacherName,
     isLoading,
     autoRefresh,
     lastUpdated,
