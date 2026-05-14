@@ -46,20 +46,20 @@ export function useTeacherMonitor() {
 
   async function loadInitialData() {
     try {
-      const teacherSession = getTeacherSession();
+      const teacherSession = await getTeacherSession();
 
       if (!teacherSession) {
         router.push("/teacher/login");
         return;
       }
 
-      setTeacherId(teacherSession.id);
-      setTeacherName(teacherSession.name);
+      setTeacherId(teacherSession.user.id);
+      setTeacherName(teacherSession.user.email ?? "Teacher");
 
       const [quizData, sessionData, teacherQuizzes] = await Promise.all([
         getQuizById(quizId),
         getQuizSessions(quizId),
-        getTeacherQuizzes(teacherSession.id),
+        getTeacherQuizzes(teacherSession.user.id),
       ]);
 
       setQuiz(quizData);

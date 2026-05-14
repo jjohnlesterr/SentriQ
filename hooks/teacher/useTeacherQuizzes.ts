@@ -20,25 +20,29 @@ export function useTeacherQuizzes() {
 
   const publishedQuizzes = useMemo(
     () => quizzes.filter((quiz) => quiz.published),
-    [quizzes]
+    [quizzes],
   );
 
   const draftQuizzes = useMemo(
     () => quizzes.filter((quiz) => !quiz.published),
-    [quizzes]
+    [quizzes],
   );
 
   useEffect(() => {
-    const session = getTeacherSession();
+    async function loadSession() {
+      const session = await getTeacherSession();
 
-    if (!session) {
-      router.push("/teacher/login");
-      return;
+      if (!session) {
+        router.push("/teacher/login");
+        return;
+      }
+
+      setTeacherId(session.user.id);
+      setTeacherName(session.user.email ?? "Teacher");
+      loadQuizzes(session.user.id);
     }
 
-    setTeacherId(session.id);
-    setTeacherName(session.name);
-    loadQuizzes(session.id);
+    loadSession();
   }, [router]);
 
   async function loadQuizzes(id = teacherId) {
@@ -68,7 +72,7 @@ export function useTeacherQuizzes() {
 
   async function handleDeleteQuiz(quizId: string) {
     const confirmed = window.confirm(
-      "Are you sure you want to delete this quiz? This will also delete its sessions."
+      "Are you sure you want to delete this quiz? This will also delete its sessions.",
     );
 
     if (!confirmed) return;

@@ -22,21 +22,21 @@ export function useQuizPersistence({ quizId }: Params) {
   const [isLoading, setIsLoading] = useState(true);
 
   const refreshTeacherQuizzes = useCallback(async () => {
-    const session = getTeacherSession();
+    const session = await getTeacherSession();
 
     if (!session) {
       setQuizzes([]);
       return;
     }
 
-    const teacherQuizzes = await getTeacherQuizzes(session.id);
+    const teacherQuizzes = await getTeacherQuizzes(session.user.id);
     setQuizzes(teacherQuizzes);
   }, []);
 
   useEffect(() => {
     async function loadQuiz() {
       try {
-        const session = getTeacherSession();
+        const session = await getTeacherSession();
 
         if (!session) {
           router.push("/teacher/login");
@@ -45,7 +45,7 @@ export function useQuizPersistence({ quizId }: Params) {
 
         const [quizData, teacherQuizzes] = await Promise.all([
           getQuizById(quizId),
-          getTeacherQuizzes(session.id),
+          getTeacherQuizzes(session.user.id),
         ]);
 
         if (!quizData) {
