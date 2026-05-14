@@ -3,7 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Turnstile } from "@marsidev/react-turnstile";
-import { ArrowLeft, Eye, EyeOff, LockKeyhole, ShieldCheck } from "lucide-react";
+import {
+  ArrowLeft,
+  Eye,
+  EyeOff,
+  LockKeyhole,
+  ShieldCheck,
+  UserPlus,
+} from "lucide-react";
 
 import SectionHeading from "@/components/shared/SectionHeading";
 import { GlassCard } from "@/components/shared/GlassCard";
@@ -11,33 +18,50 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 
-
-export default function TeacherLoginForm() {
+export default function TeacherRegisterForm() {
   const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [captchaToken, setCaptchaToken] = useState("");
+
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    setError("");
+    setSuccess("");
 
     if (!captchaToken) {
       setError("Please complete the security check.");
       return;
     }
 
-    setIsLoading(true);
-    setError("");
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
 
-    const { error } = await supabaseBrowser.auth.signInWithPassword({
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    const { error } = await supabaseBrowser.auth.signUp({
       email,
       password,
       options: {
         captchaToken,
+        emailRedirectTo: `${window.location.origin}/teacher/login`,
       },
     });
 
@@ -48,8 +72,11 @@ export default function TeacherLoginForm() {
       return;
     }
 
-    router.push("/teacher/dashboard");
-    router.refresh();
+    setSuccess("Account created. Please check your email to confirm your account.");
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+    setCaptchaToken("");
   }
 
   return (
@@ -66,10 +93,10 @@ export default function TeacherLoginForm() {
 
         <GlassCard className="p-5 sm:p-6 md:p-8">
           <SectionHeading
-            icon={ShieldCheck}
-            badge="Teacher Access Portal"
-            title="Teacher Login"
-            description="Sign in to manage quizzes, monitor assessments, and access your dashboard."
+            icon={UserPlus}
+            badge="Teacher Registration"
+            title="Create Account"
+            description="Register as a teacher to create quizzes and monitor student activity."
             variant="page"
             className="mb-6 md:mb-8"
             badgeClassName="mb-4 border-cyan-400/20 bg-cyan-400/10 px-3 py-1.5 text-xs text-cyan-200 md:mb-4"
@@ -81,6 +108,7 @@ export default function TeacherLoginForm() {
           <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
             <div className="space-y-2">
               <label className="text-sm text-slate-200">Email Address</label>
+
               <Input
                 type="email"
                 placeholder="teacher@example.com"
@@ -99,7 +127,7 @@ export default function TeacherLoginForm() {
 
                 <Input
                   type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
+                  placeholder="Create a password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="h-11 pl-11 pr-12"
@@ -109,9 +137,42 @@ export default function TeacherLoginForm() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-black"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm text-slate-200">Confirm Password</label>
+
+              <div className="relative">
+                <ShieldCheck className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+
+                <Input
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm your password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="h-11 pl-11 pr-12"
+                  required
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((prev) => !prev)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </div>
@@ -128,16 +189,27 @@ export default function TeacherLoginForm() {
               </div>
             )}
 
-            <Button type="submit" variant="primary" className="h-11 w-full" disabled={isLoading}>
-              {isLoading ? "Signing in..." : "Sign In"}
+            {success && (
+              <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+                {success}
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              variant="primary"
+              className="h-11 w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? "Creating account..." : "Create Account"}
             </Button>
 
             <button
               type="button"
-              onClick={() => router.push("/teacher/register")}
+              onClick={() => router.push("/teacher/login")}
               className="w-full text-center text-sm text-slate-400 hover:text-white"
             >
-              Don&apos;t have an account? Create one
+              Already have an account? Sign in
             </button>
           </form>
         </GlassCard>

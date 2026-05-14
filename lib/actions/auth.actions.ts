@@ -1,22 +1,39 @@
 "use server";
 
-import { teachers } from "../data/mock-db";
+import { supabaseBrowser } from "@/lib/supabase/browser";
 
 export async function teacherLogin(
   email: string,
   password: string
-): Promise<{ id: string; name: string; email: string }> {
-  const existing = teachers.find(
-    (teacher) => teacher.email.toLowerCase() === email.toLowerCase()
-  );
+) {
+  const { data, error } = await supabaseBrowser.auth.signInWithPassword({
+    email,
+    password,
+  });
 
-  if (!existing || existing.password !== password) {
-    throw new Error("Invalid email or password");
+  if (error) {
+    throw new Error(error.message);
   }
 
-  return {
-    id: existing.id,
-    name: existing.name,
-    email: existing.email,
-  };
+  return data.user;
+}
+
+export async function teacherRegister(
+  email: string,
+  password: string
+) {
+  const { data, error } = await supabaseBrowser.auth.signUp({
+    email,
+    password,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data.user;
+}
+
+export async function teacherLogout() {
+  await supabaseBrowser.auth.signOut();
 }

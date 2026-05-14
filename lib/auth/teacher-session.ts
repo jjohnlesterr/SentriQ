@@ -1,28 +1,13 @@
-export type TeacherSession = {
-  id: string;
-  name: string;
-};
+import { supabaseBrowser } from "@/lib/supabase/browser";
 
-export function getTeacherSession(): TeacherSession | null {
-  if (typeof window === "undefined") return null;
+export async function getTeacherSession() {
+  const {
+    data: { session },
+  } = await supabaseBrowser.auth.getSession();
 
-  const id = sessionStorage.getItem("teacherId");
-  const name = sessionStorage.getItem("teacherName");
-
-  if (!id) return null;
-
-  return {
-    id,
-    name: name || "Teacher",
-  };
+  return session;
 }
 
-export function setTeacherSession(session: TeacherSession) {
-  sessionStorage.setItem("teacherId", session.id);
-  sessionStorage.setItem("teacherName", session.name);
-}
-
-export function clearTeacherSession() {
-  sessionStorage.removeItem("teacherId");
-  sessionStorage.removeItem("teacherName");
+export async function clearTeacherSession() {
+  await supabaseBrowser.auth.signOut();
 }
