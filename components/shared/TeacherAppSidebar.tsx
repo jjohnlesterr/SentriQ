@@ -13,8 +13,8 @@ import {
 import { useRouter } from "next/navigation";
 
 import AppLogo from "@/components/shared/AppLogo";
-import { cn } from "@/lib/utils";
-import type { Quiz } from "@/lib/types";
+import { cn } from "@/lib/shared/utils";
+import type { Quiz } from "@/lib/shared/types";
 
 type ActivePage = "dashboard" | "quiz-builder" | "drafts" | "monitor";
 

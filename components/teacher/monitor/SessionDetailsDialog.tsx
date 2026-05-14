@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import type { Quiz, QuizSession, SessionEventType } from "@/lib/types";
+import type { Quiz, QuizSession, SessionEventType } from "@/lib/shared/types";
 
 type Props = {
   open: boolean;

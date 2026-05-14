@@ -1,4 +1,4 @@
-import type { Quiz, QuizSession, TeacherAccount } from "@/lib/types";
+import type { Quiz, QuizSession, TeacherAccount } from "@/lib/shared/types";
 
 export const quizzes: Quiz[] = [];
 

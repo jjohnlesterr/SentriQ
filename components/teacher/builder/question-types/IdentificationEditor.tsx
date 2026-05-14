@@ -1,6 +1,6 @@
 import QuestionField from "@/components/teacher/builder/shared/QuestionField";
 import { Input } from "@/components/ui/input";
-import type { Question } from "@/lib/types";
+import type { Question } from "@/lib/shared/types";
 
 type Props = {
   question: Question;

@@ -1,6 +1,6 @@
 import EmptyQuestionState from "@/components/teacher/builder/EmptyQuestionState";
 import QuestionEditor from "@/components/teacher/builder/QuestionEditor";
-import type { useQuizBuilder } from "@/hooks/builder/useQuizBuilder";
+import type { useQuizBuilder } from "@/hooks/teacher/builder/useQuizBuilder";
 
 type BuilderState = ReturnType<typeof useQuizBuilder>;
 

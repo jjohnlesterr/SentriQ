@@ -4,7 +4,8 @@ import { useEffect } from "react";
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 
 import { getQuizById, getSessionById } from "@/lib/actions";
-import type { Quiz, QuizSession } from "@/lib/types";
+import { supabase } from "@/lib/supabase/client";
+import type { Quiz, QuizSession } from "@/lib/shared/types";
 
 type AnswerMap = Record<number, number | string>;
 
@@ -32,29 +33,48 @@ export function useStudentQuizSession({
   useEffect(() => {
     if (!session || session.approvalStatus !== "pending") return;
 
-    const interval = setInterval(async () => {
-      const sessionData = await getSessionById(sessionId);
+    const channel = supabase
+      .channel(`student-quiz-session-${sessionId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "sessions",
+          filter: `id=eq.${sessionId}`,
+        },
+        async () => {
+          const sessionData = await getSessionById(sessionId);
 
-      if (!sessionData) return;
+          if (!sessionData) return;
 
-      setSession(sessionData);
-      syncViolationCounts(sessionData);
+          setSession(sessionData);
+          syncViolationCounts(sessionData);
 
-      if (sessionData.approvalStatus === "approved") {
-        const quizData = await getQuizById(sessionData.quizId);
+          if (sessionData.approvalStatus === "rejected") {
+            router.replace("/student/join");
+            return;
+          }
 
-        if (!quizData) {
-          router.replace("/");
-          return;
+          if (sessionData.approvalStatus === "approved") {
+            const quizData = await getQuizById(sessionData.quizId);
+
+            if (!quizData) {
+              router.replace("/");
+              return;
+            }
+
+            setQuiz(quizData);
+            setAnswers(sessionData.answers || {});
+            setCurrentIndex(sessionData.currentQuestion || 0);
+          }
         }
+      )
+      .subscribe();
 
-        setQuiz(quizData);
-        setAnswers(sessionData.answers || {});
-        setCurrentIndex(sessionData.currentQuestion || 0);
-      }
-    }, 2000);
-
-    return () => clearInterval(interval);
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [
     session,
     sessionId,

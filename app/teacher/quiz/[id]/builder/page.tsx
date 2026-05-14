@@ -8,7 +8,7 @@ import TeacherAppSidebar from "@/components/layout/sidebar/TeacherAppSidebar";
 import PageLoader from "@/components/shared/PageLoader";
 import BuilderHeader from "@/components/teacher/builder/BuilderHeader";
 import PublishCodeDialog from "@/components/teacher/builder/PublishCodeDialog";
-import CreateQuizDialog from "@/components/teacher/dashboard/CreateQuizDialog";
+import CreateQuizDialog from "@/components/teacher/dashboard/create/CreateQuizDialog";
 import BuilderDesktopLayout from "@/components/teacher/builder/layout/BuilderDesktopLayout";
 import BuilderEditorContent from "@/components/teacher/builder/layout/BuilderEditorContent";
 import BuilderMobileLayout from "@/components/teacher/builder/layout/BuilderMobileLayout";
@@ -18,7 +18,7 @@ import {
   clearTeacherSession,
   getTeacherSession,
 } from "@/lib/auth/teacher-session";
-import { useQuizBuilder } from "@/hooks/builder/useQuizBuilder";
+import { useQuizBuilder } from "@/hooks/teacher/builder/useQuizBuilder";
 import { useCreateQuizDialog } from "@/hooks/teacher/useCreateQuizDialog";
 
 export default function QuizBuilderPage() {

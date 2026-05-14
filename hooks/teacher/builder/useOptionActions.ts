@@ -2,7 +2,7 @@
 
 import type { Dispatch, SetStateAction } from "react";
 
-import type { Question } from "@/lib/types";
+import type { Question } from "@/lib/shared/types";
 
 function reorder<T>(items: T[], fromIndex: number, toIndex: number) {
   const updated = [...items];

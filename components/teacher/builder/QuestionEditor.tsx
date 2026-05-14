@@ -11,7 +11,7 @@ import QuestionSection from "@/components/teacher/builder/shared/QuestionSection
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
-import type { Question, QuestionType } from "@/lib/types";
+import type { Question, QuestionType } from "@/lib/shared/types";
 
 type Props = {
   question: Question;
@@ -25,7 +25,7 @@ type Props = {
   onUpdateOption: (
     questionIndex: number,
     optionIndex: number,
-    value: string
+    value: string,
   ) => void;
   onAddOption: (questionIndex: number) => void;
   onRemoveOption: (questionIndex: number, optionIndex: number) => void;
@@ -152,25 +152,40 @@ export default function QuestionEditor({
         </div>
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[260px_minmax(0,1fr)]">
+      <div className="grid gap-5 md:grid-cols-[220px_minmax(0,1fr)]">
         <QuestionField label="Question Type">
-          <select
-            value={question.type}
-            onChange={(e) =>
-              onChangeQuestionType(activeQuestion, e.target.value as QuestionType)
-            }
-            className="h-12 w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 text-sm text-white outline-none transition focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20"
-          >
-            <option className="bg-slate-950 text-white" value="multiple_choice">
-              Multiple Choice
-            </option>
-            <option className="bg-slate-950 text-white" value="true_false">
-              True / False
-            </option>
-            <option className="bg-slate-950 text-white" value="identification">
-              Identification
-            </option>
-          </select>
+          <div className="relative w-[220px] max-w-full">
+            <select
+              value={question.type}
+              onChange={(e) =>
+                onChangeQuestionType(
+                  activeQuestion,
+                  e.target.value as QuestionType,
+                )
+              }
+              className="h-12 w-full appearance-none rounded-2xl border border-cyan-400/20 bg-slate-950/60 px-4 pr-10 text-sm text-white outline-none transition focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20"
+            >
+              <option
+                className="bg-slate-950 text-white"
+                value="multiple_choice"
+              >
+                Multiple Choice
+              </option>
+
+              <option className="bg-slate-950 text-white" value="true_false">
+                True / False
+              </option>
+
+              <option
+                className="bg-slate-950 text-white"
+                value="identification"
+              >
+                Identification
+              </option>
+            </select>
+
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-300" />
+          </div>
         </QuestionField>
 
         <QuestionField
@@ -212,7 +227,7 @@ export default function QuestionEditor({
         type="button"
         onClick={() => {
           const trigger = document.querySelector<HTMLButtonElement>(
-            "[data-add-question-trigger]"
+            "[data-add-question-trigger]",
           );
 
           trigger?.click();

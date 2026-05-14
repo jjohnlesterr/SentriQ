@@ -1,12 +1,7 @@
 "use client";
 
-import PageShell from "@/components/layout/PageShell";
-import TeacherLoginForm from "@/components/teacher/login/TeacherLoginForm";
+import TeacherLoginContent from "@/components/teacher/login/TeacherLoginContent";
 
 export default function TeacherLoginPage() {
-  return (
-    <PageShell>
-      <TeacherLoginForm />
-    </PageShell>
-  );
+  return <TeacherLoginContent />;
 }

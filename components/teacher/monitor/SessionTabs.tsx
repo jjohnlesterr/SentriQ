@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EmptyState from "@/components/shared/EmptyState";
 import SessionCard from "@/components/teacher/monitor/SessionCard";
 
-import type { QuizSession } from "@/lib/types";
+import type { QuizSession } from "@/lib/shared/types";
 
 type Props = {
   sessions: QuizSession[];

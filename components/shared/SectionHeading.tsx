@@ -1,7 +1,7 @@
 import { LucideIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 type SectionHeadingProps = {
   icon?: LucideIcon;

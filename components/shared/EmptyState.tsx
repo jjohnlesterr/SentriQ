@@ -1,7 +1,7 @@
 import { LucideIcon } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 type EmptyStateProps = {
   icon?: LucideIcon;

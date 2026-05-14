@@ -1,18 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import {
-  ArrowDown,
-  ArrowUp,
-  Copy,
-  MoreVertical,
-  Plus,
-  Trash2,
-  X,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Plus, X } from "lucide-react";
 
+import QuestionList from "@/components/teacher/builder/question-list/QuestionList";
+import QuestionPagination from "@/components/teacher/builder/question-list/QuestionPagination";
 import { Button } from "@/components/ui/button";
-import type { Question } from "@/lib/types";
+import { useQuestionPagination } from "@/hooks/teacher/builder/useQuestionPagination";
+import type { Question } from "@/lib/shared/types";
 
 type Props = {
   questions: Question[];
@@ -29,11 +24,7 @@ type Props = {
   onReorderQuestions?: (activeId: string, overId: string) => void;
 };
 
-function getQuestionTypeLabel(question: Question) {
-  if (question.type === "multiple_choice") return "Multiple Choice";
-  if (question.type === "true_false") return "True/False";
-  return "Identification";
-}
+const QUESTIONS_PER_PAGE = 5;
 
 export default function QuestionSidebar({
   questions,
@@ -48,15 +39,34 @@ export default function QuestionSidebar({
   onDuplicateQuestion,
   onRemoveQuestion,
 }: Props) {
-  const [openMenuIndex, setOpenMenuIndex] = useState<number | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+  const {
+    visibleItems: visibleQuestions,
+    canSeeMore,
+    canSeeLess,
+    seeMore,
+    seeLess,
+    showItem,
+  } = useQuestionPagination(questions, QUESTIONS_PER_PAGE);
+
+  useEffect(() => {
+    showItem(activeQuestion);
+  }, [activeQuestion, showItem]);
 
   function handleAddQuestion() {
     onAddQuestion();
+    showItem(questions.length);
   }
 
   function handleSelectQuestion(index: number) {
     onSelectQuestion(index);
     onMobileOpenChange?.(false);
+  }
+
+  function handleSeeLess() {
+    seeLess();
+    setOpenMenuId(null);
   }
 
   const content = (
@@ -98,123 +108,24 @@ export default function QuestionSidebar({
         </div>
       ) : (
         <div className="space-y-3">
-          <div className="space-y-2.5 pr-1">
-            {questions.map((question, index) => {
-              const isActive = activeQuestion === index;
-              const isMenuOpen = openMenuIndex === index;
+          <QuestionList
+            questions={visibleQuestions}
+            activeQuestion={activeQuestion}
+            openMenuId={openMenuId}
+            onOpenMenuChange={setOpenMenuId}
+            onSelectQuestion={handleSelectQuestion}
+            onMoveQuestionUp={onMoveQuestionUp}
+            onMoveQuestionDown={onMoveQuestionDown}
+            onDuplicateQuestion={onDuplicateQuestion}
+            onRemoveQuestion={onRemoveQuestion}
+          />
 
-              return (
-                <div
-                  key={question.id}
-                  className={`relative ${isMenuOpen ? "lg:mb-0 mb-36" : ""}`}
-                >
-                  <button
-                    type="button"
-                    onClick={() => handleSelectQuestion(index)}
-                    className={`flex w-full cursor-pointer items-start gap-3 rounded-2xl border p-3 pr-12 text-left transition ${
-                      isActive
-                        ? "border-cyan-400/50 bg-cyan-500/10 shadow-[0_12px_40px_rgba(34,211,238,0.08)]"
-                        : "border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.06]"
-                    }`}
-                  >
-                    <div
-                      className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border text-xs font-bold ${
-                        isActive
-                          ? "border-cyan-400/30 bg-cyan-500/10 text-cyan-300"
-                          : "border-white/10 bg-white/5 text-slate-500"
-                      }`}
-                    >
-                      {index + 1}
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[11px] text-slate-500">
-                        Question {index + 1}
-                      </p>
-
-                      <p className="mt-0.5 line-clamp-3 break-words text-xs font-semibold leading-4 text-white">
-                        {question.text || "Untitled question"}
-                      </p>
-
-                      <p className="mt-1 text-[11px] text-slate-500">
-                        {getQuestionTypeLabel(question)}
-                      </p>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    aria-label={`Open actions for question ${index + 1}`}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setOpenMenuIndex((current) =>
-                        current === index ? null : index,
-                      );
-                    }}
-                    className="absolute right-2 top-3 flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 transition hover:bg-white/10 hover:text-white"
-                  >
-                    <MoreVertical className="h-5 w-5" />
-                  </button>
-
-                  {isMenuOpen && (
-                    <div className="absolute right-2 top-14 z-[999] w-52 overflow-hidden rounded-2xl border border-white/10 bg-slate-950 p-2 shadow-2xl shadow-black/60 backdrop-blur-xl">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          onMoveQuestionUp(index);
-                          setOpenMenuIndex(null);
-                        }}
-                        disabled={index === 0}
-                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-slate-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        <ArrowUp className="h-4 w-4" />
-                        Move Up
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          onMoveQuestionDown(index);
-                          setOpenMenuIndex(null);
-                        }}
-                        disabled={index === questions.length - 1}
-                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-slate-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        <ArrowDown className="h-4 w-4" />
-                        Move Down
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          onDuplicateQuestion(index);
-                          setOpenMenuIndex(null);
-                        }}
-                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-slate-300 transition hover:bg-white/10 hover:text-white"
-                      >
-                        <Copy className="h-4 w-4" />
-                        Duplicate
-                      </button>
-
-                      <div className="my-1 h-px bg-white/10" />
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          onRemoveQuestion(index);
-                          setOpenMenuIndex(null);
-                        }}
-                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-red-300 transition hover:bg-red-500/10 hover:text-red-200"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        Delete
-                      </button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          <QuestionPagination
+            canSeeMore={canSeeMore}
+            canSeeLess={canSeeLess}
+            onSeeMore={seeMore}
+            onSeeLess={handleSeeLess}
+          />
 
           <Button
             type="button"

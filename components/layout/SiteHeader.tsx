@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import AppLogo from "@/components/shared/AppLogo";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 import BurgerButton from "./BurgerButton";
 import DesktopNav from "./DesktopNav";
 import MobileMenu from "./MobileMenu";

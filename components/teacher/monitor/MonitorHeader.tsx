@@ -13,7 +13,7 @@ import {
 import SectionHeading from "@/components/shared/SectionHeading";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import type { Quiz, ReportVisibility } from "@/lib/types";
+import type { Quiz, ReportVisibility } from "@/lib/shared/types";
 
 type Props = {
   quiz: Quiz | null;

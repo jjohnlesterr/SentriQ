@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
-import type { QuizSession } from "@/lib/types";
+import type { QuizSession } from "@/lib/shared/types";
 
 type Props = {
   session: QuizSession;

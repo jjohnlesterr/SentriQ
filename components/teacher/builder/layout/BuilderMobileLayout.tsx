@@ -1,7 +1,7 @@
 import QuizDetailsForm from "@/components/teacher/builder/QuizDetailsForm";
 import QuestionSidebar from "@/components/teacher/builder/QuestionSidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { useQuizBuilder } from "@/hooks/builder/useQuizBuilder";
+import type { useQuizBuilder } from "@/hooks/teacher/builder/useQuizBuilder";
 
 type BuilderState = ReturnType<typeof useQuizBuilder>;
 

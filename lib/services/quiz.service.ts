@@ -1,5 +1,28 @@
-import { quizzes, sessions } from "@/lib/data/mock-db";
-import type { Question, Quiz } from "@/lib/types";
+import { supabase } from "@/lib/supabase/client";
+import type { Question, Quiz } from "@/lib/shared/types";
+
+type QuizRow = {
+  id: string;
+  title: string;
+  description: string;
+  code: string;
+  created_by: string;
+  published: boolean;
+  status: "draft" | "published";
+  created_at: string;
+  questions?: QuestionRow[];
+};
+
+type QuestionRow = {
+  id: string;
+  quiz_id: string;
+  type: Question["type"];
+  text: string;
+  options: string[];
+  correct_answer: number;
+  correct_text_answer: string;
+  position: number;
+};
 
 function generateCode(length: number = 6): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -15,11 +38,46 @@ function generateCode(length: number = 6): string {
 async function generateUniqueQuizCode(): Promise<string> {
   let code = generateCode();
 
-  while (quizzes.some((quiz) => quiz.code === code)) {
+  while (true) {
+    const { data, error } = await supabase
+      .from("quizzes")
+      .select("id")
+      .eq("code", code)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    if (!data) return code;
+
     code = generateCode();
   }
+}
 
-  return code;
+function mapQuestionRow(row: QuestionRow): Question {
+  return {
+    id: row.id,
+    type: row.type,
+    text: row.text,
+    options: row.options || [],
+    correctAnswer: row.correct_answer,
+    correctTextAnswer: row.correct_text_answer,
+  };
+}
+
+function mapQuizRow(row: QuizRow): Quiz {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    code: row.code,
+    createdBy: row.created_by,
+    published: row.published,
+    status: row.status,
+    createdAt: new Date(row.created_at),
+    questions: row.questions?.map(mapQuestionRow) || [],
+  };
 }
 
 export async function createQuizService(
@@ -27,21 +85,26 @@ export async function createQuizService(
   description: string,
   teacherId: string
 ): Promise<Quiz> {
-  const quiz: Quiz = {
-    id: Date.now().toString(),
-    title,
-    description,
-    questions: [],
-    code: await generateUniqueQuizCode(),
-    createdAt: new Date(),
-    createdBy: teacherId,
-    published: false,
-    status: "draft",
-  };
+  const code = await generateUniqueQuizCode();
 
-  quizzes.push(quiz);
+  const { data, error } = await supabase
+    .from("quizzes")
+    .insert({
+      title,
+      description,
+      code,
+      created_by: teacherId,
+      published: false,
+      status: "draft",
+    })
+    .select("*")
+    .single();
 
-  return quiz;
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return mapQuizRow({ ...data, questions: [] });
 }
 
 export async function updateQuizService(
@@ -50,73 +113,126 @@ export async function updateQuizService(
   description: string,
   questions: Question[]
 ): Promise<Quiz> {
-  const index = quizzes.findIndex((quiz) => quiz.id === quizId);
+  const { data: quizData, error: quizError } = await supabase
+    .from("quizzes")
+    .update({
+      title,
+      description,
+    })
+    .eq("id", quizId)
+    .select("*")
+    .single();
 
-  if (index === -1) {
-    throw new Error("Quiz not found");
+  if (quizError) {
+    throw new Error(quizError.message);
   }
 
-  const updatedQuiz: Quiz = {
-    ...quizzes[index],
-    title,
-    description,
+  const { error: deleteError } = await supabase
+    .from("questions")
+    .delete()
+    .eq("quiz_id", quizId);
+
+  if (deleteError) {
+    throw new Error(deleteError.message);
+  }
+
+  if (questions.length > 0) {
+    const { error: insertError } = await supabase.from("questions").insert(
+      questions.map((question, index) => ({
+        id: question.id,
+        quiz_id: quizId,
+        type: question.type,
+        text: question.text,
+        options: question.options || [],
+        correct_answer: question.correctAnswer || 0,
+        correct_text_answer: question.correctTextAnswer || "",
+        position: index,
+      }))
+    );
+
+    if (insertError) {
+      throw new Error(insertError.message);
+    }
+  }
+
+  return {
+    ...mapQuizRow({ ...quizData, questions: [] }),
     questions,
   };
-
-  quizzes[index] = updatedQuiz;
-
-  return updatedQuiz;
 }
 
 export async function publishQuizService(quizId: string): Promise<Quiz> {
-  const index = quizzes.findIndex((quiz) => quiz.id === quizId);
+  const { data, error } = await supabase
+    .from("quizzes")
+    .update({
+      published: true,
+      status: "published",
+    })
+    .eq("id", quizId)
+    .select("*, questions(*)")
+    .single();
 
-  if (index === -1) {
-    throw new Error("Quiz not found");
+  if (error) {
+    throw new Error(error.message);
   }
 
-  const updatedQuiz: Quiz = {
-    ...quizzes[index],
-    published: true,
-    status: "published",
-  };
-
-  quizzes[index] = updatedQuiz;
-
-  return updatedQuiz;
+  return mapQuizRow(data);
 }
 
 export async function deleteQuizService(quizId: string): Promise<void> {
-  const index = quizzes.findIndex((quiz) => quiz.id === quizId);
+  const { error } = await supabase.from("quizzes").delete().eq("id", quizId);
 
-  if (index === -1) {
-    throw new Error("Quiz not found");
-  }
-
-  quizzes.splice(index, 1);
-
-  for (let i = sessions.length - 1; i >= 0; i--) {
-    if (sessions[i].quizId === quizId) {
-      sessions.splice(i, 1);
-    }
+  if (error) {
+    throw new Error(error.message);
   }
 }
 
 export async function getTeacherQuizzesService(
   teacherId: string
 ): Promise<Quiz[]> {
-  return quizzes.filter((quiz) => quiz.createdBy === teacherId);
+  const { data, error } = await supabase
+    .from("quizzes")
+    .select("*, questions(*)")
+    .eq("created_by", teacherId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data || []).map(mapQuizRow);
 }
 
 export async function getQuizByIdService(
   quizId: string
 ): Promise<Quiz | null> {
-  return quizzes.find((quiz) => quiz.id === quizId) ?? null;
+  const { data, error } = await supabase
+    .from("quizzes")
+    .select("*, questions(*)")
+    .eq("id", quizId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) return null;
+
+  return mapQuizRow(data);
 }
 
 export async function getAllQuizzesWithSessionsService() {
-  return quizzes.map((quiz) => ({
-    ...quiz,
-    sessions: sessions.filter((session) => session.quizId === quiz.id),
+  const { data, error } = await supabase
+    .from("quizzes")
+    .select("*, questions(*)")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data || []).map((quiz) => ({
+    ...mapQuizRow(quiz),
+    sessions: [],
   }));
 }

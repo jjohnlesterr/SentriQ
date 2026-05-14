@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { getQuizById, getTeacherQuizzes } from "@/lib/actions";
 import { getTeacherSession } from "@/lib/auth/teacher-session";
-import type { Question, Quiz } from "@/lib/types";
+import type { Question, Quiz } from "@/lib/shared/types";
 
 type Params = {
   quizId: string;

@@ -1,4 +1,4 @@
-import type { Question, QuestionType } from "@/lib/types";
+import type { Question, QuestionType } from "@/lib/shared/types";
 
 export function createEmptyQuestion(): Question {
   return {

@@ -3,8 +3,8 @@
 import type { Dispatch, SetStateAction } from "react";
 
 import { publishQuiz, updateQuiz } from "@/lib/actions";
-import { isQuestionComplete } from "@/lib/quiz-builder";
-import type { Question, Quiz } from "@/lib/types";
+import { isQuestionComplete } from "@/lib/quiz/quiz-builder";
+import type { Question, Quiz } from "@/lib/shared/types";
 
 type Params = {
   quizId: string;

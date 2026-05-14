@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import PageShell from "@/components/layout/PageShell";
 import TeacherAppSidebar from "@/components/layout/sidebar/TeacherAppSidebar";
-import type { Quiz } from "@/lib/types";
+import type { Quiz } from "@/lib/shared/types";
 
 type ActivePage = "dashboard" | "quiz-builder" | "drafts" | "monitor";
 

@@ -1,4 +1,4 @@
-import type { Quiz } from "@/lib/types";
+import type { Quiz } from "@/lib/shared/types";
 
 type AnswerMap = Record<number, number | string>;
 

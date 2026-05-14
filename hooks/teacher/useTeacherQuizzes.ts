@@ -8,7 +8,7 @@ import {
   clearTeacherSession,
   getTeacherSession,
 } from "@/lib/auth/teacher-session";
-import type { Quiz } from "@/lib/types";
+import type { Quiz } from "@/lib/shared/types";
 
 export function useTeacherQuizzes() {
   const router = useRouter();

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { getQuizById, getSessionById } from "@/lib/actions";
-import type { Quiz, QuizSession } from "@/lib/types";
+import type { Quiz, QuizSession } from "@/lib/shared/types";
 
 type SavedResult = {
   session: QuizSession;

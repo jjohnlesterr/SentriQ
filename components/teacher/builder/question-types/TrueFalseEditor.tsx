@@ -5,7 +5,7 @@ import { CheckCircle2 } from "lucide-react";
 
 import OptionRow from "@/components/teacher/builder/shared/OptionRow";
 import QuestionField from "@/components/teacher/builder/shared/QuestionField";
-import type { Question } from "@/lib/types";
+import type { Question } from "@/lib/shared/types";
 
 type Props = {
   question: Question;

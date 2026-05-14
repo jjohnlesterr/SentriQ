@@ -6,8 +6,8 @@ import {
   createEmptyQuestion,
   getQuestionTypeDefaults,
   isQuestionComplete,
-} from "@/lib/quiz-builder";
-import type { Question, QuestionType } from "@/lib/types";
+} from "@/lib/quiz/quiz-builder";
+import type { Question, QuestionType } from "@/lib/shared/types";
 
 function reorder<T>(items: T[], fromIndex: number, toIndex: number) {
   const updated = [...items];

@@ -12,7 +12,7 @@ import SessionDetailsDialog from "@/components/teacher/monitor/SessionDetailsDia
 
 import { Button } from "@/components/ui/button";
 
-import { useTeacherMonitor } from "@/hooks/useTeacherMonitor";
+import { useTeacherMonitor } from "@/hooks/teacher/useTeacherMonitor";
 
 export default function TeacherMonitorPage() {
   const monitor = useTeacherMonitor();

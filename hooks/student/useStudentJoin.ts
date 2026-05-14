@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { getSessionById, joinQuiz } from "@/lib/actions";
+import { joinQuiz } from "@/lib/actions";
+import { supabase } from "@/lib/supabase/client";
 
 export function useStudentJoin() {
   const router = useRouter();
@@ -19,30 +20,38 @@ export function useStudentJoin() {
   useEffect(() => {
     if (!sessionId || !isWaitingApproval) return;
 
-    const interval = setInterval(async () => {
-      const session = await getSessionById(sessionId);
+    const channel = supabase
+      .channel(`student-join-${sessionId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "sessions",
+          filter: `id=eq.${sessionId}`,
+        },
+        (payload) => {
+          const updatedSession = payload.new as {
+            id: string;
+            approval_status: "pending" | "approved" | "rejected";
+          };
 
-      if (!session) {
-        clearInterval(interval);
-        setIsWaitingApproval(false);
-        setError("Join request was not found. Please try again.");
-        return;
-      }
+          if (updatedSession.approval_status === "approved") {
+            router.push(`/student/quiz/${updatedSession.id}`);
+            return;
+          }
 
-      if (session.approvalStatus === "approved") {
-        clearInterval(interval);
-        router.push(`/student/quiz/${session.id}`);
-        return;
-      }
+          if (updatedSession.approval_status === "rejected") {
+            setIsWaitingApproval(false);
+            setError("Your join request was rejected by the teacher.");
+          }
+        }
+      )
+      .subscribe();
 
-      if (session.approvalStatus === "rejected") {
-        clearInterval(interval);
-        setIsWaitingApproval(false);
-        setError("Your join request was rejected by the teacher.");
-      }
-    }, 2000);
-
-    return () => clearInterval(interval);
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [sessionId, isWaitingApproval, router]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -50,7 +59,7 @@ export function useStudentJoin() {
     setError("");
 
     const trimmedName = studentName.trim();
-    const trimmedCode = quizCode.trim().toUpperCase();
+    const trimmedCode = quizCode.replace(/\s/g, "").toUpperCase();
 
     if (!trimmedName || !trimmedCode) {
       setError("Please enter your name and quiz code.");

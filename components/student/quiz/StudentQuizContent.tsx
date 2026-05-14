@@ -7,7 +7,7 @@ import TabWarning from "@/components/student/quiz/TabWarning";
 import QuestionCard from "@/components/student/quiz/QuestionCard";
 import WaitingApprovalState from "@/components/student/quiz/status/WaitingApprovalState";
 import RejectedRequestState from "@/components/student/quiz/status/RejectedRequestState";
-import { useStudentQuiz } from "@/hooks/useStudentQuiz";
+import { useStudentQuiz } from "@/hooks/student/useStudentQuiz";
 
 export default function StudentQuizContent() {
   const quizState = useStudentQuiz();

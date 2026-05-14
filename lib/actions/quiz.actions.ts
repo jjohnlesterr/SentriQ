@@ -1,6 +1,6 @@
 "use server";
 
-import type { Question } from "@/lib/types";
+import type { Question } from "@/lib/shared/types";
 
 import {
   createQuizService,

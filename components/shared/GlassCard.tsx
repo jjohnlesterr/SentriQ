@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { Card } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 type Props = React.ComponentProps<"div">;
 

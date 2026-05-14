@@ -6,7 +6,7 @@ import JoinRequestForm from "@/components/student/join/JoinRequestForm";
 import WaitingApprovalCard from "@/components/student/join/WaitingApprovalCard";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useStudentJoin } from "@/hooks/useStudentJoin";
+import { useStudentJoin } from "@/hooks/student/useStudentJoin";
 
 export default function StudentJoinForm() {
   const join = useStudentJoin();

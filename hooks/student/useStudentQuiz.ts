@@ -9,8 +9,8 @@ import {
   getSessionById,
   updateSessionAnswer,
 } from "@/lib/actions";
-import { calculateQuizScore } from "@/lib/scoring";
-import type { Quiz, QuizSession } from "@/lib/types";
+import { calculateQuizScore } from "@/lib/quiz/scoring";
+import type { Quiz, QuizSession } from "@/lib/shared/types";
 
 import { useQuizMonitoring } from "@/hooks/student/useQuizMonitoring";
 import { useFullscreenGuard } from "@/hooks/student/useFullscreenGuard";

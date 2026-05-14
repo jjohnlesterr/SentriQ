@@ -3,7 +3,7 @@ import { CheckCircle2, Loader2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import type { Quiz } from "@/lib/types";
+import type { Quiz } from "@/lib/shared/types";
 
 type Question = Quiz["questions"][number];
 

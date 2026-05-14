@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 
 import { recordSessionEvent } from "@/lib/actions";
-import type { QuizSession } from "@/lib/types";
+import type { QuizSession } from "@/lib/shared/types";
 
 type MonitoredEventType =
   | "tab-left"
