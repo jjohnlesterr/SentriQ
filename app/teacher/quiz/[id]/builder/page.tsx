@@ -43,20 +43,33 @@ export default function QuizBuilderPage() {
   });
 
   useEffect(() => {
-    const session = getTeacherSession();
+    let mounted = true;
 
-    if (!session) {
-      router.push("/teacher/login");
-      return;
+    async function loadTeacherSession() {
+      const session = await getTeacherSession();
+
+      if (!mounted) return;
+
+      if (!session) {
+        router.push("/teacher/login");
+        return;
+      }
+
+      setTeacherId(session.user.id);
+      setTeacherName(session.user.email ?? "Teacher");
     }
 
-    setTeacherId(session.id);
-    setTeacherName(session.name);
+    loadTeacherSession();
+
+    return () => {
+      mounted = false;
+    };
   }, [router]);
 
-  function handleLogout() {
-    clearTeacherSession();
+  async function handleLogout() {
+    await clearTeacherSession();
     router.push("/");
+    router.refresh();
   }
 
   function openNewQuiz() {
@@ -67,7 +80,7 @@ export default function QuizBuilderPage() {
 
     if (hasUnsavedChanges) {
       const confirmed = window.confirm(
-        "Do you want to discard your current quiz progress?",
+        "Do you want to discard your current quiz progress?"
       );
 
       if (!confirmed) return;
