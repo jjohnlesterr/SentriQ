@@ -76,7 +76,10 @@ function mapQuizRow(row: QuizRow): Quiz {
     published: row.published,
     status: row.status,
     createdAt: new Date(row.created_at),
-    questions: row.questions?.map(mapQuestionRow) || [],
+    questions:
+      row.questions
+        ?.sort((a, b) => a.position - b.position)
+        .map(mapQuestionRow) || [],
   };
 }
 
@@ -180,7 +183,10 @@ export async function publishQuizService(quizId: string): Promise<Quiz> {
 }
 
 export async function deleteQuizService(quizId: string): Promise<void> {
-  const { error } = await supabase.from("quizzes").delete().eq("id", quizId);
+  const { error } = await supabase
+    .from("quizzes")
+    .delete()
+    .eq("id", quizId);
 
   if (error) {
     throw new Error(error.message);
@@ -192,7 +198,16 @@ export async function getTeacherQuizzesService(
 ): Promise<Quiz[]> {
   const { data, error } = await supabase
     .from("quizzes")
-    .select("*, questions(*)")
+    .select(`
+      id,
+      title,
+      description,
+      code,
+      created_by,
+      published,
+      status,
+      created_at
+    `)
     .eq("created_by", teacherId)
     .order("created_at", { ascending: false });
 
@@ -200,7 +215,12 @@ export async function getTeacherQuizzesService(
     throw new Error(error.message);
   }
 
-  return (data || []).map(mapQuizRow);
+  return (data || []).map((quiz) =>
+    mapQuizRow({
+      ...quiz,
+      questions: [],
+    })
+  );
 }
 
 export async function getQuizByIdService(

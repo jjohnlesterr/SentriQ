@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import {
@@ -11,19 +11,12 @@ import {
   rejectSession,
   updateSessionReportVisibility,
 } from "@/lib/actions";
-
 import {
   clearTeacherSession,
   getTeacherSession,
 } from "@/lib/auth/teacher-session";
-
 import { supabase } from "@/lib/supabase/client";
-
-import type {
-  Quiz,
-  QuizSession,
-  ReportVisibility,
-} from "@/lib/shared/types";
+import type { Quiz, QuizSession, ReportVisibility } from "@/lib/shared/types";
 
 const VIOLATION_TYPES = [
   "tab-left",
@@ -35,10 +28,9 @@ const VIOLATION_TYPES = [
 export function useTeacherMonitor() {
   const router = useRouter();
   const params = useParams();
-
   const quizId = params.id as string;
 
-  const refreshTimeout = useRef<NodeJS.Timeout | null>(null);
+  const refreshTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [teacherName, setTeacherName] = useState("Teacher");
@@ -46,18 +38,13 @@ export function useTeacherMonitor() {
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [sessions, setSessions] = useState<QuizSession[]>([]);
-
   const [isLoading, setIsLoading] = useState(true);
-
   const [autoRefresh, setAutoRefresh] = useState(true);
-
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
-
   const [openSessionId, setOpenSessionId] = useState<string | null>(null);
-
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  async function loadData() {
+  async function loadInitialData() {
     try {
       const teacherSession = getTeacherSession();
 
@@ -78,7 +65,6 @@ export function useTeacherMonitor() {
       setQuiz(quizData);
       setSessions(sessionData);
       setQuizzes(teacherQuizzes);
-
       setLastUpdated(new Date());
     } catch (error) {
       console.error("Teacher monitor load error:", error);
@@ -87,26 +73,36 @@ export function useTeacherMonitor() {
     }
   }
 
+  async function loadSessionsOnly() {
+    try {
+      const sessionData = await getQuizSessions(quizId);
+
+      setSessions(sessionData);
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error("Teacher monitor sessions load error:", error);
+    }
+  }
+
+  function queueSessionsReload() {
+    if (refreshTimeout.current) {
+      clearTimeout(refreshTimeout.current);
+    }
+
+    refreshTimeout.current = setTimeout(() => {
+      loadSessionsOnly();
+    }, 250);
+  }
+
   useEffect(() => {
-    loadData();
+    loadInitialData();
   }, [quizId]);
 
   useEffect(() => {
     if (!autoRefresh) return;
 
-    const debouncedReload = () => {
-      if (refreshTimeout.current) {
-        clearTimeout(refreshTimeout.current);
-      }
-
-      refreshTimeout.current = setTimeout(() => {
-        loadData();
-      }, 250);
-    };
-
     const channel = supabase
       .channel(`teacher-monitor-${quizId}`)
-
       .on(
         "postgres_changes",
         {
@@ -115,11 +111,8 @@ export function useTeacherMonitor() {
           table: "sessions",
           filter: `quiz_id=eq.${quizId}`,
         },
-        () => {
-          debouncedReload();
-        }
+        queueSessionsReload
       )
-
       .on(
         "postgres_changes",
         {
@@ -127,11 +120,8 @@ export function useTeacherMonitor() {
           schema: "public",
           table: "session_events",
         },
-        () => {
-          debouncedReload();
-        }
+        queueSessionsReload
       )
-
       .subscribe();
 
     return () => {
@@ -213,57 +203,74 @@ export function useTeacherMonitor() {
 
     setSessions((prev) =>
       prev.map((session) => {
-        const updated = updatedSessions.find(
-          (item) => item.id === session.id
-        );
+        const updated = updatedSessions.find((item) => item.id === session.id);
 
         return updated ?? session;
       })
     );
   }
 
-  const pendingRequests = sessions.filter(
-    (session) => session.approvalStatus === "pending"
+  const pendingRequests = useMemo(
+    () => sessions.filter((session) => session.approvalStatus === "pending"),
+    [sessions]
   );
 
-  const approvedSessions = sessions.filter(
-    (session) => session.approvalStatus === "approved"
+  const approvedSessions = useMemo(
+    () => sessions.filter((session) => session.approvalStatus === "approved"),
+    [sessions]
   );
 
-  const inProgress = approvedSessions.filter(
-    (session) => session.status === "in-progress"
+  const inProgress = useMemo(
+    () =>
+      approvedSessions.filter((session) => session.status === "in-progress"),
+    [approvedSessions]
   );
 
-  const completed = approvedSessions.filter(
-    (session) => session.status === "completed"
+  const completed = useMemo(
+    () => approvedSessions.filter((session) => session.status === "completed"),
+    [approvedSessions]
   );
 
-  const suspicious = approvedSessions.filter((session) =>
-    session.events.some((event) =>
-      VIOLATION_TYPES.includes(event.type)
-    )
+  const suspicious = useMemo(
+    () =>
+      approvedSessions.filter((session) =>
+        session.events.some((event) => VIOLATION_TYPES.includes(event.type))
+      ),
+    [approvedSessions]
   );
 
-  const selectedSession = sessions.find(
-    (session) => session.id === openSessionId
+  const selectedSession = useMemo(
+    () => sessions.find((session) => session.id === openSessionId),
+    [sessions, openSessionId]
   );
 
-  const reportVisibilityState: ReportVisibility | "mixed" =
-    approvedSessions.length === 0
-      ? "locked"
-      : approvedSessions.every(
-          (session) => session.reportVisibility === "locked"
-        )
-      ? "locked"
-      : approvedSessions.every(
-          (session) => session.reportVisibility === "summary"
-        )
-      ? "summary"
-      : approvedSessions.every(
-          (session) => session.reportVisibility === "full"
-        )
-      ? "full"
-      : "mixed";
+  const reportVisibilityState: ReportVisibility | "mixed" = useMemo(() => {
+    if (approvedSessions.length === 0) return "locked";
+
+    if (
+      approvedSessions.every(
+        (session) => session.reportVisibility === "locked"
+      )
+    ) {
+      return "locked";
+    }
+
+    if (
+      approvedSessions.every(
+        (session) => session.reportVisibility === "summary"
+      )
+    ) {
+      return "summary";
+    }
+
+    if (
+      approvedSessions.every((session) => session.reportVisibility === "full")
+    ) {
+      return "full";
+    }
+
+    return "mixed";
+  }, [approvedSessions]);
 
   return {
     quiz,
@@ -277,7 +284,6 @@ export function useTeacherMonitor() {
     suspicious,
 
     selectedSession,
-
     reportVisibilityState,
 
     teacherId,
@@ -290,7 +296,7 @@ export function useTeacherMonitor() {
     openSessionId,
     sidebarOpen,
 
-    loadData,
+    loadData: loadInitialData,
 
     goBack,
     goDashboard,
@@ -299,9 +305,7 @@ export function useTeacherMonitor() {
     goMonitorQuiz,
 
     logout,
-
     toggleAutoRefresh,
-
     formatTime,
 
     handleApproveSession,

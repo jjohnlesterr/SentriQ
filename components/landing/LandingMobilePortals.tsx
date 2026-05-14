@@ -31,7 +31,7 @@ export default function LandingMobilePortals({
   onNavigate,
 }: Props) {
   return (
-    <div className="mx-auto mt-6 grid max-w-md gap-3 md:hidden">
+    <div className="mx-auto mt-6 flex w-full max-w-md flex-col gap-3 md:hidden">
       {portals.map((portal) => (
         <Button
           key={portal.key}
@@ -39,7 +39,7 @@ export default function LandingMobilePortals({
           variant={portal.variant}
           onClick={() => onNavigate(portal.key, portal.href)}
           disabled={loadingTarget !== null}
-          className="h-12 w-full text-sm"
+          className="h-14 w-full rounded-xl text-sm font-semibold"
         >
           {portal.buttonText}
           <ArrowRight className="h-4 w-4" />

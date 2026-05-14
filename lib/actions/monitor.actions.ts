@@ -1,15 +1,104 @@
 "use server";
 
 import { supabase } from "@/lib/supabase/client";
-import type { QuizSession } from "@/lib/shared/types";
 import { getSessionByIdService } from "@/lib/services/session.service";
+import type {
+  QuizSession,
+  ReportVisibility,
+  SessionEvent,
+  SessionEventType,
+} from "@/lib/shared/types";
+
+type SessionEventRow = {
+  type: SessionEventType;
+  timestamp: string;
+  description: string | null;
+  duration_seconds: number | null;
+};
+
+type SessionRow = {
+  id: string;
+  quiz_id: string;
+  student_name: string;
+  student_id: string;
+  started_at: string;
+  completed_at: string | null;
+  current_question: number;
+  answers: Record<string, number | string> | null;
+  tab_switches: number;
+  status: QuizSession["status"];
+  approval_status: QuizSession["approvalStatus"];
+  report_visibility: ReportVisibility;
+  score: number | null;
+  session_events?: SessionEventRow[];
+};
+
+function mapSessionEvent(row: SessionEventRow): SessionEvent {
+  return {
+    type: row.type,
+    timestamp: new Date(row.timestamp),
+    description: row.description || undefined,
+    durationSeconds: row.duration_seconds ?? undefined,
+  };
+}
+
+function mapSessionRow(row: SessionRow): QuizSession {
+  return {
+    id: row.id,
+    quizId: row.quiz_id,
+    studentName: row.student_name,
+    studentId: row.student_id,
+    startedAt: new Date(row.started_at),
+    completedAt: row.completed_at ? new Date(row.completed_at) : undefined,
+    currentQuestion: row.current_question,
+    answers: row.answers || {},
+    tabSwitches: row.tab_switches,
+    events:
+      row.session_events
+        ?.sort(
+          (a, b) =>
+            new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        )
+        .map(mapSessionEvent) || [],
+    status: row.status,
+    approvalStatus: row.approval_status,
+    reportVisibility: row.report_visibility,
+    score: row.score ?? undefined,
+  };
+}
+
+function countEvents(events: SessionEvent[], type: SessionEventType) {
+  return events.filter((event) => event.type === type).length;
+}
 
 export async function getQuizSessions(
   quizId: string
 ): Promise<QuizSession[]> {
   const { data, error } = await supabase
     .from("sessions")
-    .select("*, session_events(*)")
+    .select(
+      `
+      id,
+      quiz_id,
+      student_name,
+      student_id,
+      started_at,
+      completed_at,
+      current_question,
+      answers,
+      tab_switches,
+      status,
+      approval_status,
+      report_visibility,
+      score,
+      session_events (
+        type,
+        timestamp,
+        description,
+        duration_seconds
+      )
+    `
+    )
     .eq("quiz_id", quizId)
     .order("started_at", { ascending: false });
 
@@ -17,30 +106,7 @@ export async function getQuizSessions(
     throw new Error(error.message);
   }
 
-  return (data || []).map((session) => ({
-    id: session.id,
-    quizId: session.quiz_id,
-    studentName: session.student_name,
-    studentId: session.student_id,
-    startedAt: new Date(session.started_at),
-    completedAt: session.completed_at
-      ? new Date(session.completed_at)
-      : undefined,
-    currentQuestion: session.current_question,
-    answers: session.answers || {},
-    tabSwitches: session.tab_switches,
-    events:
-      session.session_events?.map((event: any) => ({
-        type: event.type,
-        timestamp: new Date(event.timestamp),
-        description: event.description || undefined,
-        durationSeconds: event.duration_seconds || undefined,
-      })) || [],
-    status: session.status,
-    approvalStatus: session.approval_status,
-    reportVisibility: session.report_visibility,
-    score: session.score ?? undefined,
-  }));
+  return ((data || []) as SessionRow[]).map(mapSessionRow);
 }
 
 export async function approveSession(
@@ -55,11 +121,15 @@ export async function approveSession(
     throw new Error(error.message);
   }
 
-  await supabase.from("session_events").insert({
+  const { error: eventError } = await supabase.from("session_events").insert({
     session_id: sessionId,
     type: "approved",
     description: "Teacher approved the join request.",
   });
+
+  if (eventError) {
+    throw new Error(eventError.message);
+  }
 
   const session = await getSessionByIdService(sessionId);
 
@@ -82,11 +152,15 @@ export async function rejectSession(
     throw new Error(error.message);
   }
 
-  await supabase.from("session_events").insert({
+  const { error: eventError } = await supabase.from("session_events").insert({
     session_id: sessionId,
     type: "rejected",
     description: "Teacher rejected the join request.",
   });
+
+  if (eventError) {
+    throw new Error(eventError.message);
+  }
 
   const session = await getSessionByIdService(sessionId);
 
@@ -104,10 +178,10 @@ export async function getSessionViolations(sessionId: string) {
     throw new Error("Session not found");
   }
 
-  const tabLeft = session.events.filter((event) => event.type === "tab-left").length;
-  const fullscreenExit = session.events.filter((event) => event.type === "fullscreen-exit").length;
-  const copyAttempt = session.events.filter((event) => event.type === "copy-attempt").length;
-  const pasteAttempt = session.events.filter((event) => event.type === "paste-attempt").length;
+  const tabLeft = countEvents(session.events, "tab-left");
+  const fullscreenExit = countEvents(session.events, "fullscreen-exit");
+  const copyAttempt = countEvents(session.events, "copy-attempt");
+  const pasteAttempt = countEvents(session.events, "paste-attempt");
 
   return {
     tabLeft,
@@ -116,4 +190,4 @@ export async function getSessionViolations(sessionId: string) {
     pasteAttempt,
     total: tabLeft + fullscreenExit + copyAttempt + pasteAttempt,
   };
-}
+} 

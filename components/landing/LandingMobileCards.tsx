@@ -24,14 +24,14 @@ const portals = [
 
 export default function LandingMobileCards() {
   return (
-    <div className="mx-auto mt-5 grid max-w-md gap-3 md:hidden">
+    <div className="mx-auto mt-5 flex w-full max-w-md flex-col gap-3 md:hidden">
       {portals.map((portal) => {
         const Icon = portal.icon;
 
         return (
           <Card
             key={portal.key}
-            className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl"
+            className="w-full rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl"
           >
             <div className="flex items-center gap-4">
               <div
