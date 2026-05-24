@@ -8,7 +8,7 @@ import PageLoader from "@/components/shared/PageLoader";
 import MonitorHeader from "@/components/teacher/monitor/MonitorHeader";
 import MonitorStats from "@/components/teacher/monitor/MonitorStats";
 import SessionTabs from "@/components/teacher/monitor/SessionTabs";
-import SessionDetailsDialog from "@/components/teacher/monitor/SessionDetailsDialog";
+import SessionDetailsDialog from "@/components/teacher/monitor/view-details/SessionDetailsDialog";
 
 import { Button } from "@/components/ui/button";
 
