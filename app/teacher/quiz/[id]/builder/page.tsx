@@ -8,7 +8,7 @@ import TeacherAppSidebar from "@/components/layout/sidebar/TeacherAppSidebar";
 import PageLoader from "@/components/shared/PageLoader";
 import BuilderHeader from "@/components/teacher/builder/BuilderHeader";
 import PublishCodeDialog from "@/components/teacher/builder/PublishCodeDialog";
-import CreateQuizDialog from "@/components/teacher/dashboard/create/CreateQuizDialog";
+import CreateQuizDialog from "@/components/teacher/dashboard/CreateQuizDialog";
 import BuilderDesktopLayout from "@/components/teacher/builder/layout/BuilderDesktopLayout";
 import BuilderEditorContent from "@/components/teacher/builder/layout/BuilderEditorContent";
 import BuilderMobileLayout from "@/components/teacher/builder/layout/BuilderMobileLayout";
