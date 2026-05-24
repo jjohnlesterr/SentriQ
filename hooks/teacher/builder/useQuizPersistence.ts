@@ -26,12 +26,21 @@ export function useQuizPersistence({ quizId }: Params) {
 
     if (!session) {
       setQuizzes([]);
+      router.push("/teacher/login");
       return;
     }
 
     const teacherQuizzes = await getTeacherQuizzes(session.user.id);
     setQuizzes(teacherQuizzes);
-  }, []);
+  }, [router]);
+
+  const goToDrafts = useCallback(() => {
+    router.push("/teacher/drafts");
+  }, [router]);
+
+  const goToDashboard = useCallback(() => {
+    router.push("/teacher/dashboard");
+  }, [router]);
 
   useEffect(() => {
     async function loadQuiz() {
@@ -88,5 +97,7 @@ export function useQuizPersistence({ quizId }: Params) {
     setQuestions,
 
     refreshTeacherQuizzes,
+    goToDrafts,
+    goToDashboard,
   };
 }

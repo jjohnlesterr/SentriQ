@@ -50,7 +50,8 @@ export function useQuizBuilder() {
 
     try {
       await publish.saveQuiz();
-      alert("Draft saved successfully.");
+
+      router.push("/teacher/dashboard");
     } catch {
       alert("Failed to save draft.");
     } finally {
