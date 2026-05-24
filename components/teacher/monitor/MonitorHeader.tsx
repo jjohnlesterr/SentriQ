@@ -5,7 +5,6 @@ import {
   ArrowLeft,
   ChevronDown,
   Lock,
-  RefreshCw,
   ShieldCheck,
   Unlock,
 } from "lucide-react";
@@ -17,23 +16,17 @@ import type { Quiz, ReportVisibility } from "@/lib/shared/types";
 
 type Props = {
   quiz: Quiz | null;
-  autoRefresh: boolean;
   lastUpdated: Date;
   reportVisibilityState: ReportVisibility | "mixed";
   onBack: () => void;
-  onRefresh: () => void;
-  onToggleAutoRefresh: () => void;
   onBulkUpdateReportVisibility: (visibility: ReportVisibility) => void;
 };
 
 export default function MonitorHeader({
   quiz,
-  autoRefresh,
   lastUpdated,
   reportVisibilityState,
   onBack,
-  onRefresh,
-  onToggleAutoRefresh,
   onBulkUpdateReportVisibility,
 }: Props) {
   const [reportOpen, setReportOpen] = useState(false);
@@ -92,34 +85,22 @@ export default function MonitorHeader({
           </div>
 
           <div className="flex flex-col gap-3 lg:items-end">
-            <p className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-400 lg:border-0 lg:bg-transparent lg:px-0 lg:py-0">
-              Last updated:{" "}
-              <span className="font-medium text-white">
-                {lastUpdated.toLocaleTimeString()}
-              </span>
-            </p>
+            <div className="flex items-center gap-3 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3">
+              <div className="relative flex h-3 w-3">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
 
-            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
-              <Button
-                variant="secondary"
-                onClick={onRefresh}
-                className="h-11 border-white/10 bg-white/5 hover:bg-white/10 hover:text-white"
-              >
-                <RefreshCw className="h-4 w-4" />
-                Refresh
-              </Button>
+                <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-400" />
+              </div>
 
-              <Button
-                onClick={onToggleAutoRefresh}
-                variant={autoRefresh ? "primary" : "secondary"}
-                className={
-                  autoRefresh
-                    ? "h-11"
-                    : "h-11 border-white/10 bg-white/5 hover:bg-white/10 hover:text-white"
-                }
-              >
-                Auto {autoRefresh ? "ON" : "OFF"}
-              </Button>
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold text-emerald-200">
+                  Live
+                </span>
+
+                <span className="text-xs text-emerald-300/80">
+                  Last Sync {lastUpdated.toLocaleTimeString()}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -191,7 +172,7 @@ export default function MonitorHeader({
           )}
         </div>
 
-        {/* DESKTOP REPORT RELEASE - OLD STYLE */}
+        {/* DESKTOP REPORT RELEASE */}
         <div className="relative z-10 mt-6 hidden rounded-2xl border border-white/10 bg-white/5 p-4 md:block">
           <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <div>
