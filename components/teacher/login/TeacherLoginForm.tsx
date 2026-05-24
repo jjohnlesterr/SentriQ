@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 
-
 export default function TeacherLoginForm() {
   const router = useRouter();
 
@@ -116,11 +115,16 @@ export default function TeacherLoginForm() {
               </div>
             </div>
 
-            <Turnstile
-              siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
-              onSuccess={(token) => setCaptchaToken(token)}
-              onExpire={() => setCaptchaToken("")}
-            />
+            <div className="w-full">
+              <Turnstile
+                siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+                onSuccess={(token) => setCaptchaToken(token)}
+                onExpire={() => setCaptchaToken("")}
+                options={{
+                  size: "flexible",
+                }}
+              />
+            </div>
 
             {error && (
               <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
