@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowRight, Loader2, LucideIcon } from "lucide-react";
+import { ArrowRight, Loader2, type LucideIcon } from "lucide-react";
 
+import { GlassCard } from "@/components/shared/GlassCard";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 
 interface PortalCardProps {
   icon: LucideIcon;
@@ -31,7 +31,7 @@ export default function PortalCard({
   onClick,
 }: PortalCardProps) {
   return (
-    <Card className="h-full overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-0 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+    <GlassCard className="h-full overflow-hidden p-0 shadow-[0_20px_80px_rgba(0,0,0,0.35)]">
       <div className="relative h-full p-4 sm:p-6 md:p-8">
         <div
           className={`absolute right-0 top-0 h-24 w-24 rounded-full blur-2xl md:h-32 md:w-32 ${glowClass}`}
@@ -75,6 +75,6 @@ export default function PortalCard({
           </Button>
         </div>
       </div>
-    </Card>
+    </GlassCard>
   );
 }
