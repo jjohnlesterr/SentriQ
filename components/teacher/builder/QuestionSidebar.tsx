@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { Plus, X } from "lucide-react";
 
 import QuestionList from "@/components/teacher/builder/question-list/QuestionList";
 import QuestionPagination from "@/components/teacher/builder/question-list/QuestionPagination";
 import { Button } from "@/components/ui/button";
-import { useQuestionPagination } from "@/hooks/teacher/builder/useQuestionPagination";
 import type { Question } from "@/lib/shared/types";
 
 type Props = {
@@ -24,7 +23,7 @@ type Props = {
   onReorderQuestions?: (activeId: string, overId: string) => void;
 };
 
-const QUESTIONS_PER_PAGE = 5;
+const VISIBLE_QUESTION_LIMIT = 5;
 
 export default function QuestionSidebar({
   questions,
@@ -40,23 +39,22 @@ export default function QuestionSidebar({
   onRemoveQuestion,
 }: Props) {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  const {
-    visibleItems: visibleQuestions,
-    canSeeMore,
-    canSeeLess,
-    seeMore,
-    seeLess,
-    showItem,
-  } = useQuestionPagination(questions, QUESTIONS_PER_PAGE);
+  const visibleQuestionItems = useMemo(() => {
+    const source = isExpanded
+      ? questions
+      : questions.slice(0, VISIBLE_QUESTION_LIMIT);
 
-  useEffect(() => {
-    showItem(activeQuestion);
-  }, [activeQuestion, showItem]);
+    return source.map((question) => ({
+      question,
+      originalIndex: questions.findIndex((item) => item.id === question.id),
+    }));
+  }, [isExpanded, questions]);
 
   function handleAddQuestion() {
     onAddQuestion();
-    showItem(questions.length);
+    setOpenMenuId(null);
   }
 
   function handleSelectQuestion(index: number) {
@@ -64,8 +62,13 @@ export default function QuestionSidebar({
     onMobileOpenChange?.(false);
   }
 
+  function handleSeeMore() {
+    setIsExpanded(true);
+    setOpenMenuId(null);
+  }
+
   function handleSeeLess() {
-    seeLess();
+    setIsExpanded(false);
     setOpenMenuId(null);
   }
 
@@ -109,8 +112,9 @@ export default function QuestionSidebar({
       ) : (
         <div className="space-y-3">
           <QuestionList
-            questions={visibleQuestions}
+            items={visibleQuestionItems}
             activeQuestion={activeQuestion}
+            totalQuestions={questions.length}
             openMenuId={openMenuId}
             onOpenMenuChange={setOpenMenuId}
             onSelectQuestion={handleSelectQuestion}
@@ -121,9 +125,10 @@ export default function QuestionSidebar({
           />
 
           <QuestionPagination
-            canSeeMore={canSeeMore}
-            canSeeLess={canSeeLess}
-            onSeeMore={seeMore}
+            totalQuestions={questions.length}
+            visibleCount={VISIBLE_QUESTION_LIMIT}
+            isExpanded={isExpanded}
+            onSeeMore={handleSeeMore}
             onSeeLess={handleSeeLess}
           />
 
@@ -153,7 +158,7 @@ export default function QuestionSidebar({
       <>
         {mobileOpen && (
           <div className="fixed inset-0 z-50 bg-slate-950 text-white lg:hidden">
-            <div className="h-full overflow-y-auto px-4 pt-4 pb-40">
+            <div className="h-full overflow-y-auto px-4 pb-40 pt-4">
               <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-white/20" />
               {content}
             </div>

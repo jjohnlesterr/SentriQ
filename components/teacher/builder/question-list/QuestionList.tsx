@@ -3,9 +3,15 @@
 import QuestionCard from "@/components/teacher/builder/question-list/QuestionCard";
 import type { Question } from "@/lib/shared/types";
 
+type QuestionListItem = {
+  question: Question;
+  originalIndex: number;
+};
+
 type Props = {
-  questions: Question[];
+  items: QuestionListItem[];
   activeQuestion: number;
+  totalQuestions: number;
   openMenuId: string | null;
   onOpenMenuChange: (id: string | null) => void;
   onSelectQuestion: (index: number) => void;
@@ -16,8 +22,9 @@ type Props = {
 };
 
 export default function QuestionList({
-  questions,
+  items,
   activeQuestion,
+  totalQuestions,
   openMenuId,
   onOpenMenuChange,
   onSelectQuestion,
@@ -28,13 +35,13 @@ export default function QuestionList({
 }: Props) {
   return (
     <div className="space-y-2.5 pr-1">
-      {questions.map((question, index) => (
+      {items.map(({ question, originalIndex }) => (
         <QuestionCard
           key={question.id}
           question={question}
-          index={index}
+          index={originalIndex}
           activeQuestion={activeQuestion}
-          totalQuestions={questions.length}
+          totalQuestions={totalQuestions}
           openMenuId={openMenuId}
           onOpenMenuChange={onOpenMenuChange}
           onSelectQuestion={onSelectQuestion}

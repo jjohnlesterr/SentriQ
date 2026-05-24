@@ -3,43 +3,32 @@
 import { Button } from "@/components/ui/button";
 
 type Props = {
-  canSeeMore: boolean;
-  canSeeLess: boolean;
+  totalQuestions: number;
+  visibleCount: number;
+  isExpanded: boolean;
   onSeeMore: () => void;
   onSeeLess: () => void;
 };
 
 export default function QuestionPagination({
-  canSeeMore,
-  canSeeLess,
+  totalQuestions,
+  visibleCount,
+  isExpanded,
   onSeeMore,
   onSeeLess,
 }: Props) {
-  if (!canSeeMore && !canSeeLess) return null;
+  if (totalQuestions <= visibleCount) return null;
 
   return (
-    <div className="flex gap-2 pt-2">
-      {canSeeMore && (
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={onSeeMore}
-          className="flex-1 rounded-xl border border-white/10 bg-white/5 text-xs text-slate-300 hover:bg-white/10 hover:text-white"
-        >
-          See More
-        </Button>
-      )}
-
-      {canSeeLess && (
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={onSeeLess}
-          className="flex-1 rounded-xl border border-white/10 bg-white/5 text-xs text-slate-300 hover:bg-white/10 hover:text-white"
-        >
-          See Less
-        </Button>
-      )}
+    <div className="relative z-20 pt-2">
+      <Button
+        type="button"
+        variant="ghost"
+        onClick={isExpanded ? onSeeLess : onSeeMore}
+        className="h-11 w-full rounded-2xl border border-white/10 bg-white/10 text-sm font-semibold text-white hover:bg-white/15"
+      >
+        {isExpanded ? "See Less" : `See More (${totalQuestions - visibleCount})`}
+      </Button>
     </div>
   );
 }
