@@ -199,14 +199,8 @@ export async function getTeacherQuizzesService(
   const { data, error } = await supabase
     .from("quizzes")
     .select(`
-      id,
-      title,
-      description,
-      code,
-      created_by,
-      published,
-      status,
-      created_at
+      *,
+      questions(*)
     `)
     .eq("created_by", teacherId)
     .order("created_at", { ascending: false });
@@ -215,12 +209,7 @@ export async function getTeacherQuizzesService(
     throw new Error(error.message);
   }
 
-  return (data || []).map((quiz) =>
-    mapQuizRow({
-      ...quiz,
-      questions: [],
-    })
-  );
+  return (data || []).map(mapQuizRow);
 }
 
 export async function getQuizByIdService(
