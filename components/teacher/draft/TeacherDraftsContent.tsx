@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { History } from "lucide-react";
 
 import TeacherPageLayout from "@/components/layout/TeacherPageLayout";
 import PageLoader from "@/components/shared/PageLoader";
 import DraftHeader from "@/components/teacher/draft/DraftHeader";
-import QuizList from "@/components/teacher/dashboard/quizzes/QuizList";
-import CreateQuizDialog from "@/components/teacher/dashboard/create/CreateQuizDialog";
+import QuizList from "@/components/teacher/dashboard/QuizList";
+import CreateQuizDialog from "@/components/teacher/dashboard/CreateQuizDialog";
 import { useCreateQuizDialog } from "@/hooks/teacher/useCreateQuizDialog";
 import { useTeacherQuizzes } from "@/hooks/teacher/useTeacherQuizzes";
 
@@ -48,7 +49,20 @@ export default function TeacherDraftsContent() {
             </div>
           </div>
 
-          <div className="mt-7 md:mt-8">
+          <section className="mt-7 md:mt-8">
+            <div className="mb-4 flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-violet-400/20 bg-violet-500/10 text-violet-200">
+                <History className="h-4 w-4" />
+              </div>
+
+              <div>
+                <h2 className="text-lg font-bold text-white">Draft History</h2>
+                <p className="text-sm text-slate-400">
+                  Search and continue editing your unpublished quizzes.
+                </p>
+              </div>
+            </div>
+
             {teacher.isLoading ? (
               <PageLoader label="Loading drafts..." variant="card" />
             ) : (
@@ -57,7 +71,7 @@ export default function TeacherDraftsContent() {
                 onDeleteQuiz={teacher.handleDeleteQuiz}
               />
             )}
-          </div>
+          </section>
         </main>
       </div>
     </TeacherPageLayout>
