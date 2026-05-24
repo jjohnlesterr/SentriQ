@@ -2,10 +2,19 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Eye, FileText, LayoutDashboard, LogOut, X } from "lucide-react";
+import {
+  Eye,
+  FilePlus2,
+  FileText,
+  LayoutDashboard,
+  LogOut,
+  PencilLine,
+  X,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import AppLogo from "@/components/shared/AppLogo";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/shared/utils";
 import type { Quiz } from "@/lib/shared/types";
 import SidebarButton from "./SidebarButton";
@@ -85,13 +94,13 @@ export default function TeacherAppSidebar({
 
       <aside
         className={cn(
-          "fixed left-0 top-0 flex h-screen flex-col border-r border-white/10 px-4 py-5 text-white",
+          "fixed left-0 top-0 flex h-screen flex-col border-r border-white/10 px-5 py-5 text-white",
           open
-            ? "z-50 w-72 bg-slate-950/95 shadow-2xl backdrop-blur-2xl lg:hidden"
-            : "z-40 hidden w-64 bg-slate-950/60 backdrop-blur-xl lg:flex"
+            ? "z-50 w-full bg-slate-950/95 shadow-2xl backdrop-blur-2xl lg:hidden"
+            : "z-40 hidden w-64 bg-slate-950/60 px-4 backdrop-blur-xl lg:flex"
         )}
       >
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-6 shrink-0 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative h-9 w-9 overflow-hidden rounded-xl">
               <Image
@@ -119,72 +128,78 @@ export default function TeacherAppSidebar({
           )}
         </div>
 
-        <nav className="space-y-2">
-          <SidebarButton
-            icon={LayoutDashboard}
-            active={activePage === "dashboard"}
-            onClick={() => navigate("/teacher/dashboard")}
-          >
-            Dashboard
-          </SidebarButton>
-
-          <SidebarSection
-            title="Quiz Builder"
-            icon={FileText}
-            active={isQuizActive}
-            open={builderOpen}
-            onToggle={() => setBuilderOpen((prev) => !prev)}
-          >
+        <ScrollArea className="min-h-0 flex-1 pr-2">
+          <nav className="space-y-2 pb-4">
             <SidebarButton
-              sidebarVariant="sub"
-              active={activePage === "drafts"}
-              onClick={() => navigate("/teacher/drafts")}
+              icon={LayoutDashboard}
+              active={activePage === "dashboard"}
+              onClick={() => navigate("/teacher/dashboard")}
             >
-              Drafts
+              Dashboard
             </SidebarButton>
 
-            <SidebarButton
-              sidebarVariant="sub"
-              active={activePage === "quiz-builder"}
-              onClick={createNewQuiz}
-              className={!activePage.includes("quiz-builder") ? "text-cyan-200" : ""}
+            <SidebarSection
+              title="Quiz Builder"
+              icon={FileText}
+              active={isQuizActive}
+              open={builderOpen}
+              onToggle={() => setBuilderOpen((prev) => !prev)}
             >
-              Create New
-            </SidebarButton>
-          </SidebarSection>
+              <SidebarButton
+                sidebarVariant="sub"
+                icon={PencilLine}
+                active={activePage === "drafts"}
+                onClick={() => navigate("/teacher/drafts")}
+                className={activePage !== "drafts" ? "text-violet-200" : ""}
+              >
+                Drafts
+              </SidebarButton>
 
-          <SidebarSection
-            title="Live Monitor"
-            icon={Eye}
-            active={isMonitorActive}
-            open={monitorOpen}
-            onToggle={() => setMonitorOpen((prev) => !prev)}
-          >
-            <div className="max-h-56 space-y-1 overflow-y-auto pr-1">
+              <SidebarButton
+                sidebarVariant="sub"
+                icon={FilePlus2}
+                active={activePage === "quiz-builder"}
+                onClick={createNewQuiz}
+                className={activePage !== "quiz-builder" ? "text-cyan-200" : ""}
+              >
+                Create New
+              </SidebarButton>
+            </SidebarSection>
+
+            <SidebarSection
+              title="Live Monitor"
+              icon={Eye}
+              active={isMonitorActive}
+              open={monitorOpen}
+              onToggle={() => setMonitorOpen((prev) => !prev)}
+              contentClassName="pl-0"
+            >
               {liveQuizzes.length === 0 ? (
                 <p className="rounded-xl px-3 py-2 text-xs text-slate-500">
                   No published quizzes yet.
                 </p>
               ) : (
-                liveQuizzes.map((quiz) => (
-                  <SidebarButton
-                    key={quiz.id}
-                    sidebarVariant="sub"
-                    active={activeQuizId === quiz.id}
-                    onClick={() => navigate(`/teacher/quiz/${quiz.id}/monitor`)}
-                    className={
-                      activeQuizId !== quiz.id ? "text-cyan-200" : ""
-                    }
-                  >
-                    <span className="truncate">{quiz.title}</span>
-                  </SidebarButton>
-                ))
+                <div className="space-y-1 pl-6">
+                  {liveQuizzes.map((quiz) => (
+                    <SidebarButton
+                      key={quiz.id}
+                      sidebarVariant="sub"
+                      active={activeQuizId === quiz.id}
+                      onClick={() =>
+                        navigate(`/teacher/quiz/${quiz.id}/monitor`)
+                      }
+                      className={activeQuizId !== quiz.id ? "text-cyan-200" : ""}
+                    >
+                      <span className="truncate">{quiz.title}</span>
+                    </SidebarButton>
+                  ))}
+                </div>
               )}
-            </div>
-          </SidebarSection>
-        </nav>
+            </SidebarSection>
+          </nav>
+        </ScrollArea>
 
-        <div className="mt-auto space-y-3">
+        <div className="mt-4 shrink-0 space-y-3">
           <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-violet-500 text-sm font-bold text-white">

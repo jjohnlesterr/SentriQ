@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { ChevronDown } from "lucide-react";
 
@@ -11,7 +12,8 @@ type SidebarSectionProps = {
   active?: boolean;
   open: boolean;
   onToggle: () => void;
-  children: React.ReactNode;
+  children: ReactNode;
+  contentClassName?: string;
 };
 
 export default function SidebarSection({
@@ -21,6 +23,7 @@ export default function SidebarSection({
   open,
   onToggle,
   children,
+  contentClassName,
 }: SidebarSectionProps) {
   return (
     <div
@@ -40,16 +43,20 @@ export default function SidebarSection({
         )}
       >
         <div className="flex items-center gap-3">
-          <Icon className="h-4 w-4" />
+          <Icon className="h-4 w-4 shrink-0" />
           {title}
         </div>
 
         <ChevronDown
-          className={cn("h-4 w-4 transition", open && "rotate-180")}
+          className={cn("h-4 w-4 shrink-0 transition", open && "rotate-180")}
         />
       </button>
 
-      {open && <div className="mt-2 space-y-1 pl-9">{children}</div>}
+      {open && (
+        <div className={cn("mt-2 space-y-1 pl-6", contentClassName)}>
+          {children}
+        </div>
+      )}
     </div>
   );
 }
