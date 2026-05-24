@@ -5,13 +5,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import TeacherPageLayout from "@/components/layout/TeacherPageLayout";
 
-import DashboardHeader from "@/components/teacher/dashboard/header/DashboardHeader";
+import DashboardHeader from "@/components/teacher/dashboard/DashboardHeader";
 
-import CreateQuizDialog from "@/components/teacher/dashboard/create/CreateQuizDialog";
+import CreateQuizDialog from "@/components/teacher/dashboard/CreateQuizDialog";
 
-import DashboardStats from "@/components/teacher/dashboard/stats/DashboardStats";
+import DashboardStats from "@/components/teacher/dashboard/DashboardStats";
 
-import DashboardQuizTabs from "@/components/teacher/dashboard/quizzes/DashboardQuizTabs";
+import DashboardQuizTabs from "@/components/teacher/dashboard/DashboardQuizTabs";
 
 import { useCreateQuizDialog } from "@/hooks/teacher/useCreateQuizDialog";
 import { useTeacherQuizzes } from "@/hooks/teacher/useTeacherQuizzes";
