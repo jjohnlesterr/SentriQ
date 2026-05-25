@@ -88,7 +88,6 @@ export default function MonitorHeader({
             <div className="flex items-center gap-3 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3">
               <div className="relative flex h-3 w-3">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-
                 <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-400" />
               </div>
 
@@ -114,7 +113,7 @@ export default function MonitorHeader({
           >
             <div className="min-w-0">
               <h3 className="text-left font-semibold text-white">
-                Student Report Release
+                Student Result Access
               </h3>
 
               <p className="mt-1 text-left text-sm text-slate-400">
@@ -156,7 +155,7 @@ export default function MonitorHeader({
                 className={mobileButtonClass("summary")}
               >
                 <Unlock className="mr-3 h-5 w-5" />
-                Release Summary
+                Release Answers
               </Button>
 
               <Button
@@ -177,7 +176,7 @@ export default function MonitorHeader({
           <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="font-semibold text-white">
-                Student Report Release
+                Student Result Access
               </h3>
 
               <p className="text-sm text-slate-400">
@@ -210,7 +209,7 @@ export default function MonitorHeader({
               className={buttonClass("summary")}
             >
               <Unlock className="h-4 w-4" />
-              Release Summary
+              Release Answers
             </Button>
 
             <Button
