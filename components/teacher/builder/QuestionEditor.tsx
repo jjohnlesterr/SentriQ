@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDown, ListChecks, Plus, Trash2 } from "lucide-react";
 
 import IdentificationEditor from "@/components/teacher/builder/question-types/IdentificationEditor";
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
 import type { Question, QuestionType } from "@/lib/shared/types";
+import { VALIDATION_LIMITS } from "@/lib/validations/constants";
 
 type Props = {
   question: Question;
@@ -34,10 +35,16 @@ type Props = {
   onDuplicateOption: (questionIndex: number, optionIndex: number) => void;
 };
 
+const QUESTION_COUNT_WARNING_AT = 160;
+
 function getQuestionLabel(question: Question) {
   if (question.type === "multiple_choice") return "Multiple Choice";
   if (question.type === "true_false") return "True/False";
   return "Identification";
+}
+
+function sanitizeInput(value: string) {
+  return value.replace(/^\s+/, "");
 }
 
 export default function QuestionEditor({
@@ -57,6 +64,15 @@ export default function QuestionEditor({
   onDuplicateOption,
 }: Props) {
   const [questionMenuOpen, setQuestionMenuOpen] = useState(false);
+  const [questionTouched, setQuestionTouched] = useState(false);
+
+  useEffect(() => {
+    setQuestionTouched(false);
+    setQuestionMenuOpen(false);
+  }, [question.id]);
+
+  const showQuestionCount = question.text.length >= QUESTION_COUNT_WARNING_AT;
+  const showQuestionWarning = questionTouched && !question.text.trim();
 
   const optionEditorProps = {
     question,
@@ -73,7 +89,7 @@ export default function QuestionEditor({
   return (
     <QuestionSection>
       <div className="mb-6 border-b border-white/10 pb-5">
-        <div className="mb-4 flex items-center gap-2 lg:hidden">
+        <div className="mb-4 flex items-center gap-2 xl:hidden">
           {onOpenQuestionSelector && (
             <Button
               type="button"
@@ -152,9 +168,9 @@ export default function QuestionEditor({
         </div>
       </div>
 
-      <div className="grid gap-5 md:grid-cols-[220px_minmax(0,1fr)]">
+      <div className="grid gap-5 xl:grid-cols-[220px_minmax(0,1fr)]">
         <QuestionField label="Question Type">
-          <div className="relative w-[220px] max-w-full">
+          <div className="relative w-full xl:w-[220px]">
             <select
               value={question.type}
               onChange={(e) =>
@@ -190,20 +206,37 @@ export default function QuestionEditor({
 
         <QuestionField
           label="Question Text"
-          rightText={`${question.text.length}/500`}
+          rightText={
+            showQuestionCount
+              ? `${question.text.length}/${VALIDATION_LIMITS.QUESTION_MAX}`
+              : undefined
+          }
         >
-          <Textarea
-            value={question.text}
-            wrap="soft"
-            onChange={(e) =>
-              onUpdateQuestion(activeQuestion, {
-                text: e.target.value.slice(0, 500),
-              })
-            }
-            placeholder="Enter your question"
-            rows={3}
-            className="min-h-[112px] w-full resize-none rounded-2xl border-white/10 bg-slate-950/40 px-4 py-3 text-base text-white placeholder:text-slate-600"
-          />
+          <div className="space-y-2">
+            <Textarea
+              value={question.text}
+              wrap="soft"
+              maxLength={VALIDATION_LIMITS.QUESTION_MAX}
+              onBlur={() => setQuestionTouched(true)}
+              onChange={(e) => {
+                setQuestionTouched(true);
+
+                onUpdateQuestion(activeQuestion, {
+                  text: sanitizeInput(e.target.value).slice(
+                    0,
+                    VALIDATION_LIMITS.QUESTION_MAX,
+                  ),
+                });
+              }}
+              placeholder="Enter your question"
+              rows={3}
+              className="min-h-[112px] w-full resize-none rounded-2xl border-white/10 bg-slate-950/40 px-4 py-3 text-base text-white placeholder:text-slate-600"
+            />
+
+            {showQuestionWarning && (
+              <p className="text-xs text-red-400">Question text is required.</p>
+            )}
+          </div>
         </QuestionField>
       </div>
 
@@ -226,6 +259,11 @@ export default function QuestionEditor({
       <Button
         type="button"
         onClick={() => {
+          if (!question.text.trim()) {
+            setQuestionTouched(true);
+            return;
+          }
+
           const trigger = document.querySelector<HTMLButtonElement>(
             "[data-add-question-trigger]",
           );
