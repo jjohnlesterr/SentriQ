@@ -8,6 +8,14 @@ import { useQuestionActions } from "./useQuestionActions";
 import { useQuizPersistence } from "./useQuizPersistence";
 import { useQuizPublish } from "./useQuizPublish";
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return fallback;
+}
+
 export function useQuizBuilder() {
   const router = useRouter();
   const params = useParams();
@@ -19,6 +27,7 @@ export function useQuizBuilder() {
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [showCodeDialog, setShowCodeDialog] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   const questionActions = useQuestionActions({
     questions: persistence.questions,
@@ -44,6 +53,8 @@ export function useQuizBuilder() {
   });
 
   async function saveDraftOnly() {
+    setSaveError("");
+
     if (!publish.validateQuizBeforeSave()) return false;
 
     setIsSaving(true);
@@ -52,8 +63,10 @@ export function useQuizBuilder() {
       await publish.saveQuiz();
       persistence.markClean();
       return true;
-    } catch {
-      alert("Failed to save draft.");
+    } catch (error) {
+      setSaveError(
+        getErrorMessage(error, "Failed to save draft. Please try again."),
+      );
       return false;
     } finally {
       setIsSaving(false);
@@ -69,6 +82,8 @@ export function useQuizBuilder() {
   }
 
   async function handlePublishQuiz() {
+    setSaveError("");
+
     if (!publish.validateQuizBeforePublish()) return;
 
     setIsPublishing(true);
@@ -77,11 +92,17 @@ export function useQuizBuilder() {
       await publish.publishCurrentQuiz();
       persistence.markClean();
       setShowCodeDialog(true);
-    } catch {
-      alert("Failed to publish quiz.");
+    } catch (error) {
+      setSaveError(
+        getErrorMessage(error, "Failed to publish quiz. Please try again."),
+      );
     } finally {
       setIsPublishing(false);
     }
+  }
+
+  function clearSaveError() {
+    setSaveError("");
   }
 
   function goBack() {
@@ -106,6 +127,7 @@ export function useQuizBuilder() {
     isSaving,
     isPublishing,
     showCodeDialog,
+    saveError,
 
     setTitle: persistence.setTitle,
     setDescription: persistence.setDescription,
@@ -116,6 +138,7 @@ export function useQuizBuilder() {
     handleSaveQuiz,
     handlePublishQuiz,
     handleCopyCode: publish.copyQuizCode,
+    clearSaveError,
     goBack,
     goToMonitor,
 

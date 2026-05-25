@@ -71,12 +71,6 @@ export function useTeacherQuizzes() {
   }
 
   async function handleDeleteQuiz(quizId: string) {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this quiz? This will also delete its sessions.",
-    );
-
-    if (!confirmed) return;
-
     try {
       await deleteQuiz(quizId);
       setQuizzes((prev) => prev.filter((quiz) => quiz.id !== quizId));

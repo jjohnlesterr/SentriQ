@@ -18,6 +18,12 @@ type Params = {
   refreshTeacherQuizzes: () => Promise<void>;
 };
 
+function hasDuplicateOptions(options: string[]) {
+  const normalized = options.map((option) => option.trim().toLowerCase());
+
+  return new Set(normalized).size !== normalized.length;
+}
+
 export function useQuizPublish({
   quizId,
   quiz,
@@ -30,7 +36,9 @@ export function useQuizPublish({
 }: Params) {
   async function saveQuiz() {
     const updated = await updateQuiz(quizId, title, description, questions);
+
     setQuiz(updated);
+
     return updated;
   }
 
@@ -40,6 +48,7 @@ export function useQuizPublish({
     const published = await publishQuiz(quizId);
 
     setQuiz(published);
+
     await refreshTeacherQuizzes();
 
     return published;
@@ -62,16 +71,35 @@ export function useQuizPublish({
 
     if (questions.length === 0) {
       toast.error("Add at least one question before publishing.");
+
       return false;
     }
 
     const incompleteQuestionIndex = questions.findIndex(
-      (question) => !isQuestionComplete(question)
+      (question) => !isQuestionComplete(question),
     );
 
     if (incompleteQuestionIndex !== -1) {
       setActiveQuestion(incompleteQuestionIndex);
+
       toast.error(`Please complete Question ${incompleteQuestionIndex + 1}.`);
+
+      return false;
+    }
+
+    const duplicateQuestionIndex = questions.findIndex(
+      (question) =>
+        question.type === "multiple_choice" &&
+        hasDuplicateOptions(question.options),
+    );
+
+    if (duplicateQuestionIndex !== -1) {
+      setActiveQuestion(duplicateQuestionIndex);
+
+      toast.error(
+        `Question ${duplicateQuestionIndex + 1} contains duplicate answers.`,
+      );
+
       return false;
     }
 
@@ -85,6 +113,7 @@ export function useQuizPublish({
     }
 
     await navigator.clipboard.writeText(quiz.code);
+
     toast.success("Quiz code copied.");
   }
 
