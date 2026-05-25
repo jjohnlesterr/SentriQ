@@ -12,7 +12,7 @@ type Props = {
 
 export default function BuilderDesktopLayout({ builder, children }: Props) {
   return (
-    <div className="mt-5 hidden gap-5 lg:grid lg:grid-cols-[340px_minmax(0,1fr)] xl:grid-cols-[360px_minmax(0,1fr)]">
+    <div className="mt-5 hidden gap-5 xl:grid xl:grid-cols-[320px_minmax(0,1fr)] 2xl:grid-cols-[360px_minmax(0,1fr)]">
       <aside className="min-w-0">
         <div className="sticky top-4 space-y-4">
           <Tabs defaultValue="questions" className="w-full">
