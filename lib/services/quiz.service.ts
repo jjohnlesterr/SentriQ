@@ -1,5 +1,10 @@
 import { supabase } from "@/lib/supabase/client";
 import type { Question, Quiz } from "@/lib/shared/types";
+import {
+  createQuizSchema,
+  publishQuizSchema,
+  updateQuizSchema,
+} from "@/lib/validations/quiz.schema";
 
 type QuizRow = {
   id: string;
@@ -88,15 +93,21 @@ export async function createQuizService(
   description: string,
   teacherId: string
 ): Promise<Quiz> {
+  const validated = createQuizSchema.parse({
+    title,
+    description,
+    teacherId,
+  });
+
   const code = await generateUniqueQuizCode();
 
   const { data, error } = await supabase
     .from("quizzes")
     .insert({
-      title,
-      description,
+      title: validated.title,
+      description: validated.description,
       code,
-      created_by: teacherId,
+      created_by: validated.teacherId,
       published: false,
       status: "draft",
     })
@@ -116,13 +127,20 @@ export async function updateQuizService(
   description: string,
   questions: Question[]
 ): Promise<Quiz> {
+  const validated = updateQuizSchema.parse({
+    quizId,
+    title,
+    description,
+    questions,
+  });
+
   const { data: quizData, error: quizError } = await supabase
     .from("quizzes")
     .update({
-      title,
-      description,
+      title: validated.title,
+      description: validated.description,
     })
-    .eq("id", quizId)
+    .eq("id", validated.quizId)
     .select("*")
     .single();
 
@@ -133,17 +151,17 @@ export async function updateQuizService(
   const { error: deleteError } = await supabase
     .from("questions")
     .delete()
-    .eq("quiz_id", quizId);
+    .eq("quiz_id", validated.quizId);
 
   if (deleteError) {
     throw new Error(deleteError.message);
   }
 
-  if (questions.length > 0) {
+  if (validated.questions.length > 0) {
     const { error: insertError } = await supabase.from("questions").insert(
-      questions.map((question, index) => ({
+      validated.questions.map((question, index) => ({
         id: question.id,
-        quiz_id: quizId,
+        quiz_id: validated.quizId,
         type: question.type,
         text: question.text,
         options: question.options || [],
@@ -160,18 +178,37 @@ export async function updateQuizService(
 
   return {
     ...mapQuizRow({ ...quizData, questions: [] }),
-    questions,
+    questions: validated.questions,
   };
 }
 
 export async function publishQuizService(quizId: string): Promise<Quiz> {
+  const validated = publishQuizSchema.parse({ quizId });
+
+  const existingQuiz = await getQuizByIdService(validated.quizId);
+
+  if (!existingQuiz) {
+    throw new Error("Quiz not found.");
+  }
+
+  if (existingQuiz.questions.length === 0) {
+    throw new Error("Quiz must have at least 1 question before publishing.");
+  }
+
+  updateQuizSchema.parse({
+    quizId: existingQuiz.id,
+    title: existingQuiz.title,
+    description: existingQuiz.description,
+    questions: existingQuiz.questions,
+  });
+
   const { data, error } = await supabase
     .from("quizzes")
     .update({
       published: true,
       status: "published",
     })
-    .eq("id", quizId)
+    .eq("id", validated.quizId)
     .select("*, questions(*)")
     .single();
 
@@ -183,10 +220,12 @@ export async function publishQuizService(quizId: string): Promise<Quiz> {
 }
 
 export async function deleteQuizService(quizId: string): Promise<void> {
+  const validated = publishQuizSchema.parse({ quizId });
+
   const { error } = await supabase
     .from("quizzes")
     .delete()
-    .eq("id", quizId);
+    .eq("id", validated.quizId);
 
   if (error) {
     throw new Error(error.message);
@@ -196,6 +235,10 @@ export async function deleteQuizService(quizId: string): Promise<void> {
 export async function getTeacherQuizzesService(
   teacherId: string
 ): Promise<Quiz[]> {
+  if (!teacherId) {
+    throw new Error("Teacher ID is required.");
+  }
+
   const { data, error } = await supabase
     .from("quizzes")
     .select(`
@@ -215,10 +258,12 @@ export async function getTeacherQuizzesService(
 export async function getQuizByIdService(
   quizId: string
 ): Promise<Quiz | null> {
+  const validated = publishQuizSchema.parse({ quizId });
+
   const { data, error } = await supabase
     .from("quizzes")
     .select("*, questions(*)")
-    .eq("id", quizId)
+    .eq("id", validated.quizId)
     .maybeSingle();
 
   if (error) {
