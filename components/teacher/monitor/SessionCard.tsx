@@ -2,7 +2,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   ChevronRight,
-  Copy,
   Monitor,
   TriangleAlert,
   XCircle,
@@ -57,10 +56,26 @@ function getRiskLevel(session: QuizSession) {
 
 function getReportClass(reportVisibility: QuizSession["reportVisibility"]) {
   if (reportVisibility === "full") return "text-blue-300";
-
   if (reportVisibility === "summary") return "text-violet-300";
-
   return "text-slate-400";
+}
+
+function getReportLabel(reportVisibility: QuizSession["reportVisibility"]) {
+  if (reportVisibility === "full") return "Full Review";
+  if (reportVisibility === "summary") return "Answers";
+  return "Locked";
+}
+
+function getStatusLabel(session: QuizSession) {
+  if (session.approvalStatus === "pending") return "Pending";
+  if (session.approvalStatus === "rejected") return "Rejected";
+  return session.status === "completed" ? "Completed" : "In Progress";
+}
+
+function getStatusClass(session: QuizSession) {
+  if (session.approvalStatus === "pending") return "text-yellow-300";
+  if (session.approvalStatus === "rejected") return "text-red-300";
+  return session.status === "completed" ? "text-emerald-300" : "text-blue-300";
 }
 
 export default function SessionCard({
@@ -75,17 +90,12 @@ export default function SessionCard({
     : 0;
 
   const isPending = session.approvalStatus === "pending";
-
   const isRejected = session.approvalStatus === "rejected";
-
   const isApproved = session.approvalStatus === "approved";
 
   const tabLeft = countEvents(session, "tab-left");
-
   const fullscreenExit = countEvents(session, "fullscreen-exit");
-
   const copyAttempt = countEvents(session, "copy-attempt");
-
   const pasteAttempt = countEvents(session, "paste-attempt");
 
   const risk = getRiskLevel(session);
@@ -137,14 +147,13 @@ export default function SessionCard({
           </div>
         </div>
 
-        {/* COMPACT MAIN */}
         <div className="mt-4 rounded-3xl border border-white/10 bg-white/[0.03] p-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-slate-500">Current Question</p>
+              <p className="text-xs text-slate-500">Status</p>
 
-              <p className="mt-1 text-2xl font-bold text-white">
-                {isApproved ? `Q${session.currentQuestion + 1}` : "—"}
+              <p className={`mt-1 text-2xl font-bold ${getStatusClass(session)}`}>
+                {getStatusLabel(session)}
               </p>
             </div>
 
@@ -170,12 +179,10 @@ export default function SessionCard({
             Requested at {formatTime(session.startedAt)}
           </div>
 
-          {/* EVENTS */}
           {isApproved && (
             <div className="mt-4 grid grid-cols-4 gap-2">
               <div className="rounded-xl border border-red-400/10 bg-red-500/5 px-2 py-2 text-center">
                 <p className="text-sm font-bold text-red-300">{tabLeft}</p>
-
                 <p className="mt-1 text-[10px] text-slate-400">Tab</p>
               </div>
 
@@ -183,13 +190,11 @@ export default function SessionCard({
                 <p className="text-sm font-bold text-orange-300">
                   {fullscreenExit}
                 </p>
-
                 <p className="mt-1 text-[10px] text-slate-400">Full</p>
               </div>
 
               <div className="rounded-xl border border-blue-400/10 bg-blue-500/5 px-2 py-2 text-center">
                 <p className="text-sm font-bold text-blue-300">{copyAttempt}</p>
-
                 <p className="mt-1 text-[10px] text-slate-400">Copy</p>
               </div>
 
@@ -197,26 +202,23 @@ export default function SessionCard({
                 <p className="text-sm font-bold text-pink-300">
                   {pasteAttempt}
                 </p>
-
                 <p className="mt-1 text-[10px] text-slate-400">Paste</p>
               </div>
             </div>
           )}
 
-          {/* REPORT */}
           <div className="mt-4 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-3 py-3">
             <span className="text-sm text-slate-400">Report</span>
 
             <span
-              className={`text-sm font-semibold capitalize ${getReportClass(
-                session.reportVisibility,
+              className={`text-sm font-semibold ${getReportClass(
+                session.reportVisibility
               )}`}
             >
-              {session.reportVisibility}
+              {getReportLabel(session.reportVisibility)}
             </span>
           </div>
 
-          {/* ACTIONS */}
           <div className="mt-4">
             {isPending ? (
               <div className="grid grid-cols-2 gap-2">
@@ -298,10 +300,10 @@ export default function SessionCard({
 
             <div className="grid gap-3 text-sm md:grid-cols-4">
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-slate-400">Current Question</p>
+                <p className="text-slate-400">Status</p>
 
-                <p className="mt-1 font-mono text-white">
-                  {isApproved ? `Q${session.currentQuestion + 1}` : "—"}
+                <p className={`mt-1 font-semibold ${getStatusClass(session)}`}>
+                  {getStatusLabel(session)}
                 </p>
               </div>
 
@@ -333,11 +335,11 @@ export default function SessionCard({
                 <p className="text-slate-400">Report</p>
 
                 <p
-                  className={`mt-1 font-semibold capitalize ${getReportClass(
-                    session.reportVisibility,
+                  className={`mt-1 font-semibold ${getReportClass(
+                    session.reportVisibility
                   )}`}
                 >
-                  {session.reportVisibility}
+                  {getReportLabel(session.reportVisibility)}
                 </p>
               </div>
             </div>

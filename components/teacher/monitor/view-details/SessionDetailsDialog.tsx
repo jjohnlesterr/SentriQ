@@ -99,8 +99,8 @@ export default function SessionDetailsDialog({
               Session not found.
             </p>
           ) : viewMode === "answers" ? (
-            <ScrollArea className="min-h-0 flex-1 rounded-3xl border border-white/10 bg-white/[0.035]">
-              <div className="p-4 sm:p-5">
+            <ScrollArea className="min-h-0 flex-1">
+              <div className="pr-2">
                 <SessionAnswersView session={session} quiz={quiz} />
               </div>
             </ScrollArea>
@@ -127,7 +127,11 @@ export default function SessionDetailsDialog({
 
                   <ScrollArea className="min-h-0 flex-1">
                     <div className="p-4">
-                      <SessionAnswersView session={session} quiz={quiz} compact />
+                      <SessionAnswersView
+                        session={session}
+                        quiz={quiz}
+                        compact
+                      />
                     </div>
                   </ScrollArea>
                 </section>
@@ -185,7 +189,11 @@ export default function SessionDetailsDialog({
 
                   <ScrollArea className="h-full">
                     <div className="p-4">
-                      <SessionAnswersView session={session} quiz={quiz} compact />
+                      <SessionAnswersView
+                        session={session}
+                        quiz={quiz}
+                        compact
+                      />
                     </div>
                   </ScrollArea>
                 </TabsContent>
