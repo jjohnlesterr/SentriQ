@@ -43,19 +43,28 @@ export function useQuizBuilder() {
     refreshTeacherQuizzes: persistence.refreshTeacherQuizzes,
   });
 
-  async function handleSaveQuiz() {
-    if (!publish.validateQuizBeforeSave()) return;
+  async function saveDraftOnly() {
+    if (!publish.validateQuizBeforeSave()) return false;
 
     setIsSaving(true);
 
     try {
       await publish.saveQuiz();
-
-      router.push("/teacher/dashboard");
+      persistence.markClean();
+      return true;
     } catch {
       alert("Failed to save draft.");
+      return false;
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function handleSaveQuiz() {
+    const saved = await saveDraftOnly();
+
+    if (saved) {
+      router.push("/teacher/dashboard");
     }
   }
 
@@ -66,6 +75,7 @@ export function useQuizBuilder() {
 
     try {
       await publish.publishCurrentQuiz();
+      persistence.markClean();
       setShowCodeDialog(true);
     } catch {
       alert("Failed to publish quiz.");
@@ -92,6 +102,7 @@ export function useQuizBuilder() {
     activeQuestion,
 
     isLoading: persistence.isLoading,
+    isDirty: persistence.isDirty,
     isSaving,
     isPublishing,
     showCodeDialog,
@@ -101,6 +112,7 @@ export function useQuizBuilder() {
     setActiveQuestion,
     setShowCodeDialog,
 
+    saveDraftOnly,
     handleSaveQuiz,
     handlePublishQuiz,
     handleCopyCode: publish.copyQuizCode,

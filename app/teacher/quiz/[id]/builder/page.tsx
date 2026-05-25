@@ -66,25 +66,63 @@ export default function QuizBuilderPage() {
     };
   }, [router]);
 
+  useEffect(() => {
+    function handleBeforeUnload(event: BeforeUnloadEvent) {
+      if (!builder.isDirty) return;
+
+      event.preventDefault();
+      event.returnValue = "";
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [builder.isDirty]);
+
+  async function confirmSaveBeforeLeaving() {
+    if (!builder.isDirty) return true;
+
+    const shouldSave = window.confirm(
+      "You have unsaved quiz changes. Do you want to save this draft before leaving?"
+    );
+
+    if (!shouldSave) return false;
+
+    return builder.saveDraftOnly();
+  }
+
+  async function handleNavigateRequest(path: string) {
+    const canLeave = await confirmSaveBeforeLeaving();
+
+    if (!canLeave) return;
+
+    router.push(path);
+  }
+
+  async function handleBack() {
+    const canLeave = await confirmSaveBeforeLeaving();
+
+    if (!canLeave) return;
+
+    router.push("/teacher/dashboard");
+  }
+
   async function handleLogout() {
+    const canLeave = await confirmSaveBeforeLeaving();
+
+    if (!canLeave) return;
+
     await clearTeacherSession();
     router.push("/");
     router.refresh();
   }
 
-  function openNewQuiz() {
-    const hasUnsavedChanges =
-      builder.title.trim() ||
-      builder.description.trim() ||
-      builder.questions.length > 0;
+  async function openNewQuiz() {
+    const canLeave = await confirmSaveBeforeLeaving();
 
-    if (hasUnsavedChanges) {
-      const confirmed = window.confirm(
-        "Do you want to discard your current quiz progress?"
-      );
-
-      if (!confirmed) return;
-    }
+    if (!canLeave) return;
 
     createDialog.setOpen(true);
     setSidebarOpen(false);
@@ -115,6 +153,7 @@ export default function QuizBuilderPage() {
         onClose={() => setSidebarOpen(false)}
         onLogout={handleLogout}
         onNewQuiz={openNewQuiz}
+        onNavigateRequest={handleNavigateRequest}
         activePage="quiz-builder"
       />
 
@@ -126,7 +165,7 @@ export default function QuizBuilderPage() {
             isPublishing={builder.isPublishing}
             isPublished={builder.quiz?.published}
             disablePublish={builder.questions.length === 0}
-            onBack={builder.goBack}
+            onBack={handleBack}
             onSave={builder.handleSaveQuiz}
             onPublish={builder.handlePublishQuiz}
             onOpenSidebar={() => setSidebarOpen(true)}

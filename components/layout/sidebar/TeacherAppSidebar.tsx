@@ -31,6 +31,7 @@ type Props = {
   onClose?: () => void;
   onLogout: () => void;
   onNewQuiz?: () => void;
+  onNavigateRequest?: (path: string) => void;
 };
 
 export default function TeacherAppSidebar({
@@ -42,6 +43,7 @@ export default function TeacherAppSidebar({
   onClose,
   onLogout,
   onNewQuiz,
+  onNavigateRequest,
 }: Props) {
   const router = useRouter();
 
@@ -67,6 +69,12 @@ export default function TeacherAppSidebar({
   }
 
   function navigate(path: string) {
+    if (onNavigateRequest) {
+      onNavigateRequest(path);
+      closeSidebar();
+      return;
+    }
+
     router.push(path);
     closeSidebar();
   }
@@ -100,7 +108,7 @@ export default function TeacherAppSidebar({
             : "z-40 hidden w-64 bg-slate-950/60 px-4 backdrop-blur-xl lg:flex"
         )}
       >
-        <div className="mb-6 shrink-0 flex items-center justify-between">
+        <div className="mb-6 flex shrink-0 items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative h-9 w-9 overflow-hidden rounded-xl">
               <Image

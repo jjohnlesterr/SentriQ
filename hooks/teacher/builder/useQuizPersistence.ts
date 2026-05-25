@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { getQuizById, getTeacherQuizzes } from "@/lib/actions";
@@ -11,6 +11,14 @@ type Params = {
   quizId: string;
 };
 
+function createSnapshot(title: string, description: string, questions: Question[]) {
+  return JSON.stringify({
+    title: title.trim(),
+    description: description.trim(),
+    questions,
+  });
+}
+
 export function useQuizPersistence({ quizId }: Params) {
   const router = useRouter();
 
@@ -20,6 +28,19 @@ export function useQuizPersistence({ quizId }: Params) {
   const [description, setDescription] = useState("");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const savedSnapshotRef = useRef("");
+
+  const currentSnapshot = useMemo(
+    () => createSnapshot(title, description, questions),
+    [title, description, questions]
+  );
+
+  const isDirty = savedSnapshotRef.current !== "" && currentSnapshot !== savedSnapshotRef.current;
+
+  const markClean = useCallback(() => {
+    savedSnapshotRef.current = createSnapshot(title, description, questions);
+  }, [title, description, questions]);
 
   const refreshTeacherQuizzes = useCallback(async () => {
     const session = await getTeacherSession();
@@ -62,17 +83,22 @@ export function useQuizPersistence({ quizId }: Params) {
           return;
         }
 
+        const normalizedQuestions = quizData.questions.map((question) => ({
+          ...question,
+          type: question.type || "multiple_choice",
+          correctTextAnswer: question.correctTextAnswer || "",
+        }));
+
         setQuiz(quizData);
         setQuizzes(teacherQuizzes);
         setTitle(quizData.title);
         setDescription(quizData.description);
+        setQuestions(normalizedQuestions);
 
-        setQuestions(
-          quizData.questions.map((question) => ({
-            ...question,
-            type: question.type || "multiple_choice",
-            correctTextAnswer: question.correctTextAnswer || "",
-          }))
+        savedSnapshotRef.current = createSnapshot(
+          quizData.title,
+          quizData.description,
+          normalizedQuestions
         );
       } finally {
         setIsLoading(false);
@@ -89,6 +115,7 @@ export function useQuizPersistence({ quizId }: Params) {
     description,
     questions,
     isLoading,
+    isDirty,
 
     setQuiz,
     setQuizzes,
@@ -96,6 +123,7 @@ export function useQuizPersistence({ quizId }: Params) {
     setDescription,
     setQuestions,
 
+    markClean,
     refreshTeacherQuizzes,
     goToDrafts,
     goToDashboard,
