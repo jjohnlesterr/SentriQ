@@ -1,6 +1,7 @@
 "use client";
 
 import type { Dispatch, SetStateAction } from "react";
+import { toast } from "sonner";
 
 import { publishQuiz, updateQuiz } from "@/lib/actions";
 import { isQuestionComplete } from "@/lib/quiz/quiz-builder";
@@ -46,7 +47,7 @@ export function useQuizPublish({
 
   function validateQuizBeforeSave() {
     if (!title.trim()) {
-      alert("Quiz title is required.");
+      toast.error("Quiz title is required.");
       return false;
     }
 
@@ -55,12 +56,12 @@ export function useQuizPublish({
 
   function validateQuizBeforePublish() {
     if (!title.trim()) {
-      alert("Quiz title is required.");
+      toast.error("Quiz title is required.");
       return false;
     }
 
     if (questions.length === 0) {
-      alert("Add at least one question before publishing.");
+      toast.error("Add at least one question before publishing.");
       return false;
     }
 
@@ -70,7 +71,7 @@ export function useQuizPublish({
 
     if (incompleteQuestionIndex !== -1) {
       setActiveQuestion(incompleteQuestionIndex);
-      alert(`Please complete Question ${incompleteQuestionIndex + 1}.`);
+      toast.error(`Please complete Question ${incompleteQuestionIndex + 1}.`);
       return false;
     }
 
@@ -78,10 +79,13 @@ export function useQuizPublish({
   }
 
   async function copyQuizCode() {
-    if (!quiz?.code) return;
+    if (!quiz?.code) {
+      toast.error("No quiz code available.");
+      return;
+    }
 
     await navigator.clipboard.writeText(quiz.code);
-    alert("Quiz code copied.");
+    toast.success("Quiz code copied.");
   }
 
   return {
