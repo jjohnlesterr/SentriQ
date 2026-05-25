@@ -1,0 +1,34 @@
+export const VALIDATION_LIMITS = {
+  QUIZ_TITLE_MIN: 2,
+  QUIZ_TITLE_MAX: 30,
+
+  QUIZ_DESCRIPTION_MAX: 50,
+
+  QUESTION_MIN: 5,
+  QUESTION_MAX: 50,
+
+  OPTION_MIN: 1,
+  OPTION_MAX: 50,
+
+  IDENTIFICATION_ANSWER_MIN: 1,
+  IDENTIFICATION_ANSWER_MAX: 50,
+
+  STUDENT_NAME_MIN: 2,
+  STUDENT_NAME_MAX: 40,
+
+  EMAIL_MAX: 80,
+
+  PASSWORD_MIN: 6,
+  PASSWORD_MAX: 100,
+};
+
+export const INVALID_PATTERNS = [
+  /<script/i,
+  /<\/script>/i,
+  /SELECT\s.*FROM/i,
+  /DROP\sTABLE/i,
+  /INSERT\sINTO/i,
+  /DELETE\sFROM/i,
+  /--/g,
+  /<.*?>/g,
+];
