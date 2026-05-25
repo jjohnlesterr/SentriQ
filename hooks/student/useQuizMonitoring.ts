@@ -22,6 +22,20 @@ type InitializeParams = {
   onFullscreenChange: (active: boolean) => void;
 };
 
+const MAX_CLIPBOARD_PREVIEW = 200;
+
+function formatClipboardPreview(value: string) {
+  const cleanValue = value.replace(/\s+/g, " ").trim();
+
+  if (!cleanValue) return "";
+
+  if (cleanValue.length <= MAX_CLIPBOARD_PREVIEW) {
+    return cleanValue;
+  }
+
+  return `${cleanValue.slice(0, MAX_CLIPBOARD_PREVIEW)}...`;
+}
+
 export function useQuizMonitoring({
   session,
   sessionId,
@@ -112,27 +126,27 @@ export function useQuizMonitoring({
       event.preventDefault();
 
       const selectedText = window.getSelection()?.toString() || "";
+      const preview = formatClipboardPreview(selectedText);
 
       addSessionEvent(
         "copy-attempt",
-        selectedText
-          ? `Student attempted to copy: "${selectedText.slice(0, 80)}"`
+        preview
+          ? `Student attempted to copy: "${preview}"`
           : "Student attempted to copy quiz content."
       );
     }
 
     function handlePaste(event: ClipboardEvent) {
-      event.preventDefault();
-
       const pastedText = event.clipboardData?.getData("text") || "";
+      const preview = formatClipboardPreview(pastedText);
 
       addSessionEvent(
         "paste-attempt",
-        pastedText
-          ? `Student attempted to paste ${pastedText.length} character${
+        preview
+          ? `Student pasted ${pastedText.length} character${
               pastedText.length !== 1 ? "s" : ""
-            }.`
-          : "Student attempted to paste content."
+            }: "${preview}"`
+          : "Student pasted content."
       );
     }
 
