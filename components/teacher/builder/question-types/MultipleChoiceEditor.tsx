@@ -1,24 +1,40 @@
 "use client";
 
-import { useState } from "react";
-import { CheckCircle2, Plus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { AlertTriangle, CheckCircle2, Plus } from "lucide-react";
 
 import OptionRow from "@/components/teacher/builder/shared/OptionRow";
 import QuestionField from "@/components/teacher/builder/shared/QuestionField";
 import { Button } from "@/components/ui/button";
+
 import type { Question } from "@/lib/shared/types";
+import { VALIDATION_LIMITS } from "@/lib/validations/constants";
 
 type Props = {
   question: Question;
   activeQuestion: number;
   onUpdateQuestion: (index: number, updates: Partial<Question>) => void;
-  onUpdateOption: (questionIndex: number, optionIndex: number, value: string) => void;
+  onUpdateOption: (
+    questionIndex: number,
+    optionIndex: number,
+    value: string,
+  ) => void;
   onAddOption: (questionIndex: number) => void;
   onRemoveOption: (questionIndex: number, optionIndex: number) => void;
   onMoveOptionUp: (questionIndex: number, optionIndex: number) => void;
   onMoveOptionDown: (questionIndex: number, optionIndex: number) => void;
   onDuplicateOption: (questionIndex: number, optionIndex: number) => void;
 };
+
+const OPTION_COUNT_WARNING_AT = 40;
+
+function sanitizeInput(value: string) {
+  return value.replace(/^\s+/, "");
+}
+
+function isDefaultOption(option: string, index: number) {
+  return option.trim().toLowerCase() === `option ${index + 1}`;
+}
 
 export default function MultipleChoiceEditor({
   question,
@@ -32,6 +48,26 @@ export default function MultipleChoiceEditor({
   onDuplicateOption,
 }: Props) {
   const [openMenuIndex, setOpenMenuIndex] = useState<number | null>(null);
+  const [touchedOptions, setTouchedOptions] = useState<Record<number, boolean>>(
+    {},
+  );
+
+  useEffect(() => {
+    setTouchedOptions({});
+    setOpenMenuIndex(null);
+  }, [question.id]);
+
+  const hasDuplicateOptions = useMemo(() => {
+    const meaningfulOptions = question.options
+      .map((option, index) => ({
+        value: option.trim().toLowerCase(),
+        isDefault: isDefaultOption(option, index),
+      }))
+      .filter((option) => option.value.length > 0 && !option.isDefault)
+      .map((option) => option.value);
+
+    return new Set(meaningfulOptions).size !== meaningfulOptions.length;
+  }, [question.options]);
 
   return (
     <div className="mt-7">
@@ -41,48 +77,111 @@ export default function MultipleChoiceEditor({
         rightText={`${question.options.length}/10`}
       >
         <div className="grid gap-3">
-          {question.options.map((option, optionIndex) => (
-            <OptionRow
-              key={optionIndex}
-              option={option}
-              optionIndex={optionIndex}
-              isCorrect={question.correctAnswer === optionIndex}
-              canDelete={question.options.length > 2}
-              canDuplicate={question.options.length < 10}
-              isMenuOpen={openMenuIndex === optionIndex}
-              disableMoveUp={optionIndex === 0}
-              disableMoveDown={optionIndex === question.options.length - 1}
-              onToggleMenu={() =>
-                setOpenMenuIndex((current) =>
-                  current === optionIndex ? null : optionIndex
-                )
-              }
-              onSelectCorrect={() =>
-                onUpdateQuestion(activeQuestion, { correctAnswer: optionIndex })
-              }
-              onChange={(value) =>
-                onUpdateOption(activeQuestion, optionIndex, value)
-              }
-              onMoveUp={() => {
-                onMoveOptionUp(activeQuestion, optionIndex);
-                setOpenMenuIndex(null);
-              }}
-              onMoveDown={() => {
-                onMoveOptionDown(activeQuestion, optionIndex);
-                setOpenMenuIndex(null);
-              }}
-              onDuplicate={() => {
-                onDuplicateOption(activeQuestion, optionIndex);
-                setOpenMenuIndex(null);
-              }}
-              onDelete={() => {
-                onRemoveOption(activeQuestion, optionIndex);
-                setOpenMenuIndex(null);
-              }}
-            />
-          ))}
+          {question.options.map((option, optionIndex) => {
+            const isTouched = touchedOptions[optionIndex];
+            const showEmptyWarning = isTouched && !option.trim();
+            const showCharacterCount = option.length >= OPTION_COUNT_WARNING_AT;
+
+            return (
+              <div key={optionIndex} className="space-y-1">
+                <OptionRow
+                  option={option}
+                  optionIndex={optionIndex}
+                  isCorrect={question.correctAnswer === optionIndex}
+                  canDelete={question.options.length > 2}
+                  canDuplicate={question.options.length < 10}
+                  isMenuOpen={openMenuIndex === optionIndex}
+                  disableMoveUp={optionIndex === 0}
+                  disableMoveDown={optionIndex === question.options.length - 1}
+                  onToggleMenu={() =>
+                    setOpenMenuIndex((current) =>
+                      current === optionIndex ? null : optionIndex,
+                    )
+                  }
+                  onSelectCorrect={() =>
+                    onUpdateQuestion(activeQuestion, {
+                      correctAnswer: optionIndex,
+                    })
+                  }
+                  onChange={(value) => {
+                    setTouchedOptions((current) => ({
+                      ...current,
+                      [optionIndex]: true,
+                    }));
+
+                    onUpdateOption(
+                      activeQuestion,
+                      optionIndex,
+                      sanitizeInput(value).slice(
+                        0,
+                        VALIDATION_LIMITS.OPTION_MAX,
+                      ),
+                    );
+                  }}
+                  onMoveUp={() => {
+                    onMoveOptionUp(activeQuestion, optionIndex);
+                    setOpenMenuIndex(null);
+                  }}
+                  onMoveDown={() => {
+                    onMoveOptionDown(activeQuestion, optionIndex);
+                    setOpenMenuIndex(null);
+                  }}
+                  onDuplicate={() => {
+                    onDuplicateOption(activeQuestion, optionIndex);
+
+                    setTouchedOptions((current) => ({
+                      ...current,
+                      [question.options.length]: true,
+                    }));
+
+                    setOpenMenuIndex(null);
+                  }}
+                  onDelete={() => {
+                    onRemoveOption(activeQuestion, optionIndex);
+                    setOpenMenuIndex(null);
+                  }}
+                />
+
+                {(showCharacterCount || showEmptyWarning) && (
+                  <div className="flex items-center justify-between px-2">
+                    {showCharacterCount ? (
+                      <span className="text-xs text-slate-500">
+                        {option.length}/{VALIDATION_LIMITS.OPTION_MAX}
+                      </span>
+                    ) : (
+                      <span />
+                    )}
+
+                    {showEmptyWarning && (
+                      <span className="text-xs text-red-400">
+                        Option cannot be empty.
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </QuestionField>
+
+      {hasDuplicateOptions && (
+        <div className="mt-4 rounded-2xl border border-red-400/20 bg-red-500/10 p-4">
+          <div className="flex gap-3">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-300" />
+
+            <div>
+              <p className="text-sm font-semibold text-red-200">
+                Duplicate Answers Detected
+              </p>
+
+              <p className="mt-1 text-sm text-red-100/70">
+                Multiple choice answers must be unique.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Button
         type="button"
