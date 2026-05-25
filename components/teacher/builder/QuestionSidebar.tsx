@@ -76,12 +76,10 @@ export default function QuestionSidebar({
     <section className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-bold text-white">
-            {onMobileOpenChange ? "Select Question" : "Questions"}
-          </h2>
+          <h2 className="text-sm font-bold text-white">Questions</h2>
 
           <p className="mt-1 text-xs text-slate-500">
-            Select and arrange quiz items
+            Manage and arrange quiz questions
           </p>
         </div>
 
@@ -90,7 +88,7 @@ export default function QuestionSidebar({
             type="button"
             aria-label="Close question selector"
             onClick={() => onMobileOpenChange(false)}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white lg:hidden"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
           >
             <X className="h-4 w-4" />
           </button>
@@ -157,15 +155,13 @@ export default function QuestionSidebar({
     return (
       <>
         {mobileOpen && (
-          <div className="fixed inset-0 z-50 bg-slate-950 text-white lg:hidden">
+          <div className="fixed inset-0 z-50 bg-slate-950 text-white xl:hidden">
             <div className="h-full overflow-y-auto px-4 pb-40 pt-4">
               <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-white/20" />
               {content}
             </div>
           </div>
         )}
-
-        <div className="hidden lg:block">{content}</div>
       </>
     );
   }
