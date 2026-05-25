@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ChevronDown,
@@ -12,6 +13,7 @@ import {
   Trash2,
 } from "lucide-react";
 
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,13 +25,16 @@ import type { Quiz } from "@/lib/shared/types";
 
 type Props = {
   items: Quiz[];
-  onDeleteQuiz: (quizId: string) => void;
+  onDeleteQuiz: (quizId: string) => Promise<void> | void;
 };
 
 const VISIBLE_LIMIT = 5;
 
 export default function QuizList({ items, onDeleteQuiz }: Props) {
   const router = useRouter();
+
+  const [quizToDelete, setQuizToDelete] = useState<Quiz | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { search, setSearch, filteredItems } = useSearchableList({
     items,
@@ -44,6 +49,19 @@ export default function QuizList({ items, onDeleteQuiz }: Props) {
     showMore,
     showLess,
   } = useExpandableList(filteredItems, VISIBLE_LIMIT);
+
+  async function confirmDeleteQuiz() {
+    if (!quizToDelete) return;
+
+    setIsDeleting(true);
+
+    try {
+      await onDeleteQuiz(quizToDelete.id);
+      setQuizToDelete(null);
+    } finally {
+      setIsDeleting(false);
+    }
+  }
 
   if (items.length === 0) {
     return (
@@ -65,7 +83,7 @@ export default function QuizList({ items, onDeleteQuiz }: Props) {
           variant="ghost"
           onClick={() => {
             const trigger = document.querySelector<HTMLButtonElement>(
-              "[data-create-quiz-trigger]"
+              "[data-create-quiz-trigger]",
             );
 
             trigger?.click();
@@ -80,127 +98,141 @@ export default function QuizList({ items, onDeleteQuiz }: Props) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="relative rounded-2xl border border-cyan-400/10 bg-[#081121] shadow-[0_0_0_1px_rgba(34,211,238,0.03)] transition focus-within:border-cyan-400/30 focus-within:ring-2 focus-within:ring-cyan-400/10">
-        <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-cyan-300/70" />
+    <>
+      <div className="space-y-4">
+        <div className="relative rounded-2xl border border-cyan-400/10 bg-[#081121] shadow-[0_0_0_1px_rgba(34,211,238,0.03)] transition focus-within:border-cyan-400/30 focus-within:ring-2 focus-within:ring-cyan-400/10">
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-cyan-300/70" />
 
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search quizzes..."
-          maxLength={100}
-          className="h-12 rounded-2xl border-0 bg-transparent pl-11 text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0"
-        />
-      </div>
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search quizzes..."
+            maxLength={100}
+            className="h-12 rounded-2xl border-0 bg-transparent pl-11 text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0"
+          />
+        </div>
 
-      {filteredItems.length === 0 ? (
-        <Card className="rounded-3xl border border-white/10 bg-white/5 p-8 text-center backdrop-blur-xl">
-          <p className="text-sm text-slate-400">No quizzes found.</p>
-        </Card>
-      ) : (
-        <>
-          <div className="space-y-4">
-            {visibleItems.map((quiz) => (
-              <Card
-                key={quiz.id}
-                className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl transition hover:border-white/20 md:p-6"
-              >
-                <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-                  <div className="min-w-0">
-                    <div className="mb-3 flex flex-wrap items-center gap-3">
-                      <h3 className="truncate text-lg font-bold text-white md:text-xl">
-                        {quiz.title}
-                      </h3>
+        {filteredItems.length === 0 ? (
+          <Card className="rounded-3xl border border-white/10 bg-white/5 p-8 text-center backdrop-blur-xl">
+            <p className="text-sm text-slate-400">No quizzes found.</p>
+          </Card>
+        ) : (
+          <>
+            <div className="space-y-4">
+              {visibleItems.map((quiz) => (
+                <Card
+                  key={quiz.id}
+                  className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl transition hover:border-white/20 md:p-6"
+                >
+                  <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="min-w-0">
+                      <div className="mb-3 flex flex-wrap items-center gap-3">
+                        <h3 className="truncate text-lg font-bold text-white md:text-xl">
+                          {quiz.title}
+                        </h3>
 
-                      <span
-                        className={
-                          quiz.published
-                            ? "rounded-full border border-blue-400/20 bg-blue-500/10 px-3 py-1 text-xs text-blue-200"
-                            : "rounded-full border border-violet-400/20 bg-violet-500/10 px-3 py-1 text-xs text-violet-200"
-                        }
-                      >
-                        {quiz.published ? "Published" : "Draft"}
-                      </span>
-                    </div>
-
-                    <p className="text-sm leading-6 text-slate-400">
-                      {quiz.description || "No description provided."}
-                    </p>
-
-                    <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-400">
-                      <span>{quiz.questions.length} Questions</span>
-
-                      {quiz.published && (
-                        <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 font-mono text-cyan-200">
-                          {quiz.code}
+                        <span
+                          className={
+                            quiz.published
+                              ? "rounded-full border border-blue-400/20 bg-blue-500/10 px-3 py-1 text-xs text-blue-200"
+                              : "rounded-full border border-violet-400/20 bg-violet-500/10 px-3 py-1 text-xs text-violet-200"
+                          }
+                        >
+                          {quiz.published ? "Published" : "Draft"}
                         </span>
-                      )}
+                      </div>
+
+                      <p className="text-sm leading-6 text-slate-400">
+                        {quiz.description || "No description provided."}
+                      </p>
+
+                      <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-400">
+                        <span>{quiz.questions.length} Questions</span>
+
+                        {quiz.published && (
+                          <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 font-mono text-cyan-200">
+                            {quiz.code}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={() =>
-                        router.push(`/teacher/quiz/${quiz.id}/builder`)
-                      }
-                      className="h-10 cursor-pointer border-white/10 bg-white/5 hover:bg-white/10 hover:text-white"
-                    >
-                      <Edit className="h-4 w-4" />
-                      Edit
-                    </Button>
-
-                    {quiz.published && (
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         type="button"
+                        variant="secondary"
                         onClick={() =>
-                          router.push(`/teacher/quiz/${quiz.id}/monitor`)
+                          router.push(`/teacher/quiz/${quiz.id}/builder`)
                         }
-                        className="h-10 cursor-pointer"
+                        className="h-10 cursor-pointer border-white/10 bg-white/5 hover:bg-white/10 hover:text-white"
                       >
-                        <Eye className="h-4 w-4" />
-                        Monitor
+                        <Edit className="h-4 w-4" />
+                        Edit
                       </Button>
-                    )}
 
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => onDeleteQuiz(quiz.id)}
-                      className="h-10 cursor-pointer border-red-400/20 bg-red-500/10 text-red-200 hover:bg-red-500/20 hover:text-red-100"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Delete
-                    </Button>
+                      {quiz.published && (
+                        <Button
+                          type="button"
+                          onClick={() =>
+                            router.push(`/teacher/quiz/${quiz.id}/monitor`)
+                          }
+                          className="h-10 cursor-pointer"
+                        >
+                          <Eye className="h-4 w-4" />
+                          Monitor
+                        </Button>
+                      )}
+
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => setQuizToDelete(quiz)}
+                        className="h-10 cursor-pointer border-red-400/20 bg-red-500/10 text-red-200 hover:bg-red-500/20 hover:text-red-100"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            ))}
-          </div>
+                </Card>
+              ))}
+            </div>
 
-          {hasHiddenItems && (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={expanded ? showLess : showMore}
-              className="h-11 w-full rounded-2xl border border-white/10 bg-white/5 text-sm text-white hover:bg-white/10"
-            >
-              {expanded ? (
-                <>
-                  <ChevronUp className="h-4 w-4" />
-                  See Less
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="h-4 w-4" />
-                  See More ({hiddenCount})
-                </>
-              )}
-            </Button>
-          )}
-        </>
-      )}
-    </div>
+            {hasHiddenItems && (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={expanded ? showLess : showMore}
+                className="h-11 w-full rounded-2xl border border-white/10 bg-white/5 text-sm text-white hover:bg-white/10"
+              >
+                {expanded ? (
+                  <>
+                    <ChevronUp className="h-4 w-4" />
+                    See Less
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-4 w-4" />
+                    See More ({hiddenCount})
+                  </>
+                )}
+              </Button>
+            )}
+          </>
+        )}
+      </div>
+
+      <ConfirmDialog
+        open={!!quizToDelete}
+        title="Delete quiz?"
+        description={`Are you sure you want to delete "${quizToDelete?.title}"? This will also delete its sessions.`}
+        confirmText="Delete Quiz"
+        isLoading={isDeleting}
+        onOpenChange={(open) => {
+          if (!open) setQuizToDelete(null);
+        }}
+        onConfirm={confirmDeleteQuiz}
+      />
+    </>
   );
 }

@@ -14,6 +14,7 @@ import {
 import { useRouter } from "next/navigation";
 
 import AppLogo from "@/components/shared/AppLogo";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/shared/utils";
 import type { Quiz } from "@/lib/shared/types";
@@ -47,12 +48,12 @@ export default function TeacherAppSidebar({
 }: Props) {
   const router = useRouter();
 
-  const isQuizActive =
-    activePage === "quiz-builder" || activePage === "drafts";
+  const isQuizActive = activePage === "quiz-builder" || activePage === "drafts";
   const isMonitorActive = activePage === "monitor";
 
   const [builderOpen, setBuilderOpen] = useState(isQuizActive);
   const [monitorOpen, setMonitorOpen] = useState(true);
+  const [logoutOpen, setLogoutOpen] = useState(false);
 
   const liveQuizzes = quizzes.filter((quiz) => quiz.published);
 
@@ -105,7 +106,7 @@ export default function TeacherAppSidebar({
           "fixed left-0 top-0 flex h-screen flex-col border-r border-white/10 px-5 py-5 text-white",
           open
             ? "z-50 w-full bg-slate-950/95 shadow-2xl backdrop-blur-2xl lg:hidden"
-            : "z-40 hidden w-64 bg-slate-950/60 px-4 backdrop-blur-xl lg:flex"
+            : "z-40 hidden w-64 bg-slate-950/60 px-4 backdrop-blur-xl lg:flex",
         )}
       >
         <div className="mb-6 flex shrink-0 items-center justify-between">
@@ -196,7 +197,9 @@ export default function TeacherAppSidebar({
                       onClick={() =>
                         navigate(`/teacher/quiz/${quiz.id}/monitor`)
                       }
-                      className={activeQuizId !== quiz.id ? "text-cyan-200" : ""}
+                      className={
+                        activeQuizId !== quiz.id ? "text-cyan-200" : ""
+                      }
                     >
                       <span className="truncate">{quiz.title}</span>
                     </SidebarButton>
@@ -226,12 +229,22 @@ export default function TeacherAppSidebar({
           <SidebarButton
             sidebarVariant="logout"
             icon={LogOut}
-            onClick={handleLogout}
+            onClick={() => setLogoutOpen(true)}
           >
             Logout
           </SidebarButton>
         </div>
       </aside>
+
+      <ConfirmDialog
+        open={logoutOpen}
+        title="Logout?"
+        description="Are you sure you want to logout from your teacher account?"
+        confirmText="Logout"
+        cancelText="Cancel"
+        onOpenChange={setLogoutOpen}
+        onConfirm={handleLogout}
+      />
     </>
   );
 }
