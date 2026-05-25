@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import PageShell from "@/components/layout/PageShell";
 import TeacherAppSidebar from "@/components/layout/sidebar/TeacherAppSidebar";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import PageLoader from "@/components/shared/PageLoader";
 import BuilderHeader from "@/components/teacher/builder/BuilderHeader";
 import PublishCodeDialog from "@/components/teacher/builder/PublishCodeDialog";
@@ -29,6 +30,12 @@ export default function QuizBuilderPage() {
   const [teacherName, setTeacherName] = useState("Teacher");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [questionPanelOpen, setQuestionPanelOpen] = useState(false);
+
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
+  const [isSavingBeforeLeave, setIsSavingBeforeLeave] = useState(false);
+  const [pendingLeaveAction, setPendingLeaveAction] = useState<
+    (() => Promise<void> | void) | null
+  >(null);
 
   const createDialog = useCreateQuizDialog(async (title, description) => {
     if (!teacherId) {
@@ -81,51 +88,71 @@ export default function QuizBuilderPage() {
     };
   }, [builder.isDirty]);
 
-  async function confirmSaveBeforeLeaving() {
-    if (!builder.isDirty) return true;
+  function requestLeave(action: () => Promise<void> | void) {
+    if (!builder.isDirty) {
+      action();
+      return;
+    }
 
-    const shouldSave = window.confirm(
-      "You have unsaved quiz changes. Do you want to save this draft before leaving?"
-    );
-
-    if (!shouldSave) return false;
-
-    return builder.saveDraftOnly();
+    setPendingLeaveAction(() => action);
+    setLeaveDialogOpen(true);
   }
 
-  async function handleNavigateRequest(path: string) {
-    const canLeave = await confirmSaveBeforeLeaving();
+  async function handleSaveAndLeave() {
+    if (!pendingLeaveAction) return;
 
-    if (!canLeave) return;
+    setIsSavingBeforeLeave(true);
 
-    router.push(path);
+    try {
+      await builder.saveDraftOnly();
+
+      setLeaveDialogOpen(false);
+
+      const action = pendingLeaveAction;
+
+      setPendingLeaveAction(null);
+
+      await action();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to save draft.");
+    } finally {
+      setIsSavingBeforeLeave(false);
+    }
   }
 
-  async function handleBack() {
-    const canLeave = await confirmSaveBeforeLeaving();
+  function handleCancelLeave() {
+    if (isSavingBeforeLeave) return;
 
-    if (!canLeave) return;
-
-    router.push("/teacher/dashboard");
+    setLeaveDialogOpen(false);
+    setPendingLeaveAction(null);
   }
 
-  async function handleLogout() {
-    const canLeave = await confirmSaveBeforeLeaving();
-
-    if (!canLeave) return;
-
-    await clearTeacherSession();
-    router.push("/");
-    router.refresh();
+  function handleNavigateRequest(path: string) {
+    requestLeave(() => {
+      router.push(path);
+    });
   }
 
-  async function openNewQuiz() {
-    const canLeave = await confirmSaveBeforeLeaving();
+  function handleBack() {
+    requestLeave(() => {
+      router.push("/teacher/dashboard");
+    });
+  }
 
-    if (!canLeave) return;
+  function handleLogout() {
+    requestLeave(async () => {
+      await clearTeacherSession();
+      router.push("/");
+      router.refresh();
+    });
+  }
 
-    createDialog.setOpen(true);
-    setSidebarOpen(false);
+  function openNewQuiz() {
+    requestLeave(() => {
+      createDialog.setOpen(true);
+      setSidebarOpen(false);
+    });
   }
 
   if (builder.isLoading) {
@@ -203,6 +230,19 @@ export default function QuizBuilderPage() {
         onOpenChange={builder.setShowCodeDialog}
         onCopyCode={builder.handleCopyCode}
         onGoToMonitor={builder.goToMonitor}
+      />
+
+      <ConfirmDialog
+        open={leaveDialogOpen}
+        title="Save draft before leaving?"
+        description="You have unsaved quiz changes. Save this draft before leaving this page?"
+        confirmText="Save Draft & Leave"
+        cancelText="Stay"
+        isLoading={isSavingBeforeLeave}
+        onOpenChange={(open) => {
+          if (!open) handleCancelLeave();
+        }}
+        onConfirm={handleSaveAndLeave}
       />
     </PageShell>
   );
