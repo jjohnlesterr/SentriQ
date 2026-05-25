@@ -20,7 +20,7 @@ export default function BuilderMobileLayout({
 }: Props) {
   return (
     <>
-      <div className="mt-5 lg:hidden">
+      <div className="mt-5 xl:hidden">
         <Tabs defaultValue="questions" className="w-full">
           <TabsList className="grid h-auto w-full grid-cols-2 rounded-2xl border border-white/10 bg-white/[0.04] p-1 backdrop-blur-xl">
             <TabsTrigger
@@ -53,22 +53,20 @@ export default function BuilderMobileLayout({
         </Tabs>
       </div>
 
-      <div className="lg:hidden">
-        <QuestionSidebar
-          questions={builder.questions}
-          activeQuestion={builder.activeQuestion}
-          canAddQuestion={builder.canAddQuestion}
-          mobileOpen={questionPanelOpen}
-          onMobileOpenChange={onQuestionPanelOpenChange}
-          onSelectQuestion={builder.setActiveQuestion}
-          onAddQuestion={builder.addQuestion}
-          onMoveQuestionUp={builder.moveQuestionUp}
-          onMoveQuestionDown={builder.moveQuestionDown}
-          onDuplicateQuestion={builder.duplicateQuestion}
-          onRemoveQuestion={builder.removeQuestion}
-          onReorderQuestions={builder.reorderQuestions}
-        />
-      </div>
+      <QuestionSidebar
+        questions={builder.questions}
+        activeQuestion={builder.activeQuestion}
+        canAddQuestion={builder.canAddQuestion}
+        mobileOpen={questionPanelOpen}
+        onMobileOpenChange={onQuestionPanelOpenChange}
+        onSelectQuestion={builder.setActiveQuestion}
+        onAddQuestion={builder.addQuestion}
+        onMoveQuestionUp={builder.moveQuestionUp}
+        onMoveQuestionDown={builder.moveQuestionDown}
+        onDuplicateQuestion={builder.duplicateQuestion}
+        onRemoveQuestion={builder.removeQuestion}
+        onReorderQuestions={builder.reorderQuestions}
+      />
     </>
   );
 }
