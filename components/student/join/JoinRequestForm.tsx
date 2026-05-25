@@ -1,9 +1,11 @@
-import { Loader2, ShieldCheck, Sparkles } from "lucide-react";
+"use client";
 
-import SectionHeading from "@/components/shared/SectionHeading";
+import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+
+import { VALIDATION_LIMITS } from "@/lib/validations/constants";
 
 type Props = {
   studentName: string;
@@ -12,8 +14,12 @@ type Props = {
   isLoading: boolean;
   onStudentNameChange: (value: string) => void;
   onQuizCodeChange: (value: string) => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
 };
+
+function sanitizeInput(value: string) {
+  return value.replace(/^\s+/, "");
+}
 
 export default function JoinRequestForm({
   studentName,
@@ -25,80 +31,70 @@ export default function JoinRequestForm({
   onSubmit,
 }: Props) {
   return (
-    <>
-      <SectionHeading
-        icon={Sparkles}
-        badge="Student Access"
-        title="Request Access"
-        description="Enter your name and quiz code to request access to the assessment."
-        variant="page"
-        className="mb-6 md:mb-8"
-        badgeClassName="mb-4 border border-violet-400/20 bg-violet-500/10 px-3 py-1.5 text-xs text-violet-200"
-        iconClassName="h-3.5 w-3.5"
-        titleClassName="text-3xl md:text-4xl"
-        descriptionClassName="mt-2 text-sm leading-6 text-slate-300 md:mt-3 md:text-base"
-      />
+    <form onSubmit={onSubmit} className="space-y-5">
+      <div>
+        <h1 className="text-3xl font-bold text-white">Join Quiz</h1>
 
-      <form onSubmit={onSubmit} className="space-y-4 md:space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="name">Your Name</Label>
-
-          <Input
-            id="name"
-            type="text"
-            placeholder="Enter your full name"
-            value={studentName}
-            onChange={(e) => onStudentNameChange(e.target.value)}
-            className="h-11"
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="code">Quiz Code</Label>
-
-          <Input
-            id="code"
-            type="text"
-            placeholder="ABC123"
-            value={quizCode}
-            onChange={(e) => onQuizCodeChange(e.target.value.toUpperCase())}
-            className="h-11 text-center font-mono uppercase tracking-[0.25em]"
-            required
-          />
-        </div>
-
-        {error && (
-          <div className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-            {error}
-          </div>
-        )}
-
-        <Button
-          type="submit"
-          variant="secondary"
-          className="h-11 w-full"
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Sending Request...
-            </>
-          ) : (
-            <>
-              <ShieldCheck className="h-4 w-4" />
-              Request to Join
-            </>
-          )}
-        </Button>
-      </form>
-
-      <div className="mt-5 border-t border-white/10 pt-5 md:mt-6 md:pt-6">
-        <p className="text-center text-xs text-slate-400">
-          Your teacher must approve your request before you can start.
+        <p className="mt-2 text-sm text-slate-400">
+          Enter your name and quiz code to request access.
         </p>
       </div>
-    </>
+
+      <div className="space-y-2">
+        <label className="text-sm text-slate-200">Student Name</label>
+
+        <Input
+          value={studentName}
+          maxLength={VALIDATION_LIMITS.STUDENT_NAME_MAX}
+          placeholder="Enter your name"
+          className="h-12"
+          onChange={(e) => onStudentNameChange(sanitizeInput(e.target.value))}
+          required
+        />
+
+        <div className="flex justify-end">
+          <span className="text-xs text-slate-500">
+            {studentName.length}/{VALIDATION_LIMITS.STUDENT_NAME_MAX}
+          </span>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm text-slate-200">Quiz Code</label>
+
+        <Input
+          value={quizCode}
+          placeholder="Enter quiz code"
+          className="h-12 uppercase"
+          maxLength={12}
+          onChange={(e) =>
+            onQuizCodeChange(sanitizeInput(e.target.value.toUpperCase()))
+          }
+          required
+        />
+      </div>
+
+      {error && (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+          {error}
+        </div>
+      )}
+
+      <Button
+        type="submit"
+        variant="primary"
+        className="h-12 w-full"
+        disabled={isLoading || !studentName.trim() || !quizCode.trim()}
+      >
+        {isLoading ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Joining...
+          </>
+        ) : (
+          "Request Access"
+        )}
+      </Button>
+    </form>
   );
 }

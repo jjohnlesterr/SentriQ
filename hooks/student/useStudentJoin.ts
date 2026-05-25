@@ -5,6 +5,15 @@ import { useRouter } from "next/navigation";
 
 import { joinQuiz } from "@/lib/actions";
 import { supabase } from "@/lib/supabase/client";
+import { VALIDATION_LIMITS } from "@/lib/validations/constants";
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return fallback;
+}
 
 export function useStudentJoin() {
   const router = useRouter();
@@ -45,7 +54,7 @@ export function useStudentJoin() {
             setIsWaitingApproval(false);
             setError("Your join request was rejected by the teacher.");
           }
-        }
+        },
       )
       .subscribe();
 
@@ -66,6 +75,20 @@ export function useStudentJoin() {
       return;
     }
 
+    if (trimmedName.length < VALIDATION_LIMITS.STUDENT_NAME_MIN) {
+      setError(
+        `Name must be at least ${VALIDATION_LIMITS.STUDENT_NAME_MIN} characters.`,
+      );
+      return;
+    }
+
+    if (trimmedName.length > VALIDATION_LIMITS.STUDENT_NAME_MAX) {
+      setError(
+        `Name must not exceed ${VALIDATION_LIMITS.STUDENT_NAME_MAX} characters.`,
+      );
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -75,11 +98,14 @@ export function useStudentJoin() {
       sessionStorage.setItem("studentName", trimmedName);
       sessionStorage.setItem("quizId", quiz.id);
 
+      setStudentName(trimmedName);
       setQuizCode(trimmedCode);
       setSessionId(session.id);
       setIsWaitingApproval(true);
-    } catch {
-      setError("Invalid quiz code or quiz is not published.");
+    } catch (error) {
+      setError(
+        getErrorMessage(error, "Invalid quiz code or quiz is not published."),
+      );
     } finally {
       setIsLoading(false);
     }
