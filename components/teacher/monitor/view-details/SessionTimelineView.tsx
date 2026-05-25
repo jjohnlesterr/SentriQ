@@ -23,6 +23,7 @@ function getEventLabel(type: SessionEventType) {
     "fullscreen-exit": "Exited Fullscreen",
     "copy-attempt": "Copy Detected",
     "paste-attempt": "Paste Detected",
+    "answered-question": "Answered Question",
     completed: "Completed",
   };
 
@@ -37,7 +38,11 @@ function getEventMeta(type: SessionEventType) {
     };
   }
 
-  if (type === "approved" || type === "completed") {
+  if (
+    type === "approved" ||
+    type === "completed" ||
+    type === "answered-question"
+  ) {
     return {
       icon: CheckCircle2,
       className: "border-emerald-300/20 bg-emerald-500/20 text-emerald-200",

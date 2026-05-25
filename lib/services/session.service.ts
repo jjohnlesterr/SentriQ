@@ -257,6 +257,15 @@ export async function recordSessionEventService(
   return getSessionWithEvents(sessionId);
 }
 
+function getAnswerEventDescription(questionIndex: number, answer: number | string) {
+  const answerLabel =
+    typeof answer === "number"
+      ? `Selected option ${answer + 1}`
+      : `Answered: ${answer}`;
+
+  return `Question ${questionIndex + 1} • ${answerLabel}`;
+}
+
 export async function updateSessionAnswerService(
   sessionId: string,
   questionIndex: number,
@@ -287,6 +296,16 @@ export async function updateSessionAnswerService(
 
   if (error) {
     throw new Error(error.message);
+  }
+
+  const { error: eventError } = await supabase.from("session_events").insert({
+    session_id: sessionId,
+    type: "answered-question",
+    description: getAnswerEventDescription(questionIndex, answer),
+  });
+
+  if (eventError) {
+    throw new Error(eventError.message);
   }
 
   return getSessionWithEvents(sessionId);

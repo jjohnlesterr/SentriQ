@@ -34,6 +34,7 @@ export type SessionEventType =
   | "fullscreen-exit"
   | "copy-attempt"
   | "paste-attempt"
+  | "answered-question"
   | "completed";
 
 export type SessionEvent = {
