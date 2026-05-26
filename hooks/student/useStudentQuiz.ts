@@ -116,15 +116,14 @@ export function useStudentQuiz() {
     });
   }, [session?.approvalStatus]);
 
-  async function handleAnswer(answer: number | string) {
-    if (!fullscreen.isFullscreenActive) return;
-
-    const updatedAnswers = {
-      ...answersState.answers,
-      [currentIndex]: answer,
-    };
-
-    answersState.setAnswers(updatedAnswers);
+  async function persistAnswer(answer?: number | string) {
+    if (
+      answer === undefined ||
+      answer === "" ||
+      !fullscreen.isFullscreenActive
+    ) {
+      return;
+    }
 
     const updatedSession = await updateSessionAnswer(
       sessionId,
@@ -135,16 +134,31 @@ export function useStudentQuiz() {
     setSession(updatedSession);
   }
 
-  function goNext() {
+  function handleAnswer(answer: number | string) {
+    if (!fullscreen.isFullscreenActive) return;
+
+    const updatedAnswers = {
+      ...answersState.answers,
+      [currentIndex]: answer,
+    };
+
+    answersState.setAnswers(updatedAnswers);
+  }
+
+  async function goNext() {
     if (!quiz || !fullscreen.isFullscreenActive) return;
+
+    await persistAnswer(answersState.answers[currentIndex]);
 
     if (currentIndex < quiz.questions.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     }
   }
 
-  function goPrevious() {
+  async function goPrevious() {
     if (!fullscreen.isFullscreenActive) return;
+
+    await persistAnswer(answersState.answers[currentIndex]);
 
     if (currentIndex > 0) {
       setCurrentIndex((prev) => prev - 1);
@@ -159,6 +173,8 @@ export function useStudentQuiz() {
     setIsSubmitting(true);
 
     try {
+      await persistAnswer(answersState.answers[currentIndex]);
+
       const score = calculateQuizScore(quiz, answersState.answers);
 
       const completedSession = await completeSession(sessionId, score);
