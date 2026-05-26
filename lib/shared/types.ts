@@ -7,6 +7,7 @@ export type Question = {
   id: string;
   type: QuestionType;
   text: string;
+  hint?: string;
   options: string[];
   correctAnswer: number;
   correctTextAnswer?: string;
@@ -69,3 +70,4 @@ export type TeacherAccount = {
   email: string;
   password: string;
 };
+
