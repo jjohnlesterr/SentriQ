@@ -23,6 +23,7 @@ type QuestionRow = {
   quiz_id: string;
   type: Question["type"];
   text: string;
+  hint: string;
   options: string[];
   correct_answer: number;
   correct_text_answer: string;
@@ -65,6 +66,7 @@ function mapQuestionRow(row: QuestionRow): Question {
     id: row.id,
     type: row.type,
     text: row.text,
+    hint: row.hint || "",
     options: row.options || [],
     correctAnswer: row.correct_answer,
     correctTextAnswer: row.correct_text_answer,
@@ -91,7 +93,7 @@ function mapQuizRow(row: QuizRow): Quiz {
 export async function createQuizService(
   title: string,
   description: string,
-  teacherId: string
+  teacherId: string,
 ): Promise<Quiz> {
   const validated = createQuizSchema.parse({
     title,
@@ -125,7 +127,7 @@ export async function updateQuizService(
   quizId: string,
   title: string,
   description: string,
-  questions: Question[]
+  questions: Question[],
 ): Promise<Quiz> {
   const validated = updateQuizSchema.parse({
     quizId,
@@ -164,11 +166,12 @@ export async function updateQuizService(
         quiz_id: validated.quizId,
         type: question.type,
         text: question.text,
+        hint: question.hint || "",
         options: question.options || [],
         correct_answer: question.correctAnswer || 0,
         correct_text_answer: question.correctTextAnswer || "",
         position: index,
-      }))
+      })),
     );
 
     if (insertError) {
@@ -233,7 +236,7 @@ export async function deleteQuizService(quizId: string): Promise<void> {
 }
 
 export async function getTeacherQuizzesService(
-  teacherId: string
+  teacherId: string,
 ): Promise<Quiz[]> {
   if (!teacherId) {
     throw new Error("Teacher ID is required.");
@@ -241,10 +244,12 @@ export async function getTeacherQuizzesService(
 
   const { data, error } = await supabase
     .from("quizzes")
-    .select(`
+    .select(
+      `
       *,
       questions(*)
-    `)
+    `,
+    )
     .eq("created_by", teacherId)
     .order("created_at", { ascending: false });
 
@@ -255,9 +260,7 @@ export async function getTeacherQuizzesService(
   return (data || []).map(mapQuizRow);
 }
 
-export async function getQuizByIdService(
-  quizId: string
-): Promise<Quiz | null> {
+export async function getQuizByIdService(quizId: string): Promise<Quiz | null> {
   const validated = publishQuizSchema.parse({ quizId });
 
   const { data, error } = await supabase
