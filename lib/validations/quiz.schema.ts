@@ -19,7 +19,7 @@ const optionalDescriptionSchema = z
       value.length <= VALIDATION_LIMITS.QUIZ_DESCRIPTION_MAX,
     {
       message: "Quiz description is too long.",
-    }
+    },
   );
 
 const quizTitleSchema = z
@@ -63,6 +63,14 @@ export const questionSchema = z
       .refine((value) => value.length <= VALIDATION_LIMITS.QUESTION_MAX, {
         message: "Question is too long.",
       }),
+
+    hint: z
+      .string()
+      .transform((value) => sanitizeText(value))
+      .refine((value) => value.length <= 120, {
+        message: "Hint is too long.",
+      })
+      .optional(),
 
     options: z.array(optionSchema),
 
@@ -121,10 +129,7 @@ export const questionSchema = z
         });
       }
 
-      if (
-        cleanedAnswer.length >
-        VALIDATION_LIMITS.IDENTIFICATION_ANSWER_MAX
-      ) {
+      if (cleanedAnswer.length > VALIDATION_LIMITS.IDENTIFICATION_ANSWER_MAX) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "Identification answer is too long.",
