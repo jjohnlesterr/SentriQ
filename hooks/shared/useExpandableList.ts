@@ -2,25 +2,37 @@
 
 import { useMemo, useState } from "react";
 
-export function useExpandableList<T>(
-  items: T[],
-  initialVisible = 5
-) {
-  const [expanded, setExpanded] = useState(false);
+export function useExpandableList<T>(items: T[], initialVisible = 5, step = 5) {
+  const [visibleCount, setVisibleCount] = useState(initialVisible);
+
+  const safeVisibleCount = Math.min(visibleCount, items.length);
 
   const visibleItems = useMemo(() => {
-    if (expanded) return items;
+    return items.slice(0, safeVisibleCount);
+  }, [items, safeVisibleCount]);
 
-    return items.slice(0, initialVisible);
-  }, [expanded, items, initialVisible]);
+  const hasMoreItems = safeVisibleCount < items.length;
+  const canShowLess = safeVisibleCount > initialVisible;
+  const expanded = canShowLess;
+
+  function showMore() {
+    setVisibleCount((current) => Math.min(current + step, items.length));
+  }
+
+  function showLess() {
+    setVisibleCount(initialVisible);
+  }
 
   return {
     expanded,
     visibleItems,
-    hasHiddenItems: items.length > initialVisible,
-    hiddenCount: Math.max(items.length - initialVisible, 0),
-
-    showMore: () => setExpanded(true),
-    showLess: () => setExpanded(false),
+    visibleCount: safeVisibleCount,
+    totalCount: items.length,
+    hiddenCount: Math.max(items.length - safeVisibleCount, 0),
+    hasMoreItems,
+    hasHiddenItems: hasMoreItems,
+    canShowLess,
+    showMore,
+    showLess,
   };
 }
