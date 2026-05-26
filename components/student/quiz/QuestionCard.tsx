@@ -1,4 +1,8 @@
-import { CheckCircle2, Loader2, Send } from "lucide-react";
+"use client";
+
+import { useState } from "react";
+
+import { CheckCircle2, Lightbulb, Loader2, Send, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -34,18 +38,62 @@ export default function QuestionCard({
   onNext,
   onSubmit,
 }: QuestionCardProps) {
+  const [showHint, setShowHint] = useState(false);
+
+  const hasHint = Boolean(question.hint?.trim());
+
   return (
-    <Card className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl md:p-8">
+    <Card className="relative rounded-3xl border border-white/10 bg-white/5 p-5 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl md:p-8">
+      {/* Hint Button */}
+      {hasHint && (
+        <div className="absolute right-5 top-5 z-20">
+          <button
+            type="button"
+            onClick={() => setShowHint((prev) => !prev)}
+            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-yellow-400/20 bg-yellow-500/10 text-yellow-300 transition hover:scale-105 hover:bg-yellow-500/20"
+          >
+            <Lightbulb className="h-5 w-5" />
+          </button>
+
+          {/* Hint Popup */}
+          {showHint && (
+            <div className="absolute right-0 top-14 w-64 rounded-2xl border border-yellow-400/20 bg-slate-950/95 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl">
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <Lightbulb className="h-4 w-4 text-yellow-300" />
+
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-yellow-200">
+                    Hint
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowHint(false)}
+                  className="text-slate-500 transition hover:text-white"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <p className="text-sm leading-relaxed text-slate-200">
+                {question.hint}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.25em] text-violet-300 md:text-xs md:tracking-[0.3em]">
         Question {currentIndex + 1} ·{" "}
         {question.type === "multiple_choice"
           ? "Multiple Choice"
           : question.type === "true_false"
-          ? "True/False"
-          : "Identification"}
+            ? "True/False"
+            : "Identification"}
       </p>
 
-      <h2 className="text-xl font-bold leading-snug text-white md:text-3xl">
+      <h2 className="pr-16 text-xl font-bold leading-snug text-white md:text-3xl">
         {question.text}
       </h2>
 
@@ -87,9 +135,7 @@ export default function QuestionCard({
                     )}
                   </div>
 
-                  <span className="min-w-0 text-sm md:text-base">
-                    {option}
-                  </span>
+                  <span className="min-w-0 text-sm md:text-base">{option}</span>
                 </div>
               </button>
             );
