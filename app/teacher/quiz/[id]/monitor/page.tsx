@@ -3,6 +3,7 @@
 import { Menu } from "lucide-react";
 
 import TeacherPageLayout from "@/components/layout/TeacherPageLayout";
+import AppLogo from "@/components/shared/AppLogo";
 import PageLoader from "@/components/shared/PageLoader";
 
 import MonitorHeader from "@/components/teacher/monitor/MonitorHeader";
@@ -32,16 +33,21 @@ export default function TeacherMonitorPage() {
         <PageLoader label="Loading monitor..." />
       ) : (
         <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 md:px-10 md:py-8 lg:px-16">
-          <div className="mb-4 lg:hidden">
+          <div className="mb-4 flex items-center justify-between lg:hidden">
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={() => monitor.setSidebarOpen(true)}
-              className="h-11 w-11 rounded-2xl p-0"
+              aria-label="Open sidebar"
+              className="h-11 w-11 rounded-2xl border border-white/10 bg-white/5 p-0 text-slate-300 hover:bg-white/10 hover:text-white"
             >
               <Menu className="h-5 w-5" />
             </Button>
+
+            <AppLogo className="text-2xl" />
+
+            <div className="h-11 w-11" />
           </div>
 
           <MonitorHeader

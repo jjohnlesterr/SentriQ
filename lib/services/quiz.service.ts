@@ -15,6 +15,7 @@ type QuizRow = {
   published: boolean;
   status: "draft" | "published";
   created_at: string;
+  time_limit_minutes?: number | null;
   questions?: QuestionRow[];
 };
 
@@ -83,6 +84,7 @@ function mapQuizRow(row: QuizRow): Quiz {
     published: row.published,
     status: row.status,
     createdAt: new Date(row.created_at),
+    timeLimitMinutes: row.time_limit_minutes ?? null,
     questions:
       row.questions
         ?.sort((a, b) => a.position - b.position)
@@ -128,19 +130,22 @@ export async function updateQuizService(
   title: string,
   description: string,
   questions: Question[],
+  timeLimitMinutes?: number | null,
 ): Promise<Quiz> {
-  const validated = updateQuizSchema.parse({
+  const validated = {
     quizId,
-    title,
-    description,
+    title: title.trim(),
+    description: description.trim(),
     questions,
-  });
+    timeLimitMinutes: timeLimitMinutes ?? null,
+  };
 
   const { data: quizData, error: quizError } = await supabase
     .from("quizzes")
     .update({
       title: validated.title,
       description: validated.description,
+      time_limit_minutes: validated.timeLimitMinutes,
     })
     .eq("id", validated.quizId)
     .select("*")
@@ -184,7 +189,6 @@ export async function updateQuizService(
     questions: validated.questions,
   };
 }
-
 export async function publishQuizService(quizId: string): Promise<Quiz> {
   const validated = publishQuizSchema.parse({ quizId });
 
@@ -244,12 +248,7 @@ export async function getTeacherQuizzesService(
 
   const { data, error } = await supabase
     .from("quizzes")
-    .select(
-      `
-      *,
-      questions(*)
-    `,
-    )
+    .select("*, questions(*)")
     .eq("created_by", teacherId)
     .order("created_at", { ascending: false });
 

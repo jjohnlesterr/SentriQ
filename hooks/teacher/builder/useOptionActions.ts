@@ -1,6 +1,7 @@
 "use client";
 
 import type { Dispatch, SetStateAction } from "react";
+import { toast } from "sonner";
 
 import type { Question } from "@/lib/shared/types";
 
@@ -20,7 +21,7 @@ export function useOptionActions({ questions, setQuestions }: Params) {
   function updateOption(
     questionIndex: number,
     optionIndex: number,
-    value: string
+    value: string,
   ) {
     setQuestions((prev) =>
       prev.map((question, index) => {
@@ -29,55 +30,81 @@ export function useOptionActions({ questions, setQuestions }: Params) {
         return {
           ...question,
           options: question.options.map((option, currentOptionIndex) =>
-            currentOptionIndex === optionIndex ? value : option
+            currentOptionIndex === optionIndex ? value : option,
           ),
         };
-      })
+      }),
     );
   }
 
   function addOption(questionIndex: number) {
+    const question = questions[questionIndex];
+
+    if (!question) {
+      toast.error("Question not found.");
+      return;
+    }
+
+    if (question.options.length >= 10) {
+      toast.error("You can only add up to 10 options.");
+      return;
+    }
+
     setQuestions((prev) =>
-      prev.map((question, index) => {
-        if (index !== questionIndex) return question;
+      prev.map((item, index) => {
+        if (index !== questionIndex) return item;
 
         return {
-          ...question,
-          options: [...question.options, ""],
+          ...item,
+          options: [...item.options, ""],
         };
-      })
+      }),
     );
   }
 
   function removeOption(questionIndex: number, optionIndex: number) {
-    setQuestions((prev) =>
-      prev.map((question, index) => {
-        if (index !== questionIndex) return question;
-        if (question.options.length <= 2) return question;
+    const question = questions[questionIndex];
 
-        const updatedOptions = question.options.filter(
-          (_, currentOptionIndex) => currentOptionIndex !== optionIndex
+    if (!question) {
+      toast.error("Question not found.");
+      return;
+    }
+
+    if (question.options.length <= 2) {
+      toast.error("Multiple choice questions must have at least 2 options.");
+      return;
+    }
+
+    setQuestions((prev) =>
+      prev.map((item, index) => {
+        if (index !== questionIndex) return item;
+
+        const updatedOptions = item.options.filter(
+          (_, currentOptionIndex) => currentOptionIndex !== optionIndex,
         );
 
-        let updatedCorrectAnswer = question.correctAnswer;
+        let updatedCorrectAnswer = item.correctAnswer;
 
-        if (optionIndex === question.correctAnswer) {
+        if (optionIndex === item.correctAnswer) {
           updatedCorrectAnswer = 0;
-        } else if (optionIndex < question.correctAnswer) {
-          updatedCorrectAnswer = question.correctAnswer - 1;
+        } else if (optionIndex < item.correctAnswer) {
+          updatedCorrectAnswer = item.correctAnswer - 1;
         }
 
         return {
-          ...question,
+          ...item,
           options: updatedOptions,
           correctAnswer: updatedCorrectAnswer,
         };
-      })
+      }),
     );
   }
 
   function moveOptionUp(questionIndex: number, optionIndex: number) {
-    if (optionIndex <= 0) return;
+    if (optionIndex <= 0) {
+      toast.error("This option is already at the top.");
+      return;
+    }
 
     setQuestions((prev) =>
       prev.map((question, index) => {
@@ -86,7 +113,7 @@ export function useOptionActions({ questions, setQuestions }: Params) {
         const updatedOptions = reorder(
           question.options,
           optionIndex,
-          optionIndex - 1
+          optionIndex - 1,
         );
 
         let updatedCorrectAnswer = question.correctAnswer;
@@ -102,14 +129,22 @@ export function useOptionActions({ questions, setQuestions }: Params) {
           options: updatedOptions,
           correctAnswer: updatedCorrectAnswer,
         };
-      })
+      }),
     );
   }
 
   function moveOptionDown(questionIndex: number, optionIndex: number) {
     const question = questions[questionIndex];
 
-    if (!question || optionIndex >= question.options.length - 1) return;
+    if (!question) {
+      toast.error("Question not found.");
+      return;
+    }
+
+    if (optionIndex >= question.options.length - 1) {
+      toast.error("This option is already at the bottom.");
+      return;
+    }
 
     setQuestions((prev) =>
       prev.map((item, index) => {
@@ -118,7 +153,7 @@ export function useOptionActions({ questions, setQuestions }: Params) {
         const updatedOptions = reorder(
           item.options,
           optionIndex,
-          optionIndex + 1
+          optionIndex + 1,
         );
 
         let updatedCorrectAnswer = item.correctAnswer;
@@ -134,31 +169,50 @@ export function useOptionActions({ questions, setQuestions }: Params) {
           options: updatedOptions,
           correctAnswer: updatedCorrectAnswer,
         };
-      })
+      }),
     );
   }
 
   function duplicateOption(questionIndex: number, optionIndex: number) {
-    setQuestions((prev) =>
-      prev.map((question, index) => {
-        if (index !== questionIndex) return question;
-        if (question.options.length >= 10) return question;
+    const question = questions[questionIndex];
 
-        const option = question.options[optionIndex] || "";
-        const updatedOptions = [...question.options];
+    if (!question) {
+      toast.error("Question not found.");
+      return;
+    }
+
+    if (question.options.length >= 10) {
+      toast.error("You can only add up to 10 options.");
+      return;
+    }
+
+    const option = question.options[optionIndex];
+
+    if (option === undefined) {
+      toast.error("Option not found.");
+      return;
+    }
+
+    setQuestions((prev) =>
+      prev.map((item, index) => {
+        if (index !== questionIndex) return item;
+
+        const updatedOptions = [...item.options];
 
         updatedOptions.splice(
           optionIndex + 1,
           0,
-          option ? `${option} Copy` : ""
+          option ? `${option} Copy` : "",
         );
 
         return {
-          ...question,
+          ...item,
           options: updatedOptions,
         };
-      })
+      }),
     );
+
+    toast.success("Option duplicated.");
   }
 
   return {

@@ -1,5 +1,7 @@
 "use server";
 
+import { ZodError } from "zod";
+
 import type { Question } from "@/lib/shared/types";
 
 import {
@@ -12,39 +14,88 @@ import {
   updateQuizService,
 } from "@/lib/services/quiz.service";
 
+function getActionErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof ZodError) {
+    return error.issues[0]?.message || fallback;
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return fallback;
+}
+
 export async function createQuiz(
   title: string,
   description: string,
-  teacherId: string
+  teacherId: string,
 ) {
-  return createQuizService(title, description, teacherId);
+  try {
+    return await createQuizService(title, description, teacherId);
+  } catch (error) {
+    throw new Error(getActionErrorMessage(error, "Failed to create quiz."));
+  }
 }
 
 export async function updateQuiz(
   quizId: string,
   title: string,
   description: string,
-  questions: Question[]
+  questions: Question[],
+  timeLimitMinutes?: number | null,
 ) {
-  return updateQuizService(quizId, title, description, questions);
+  try {
+    return await updateQuizService(
+      quizId,
+      title,
+      description,
+      questions,
+      timeLimitMinutes,
+    );
+  } catch (error) {
+    throw new Error(getActionErrorMessage(error, "Failed to update quiz."));
+  }
 }
 
 export async function publishQuiz(quizId: string) {
-  return publishQuizService(quizId);
+  try {
+    return await publishQuizService(quizId);
+  } catch (error) {
+    throw new Error(getActionErrorMessage(error, "Failed to publish quiz."));
+  }
 }
 
 export async function deleteQuiz(quizId: string) {
-  return deleteQuizService(quizId);
+  try {
+    return await deleteQuizService(quizId);
+  } catch (error) {
+    throw new Error(getActionErrorMessage(error, "Failed to delete quiz."));
+  }
 }
 
 export async function getTeacherQuizzes(teacherId: string) {
-  return getTeacherQuizzesService(teacherId);
+  try {
+    return await getTeacherQuizzesService(teacherId);
+  } catch (error) {
+    throw new Error(getActionErrorMessage(error, "Failed to load quizzes."));
+  }
 }
 
 export async function getQuizById(quizId: string) {
-  return getQuizByIdService(quizId);
+  try {
+    return await getQuizByIdService(quizId);
+  } catch (error) {
+    throw new Error(getActionErrorMessage(error, "Failed to load quiz."));
+  }
 }
 
 export async function getAllQuizzesWithSessions() {
-  return getAllQuizzesWithSessionsService();
+  try {
+    return await getAllQuizzesWithSessionsService();
+  } catch (error) {
+    throw new Error(
+      getActionErrorMessage(error, "Failed to load quiz sessions."),
+    );
+  }
 }
