@@ -1,4 +1,4 @@
-import { Copy } from "lucide-react";
+import { Clock, Copy } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -12,14 +12,28 @@ import {
 type Props = {
   open: boolean;
   code?: string;
+  timeLimitMinutes?: number | null;
   onOpenChange: (open: boolean) => void;
   onCopyCode: () => void;
   onGoToMonitor: () => void;
 };
 
+function formatTimerLabel(minutes?: number | null) {
+  if (!minutes) return "No time limit";
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+
+  if (hours > 0 && remainingMinutes > 0)
+    return `${hours}h ${remainingMinutes}m`;
+  if (hours > 0) return `${hours}h`;
+  return `${remainingMinutes}m`;
+}
+
 export default function PublishCodeDialog({
   open,
   code,
+  timeLimitMinutes,
   onOpenChange,
   onCopyCode,
   onGoToMonitor,
@@ -44,6 +58,19 @@ export default function PublishCodeDialog({
             <p className="break-all font-mono text-4xl font-bold tracking-[0.25em] text-cyan-200">
               {code}
             </p>
+          </div>
+
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+            <div className="flex items-center gap-3">
+              <Clock className="h-5 w-5 text-cyan-300" />
+
+              <div>
+                <p className="text-xs text-slate-400">Timer</p>
+                <p className="text-sm font-semibold text-white">
+                  {formatTimerLabel(timeLimitMinutes)}
+                </p>
+              </div>
+            </div>
           </div>
 
           <Button
