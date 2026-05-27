@@ -27,8 +27,9 @@ const buttonVariants = cva(
         secondary:
           "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:from-violet-600 hover:to-fuchsia-600",
 
-        ghost:
-          "border border-white/10 bg-white/5 text-white hover:bg-white/10",
+        ghost: "border border-white/10 bg-white/5 text-white hover:bg-white/10",
+
+        destructive: "bg-red-600 text-white hover:bg-red-700",
       },
 
       size: {
@@ -42,19 +43,15 @@ const buttonVariants = cva(
       variant: "primary",
       size: "default",
     },
-  }
+  },
 );
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {}
 
-function Button({
-  className,
-  variant,
-  size,
-  ...props
-}: ButtonProps) {
+function Button({ className, variant, size, ...props }: ButtonProps) {
   return (
     <button
       className={cn(buttonVariants({ variant, size }), className)}

@@ -88,6 +88,7 @@ export default function TeacherAppSidebar({
   function handleLogout() {
     onLogout();
     closeSidebar();
+    setLogoutOpen(false);
   }
 
   return (
@@ -241,7 +242,7 @@ export default function TeacherAppSidebar({
         title="Logout?"
         description="Are you sure you want to logout from your teacher account?"
         confirmText="Logout"
-        cancelText="Cancel"
+        confirmVariant="destructive"
         onOpenChange={setLogoutOpen}
         onConfirm={handleLogout}
       />
