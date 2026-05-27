@@ -4,8 +4,10 @@ import type { Dispatch, SetStateAction } from "react";
 import { toast } from "sonner";
 
 import { publishQuiz, updateQuiz } from "@/lib/actions";
-import { isQuestionComplete } from "@/lib/quiz/quiz-builder";
 import type { Question, Quiz } from "@/lib/shared/types";
+
+const QUESTION_MIN = 2;
+const OPTION_MIN = 1;
 
 type Params = {
   quizId: string;
@@ -13,6 +15,7 @@ type Params = {
   title: string;
   description: string;
   questions: Question[];
+  timeLimitMinutes: number | null;
   setQuiz: Dispatch<SetStateAction<Quiz | null>>;
   setActiveQuestion: Dispatch<SetStateAction<number>>;
   refreshTeacherQuizzes: () => Promise<void>;
@@ -24,18 +27,78 @@ function hasDuplicateOptions(options: string[]) {
   return new Set(normalized).size !== normalized.length;
 }
 
+function validateQuestion(question: Question, index: number) {
+  const questionNumber = index + 1;
+
+  if (!question.text.trim()) {
+    return `Question ${questionNumber} text is required.`;
+  }
+
+  if (question.text.trim().length < QUESTION_MIN) {
+    return `Question ${questionNumber} must be at least ${QUESTION_MIN} characters.`;
+  }
+
+  if (question.type === "multiple_choice") {
+    if (question.options.length < 2) {
+      return `Question ${questionNumber} must have at least 2 answer options.`;
+    }
+
+    const emptyOptionIndex = question.options.findIndex(
+      (option) => option.trim().length < OPTION_MIN,
+    );
+
+    if (emptyOptionIndex !== -1) {
+      return `Question ${questionNumber}, Option ${
+        emptyOptionIndex + 1
+      } cannot be empty.`;
+    }
+
+    if (hasDuplicateOptions(question.options)) {
+      return `Question ${questionNumber} contains duplicate answers.`;
+    }
+
+    if (
+      question.correctAnswer < 0 ||
+      question.correctAnswer >= question.options.length
+    ) {
+      return `Please select the correct answer for Question ${questionNumber}.`;
+    }
+  }
+
+  if (question.type === "true_false") {
+    if (question.correctAnswer !== 0 && question.correctAnswer !== 1) {
+      return `Please select the correct answer for Question ${questionNumber}.`;
+    }
+  }
+
+  if (question.type === "identification") {
+    if (!question.correctTextAnswer?.trim()) {
+      return `Identification answer for Question ${questionNumber} is required.`;
+    }
+  }
+
+  return null;
+}
+
 export function useQuizPublish({
   quizId,
   quiz,
   title,
   description,
   questions,
+  timeLimitMinutes,
   setQuiz,
   setActiveQuestion,
   refreshTeacherQuizzes,
 }: Params) {
   async function saveQuiz() {
-    const updated = await updateQuiz(quizId, title, description, questions);
+    const updated = await updateQuiz(
+      quizId,
+      title,
+      description,
+      questions,
+      timeLimitMinutes,
+    );
 
     setQuiz(updated);
 
@@ -43,7 +106,7 @@ export function useQuizPublish({
   }
 
   async function publishCurrentQuiz() {
-    await updateQuiz(quizId, title, description, questions);
+    await updateQuiz(quizId, title, description, questions, timeLimitMinutes);
 
     const published = await publishQuiz(quizId);
 
@@ -71,35 +134,22 @@ export function useQuizPublish({
 
     if (questions.length === 0) {
       toast.error("Add at least one question before publishing.");
-
       return false;
     }
 
-    const incompleteQuestionIndex = questions.findIndex(
-      (question) => !isQuestionComplete(question),
+    const invalidQuestionIndex = questions.findIndex(
+      (question, index) => validateQuestion(question, index) !== null,
     );
 
-    if (incompleteQuestionIndex !== -1) {
-      setActiveQuestion(incompleteQuestionIndex);
+    if (invalidQuestionIndex !== -1) {
+      setActiveQuestion(invalidQuestionIndex);
 
-      toast.error(`Please complete Question ${incompleteQuestionIndex + 1}.`);
-
-      return false;
-    }
-
-    const duplicateQuestionIndex = questions.findIndex(
-      (question) =>
-        question.type === "multiple_choice" &&
-        hasDuplicateOptions(question.options),
-    );
-
-    if (duplicateQuestionIndex !== -1) {
-      setActiveQuestion(duplicateQuestionIndex);
-
-      toast.error(
-        `Question ${duplicateQuestionIndex + 1} contains duplicate answers.`,
+      const message = validateQuestion(
+        questions[invalidQuestionIndex],
+        invalidQuestionIndex,
       );
 
+      toast.error(message || "Please complete the selected question.");
       return false;
     }
 

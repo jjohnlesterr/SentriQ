@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import PageShell from "@/components/layout/PageShell";
 import TeacherAppSidebar from "@/components/layout/sidebar/TeacherAppSidebar";
@@ -9,6 +10,7 @@ import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import PageLoader from "@/components/shared/PageLoader";
 import BuilderHeader from "@/components/teacher/builder/BuilderHeader";
 import PublishCodeDialog from "@/components/teacher/builder/PublishCodeDialog";
+import QuizTimerDialog from "@/components/teacher/builder/QuizTimerDialog";
 import CreateQuizDialog from "@/components/teacher/dashboard/CreateQuizDialog";
 import BuilderDesktopLayout from "@/components/teacher/builder/layout/BuilderDesktopLayout";
 import BuilderEditorContent from "@/components/teacher/builder/layout/BuilderEditorContent";
@@ -26,6 +28,7 @@ export default function QuizBuilderPage() {
   const router = useRouter();
   const builder = useQuizBuilder();
 
+  const [timerDialogOpen, setTimerDialogOpen] = useState(false);
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [teacherName, setTeacherName] = useState("Teacher");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -39,7 +42,7 @@ export default function QuizBuilderPage() {
 
   const createDialog = useCreateQuizDialog(async (title, description) => {
     if (!teacherId) {
-      alert("Teacher session not found.");
+      toast.error("Teacher session not found.");
       return;
     }
 
@@ -98,34 +101,46 @@ export default function QuizBuilderPage() {
     setLeaveDialogOpen(true);
   }
 
+  function handleCancelLeave() {
+    if (isSavingBeforeLeave) return;
+
+    setLeaveDialogOpen(false);
+    setPendingLeaveAction(null);
+  }
+
   async function handleSaveAndLeave() {
     if (!pendingLeaveAction) return;
 
     setIsSavingBeforeLeave(true);
 
     try {
-      await builder.saveDraftOnly();
+      const saved = await builder.saveDraftOnly();
+
+      if (!saved) return;
 
       setLeaveDialogOpen(false);
 
       const action = pendingLeaveAction;
-
       setPendingLeaveAction(null);
 
       await action();
     } catch (error) {
       console.error(error);
-      alert("Failed to save draft.");
+      toast.error("Failed to save draft.");
     } finally {
       setIsSavingBeforeLeave(false);
     }
   }
 
-  function handleCancelLeave() {
-    if (isSavingBeforeLeave) return;
+  async function handleDiscardAndLeave() {
+    if (!pendingLeaveAction) return;
 
     setLeaveDialogOpen(false);
+
+    const action = pendingLeaveAction;
     setPendingLeaveAction(null);
+
+    await action();
   }
 
   function handleNavigateRequest(path: string) {
@@ -192,9 +207,11 @@ export default function QuizBuilderPage() {
             isPublishing={builder.isPublishing}
             isPublished={builder.quiz?.published}
             disablePublish={builder.questions.length === 0}
+            timeLimitMinutes={builder.timeLimitMinutes}
             onBack={handleBack}
             onSave={builder.handleSaveQuiz}
             onPublish={builder.handlePublishQuiz}
+            onOpenTimer={() => setTimerDialogOpen(true)}
             onOpenSidebar={() => setSidebarOpen(true)}
           />
 
@@ -224,9 +241,17 @@ export default function QuizBuilderPage() {
         hideTrigger
       />
 
+      <QuizTimerDialog
+        open={timerDialogOpen}
+        value={builder.timeLimitMinutes}
+        onOpenChange={setTimerDialogOpen}
+        onApply={builder.setTimeLimitMinutes}
+      />
+
       <PublishCodeDialog
         open={builder.showCodeDialog}
         code={builder.quiz?.code}
+        timeLimitMinutes={builder.timeLimitMinutes}
         onOpenChange={builder.setShowCodeDialog}
         onCopyCode={builder.handleCopyCode}
         onGoToMonitor={builder.goToMonitor}
@@ -237,12 +262,15 @@ export default function QuizBuilderPage() {
         title="Save draft before leaving?"
         description="You have unsaved quiz changes. Save this draft before leaving this page?"
         confirmText="Save Draft & Leave"
-        cancelText="Stay"
+        discardText="Discard & Leave"
+        loadingText="Saving..."
         isLoading={isSavingBeforeLeave}
+        showDiscard
         onOpenChange={(open) => {
           if (!open) handleCancelLeave();
         }}
         onConfirm={handleSaveAndLeave}
+        onDiscard={handleDiscardAndLeave}
       />
     </PageShell>
   );

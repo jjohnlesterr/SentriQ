@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import { useOptionActions } from "./useOptionActions";
 import { useQuestionActions } from "./useQuestionActions";
@@ -9,7 +10,32 @@ import { useQuizPersistence } from "./useQuizPersistence";
 import { useQuizPublish } from "./useQuizPublish";
 
 function getErrorMessage(error: unknown, fallback: string) {
+  if (Array.isArray(error)) {
+    return error[0]?.message || fallback;
+  }
+
   if (error instanceof Error && error.message) {
+    try {
+      const parsed = JSON.parse(error.message);
+
+      if (Array.isArray(parsed)) {
+        return parsed[0]?.message || fallback;
+      }
+
+      if (parsed?.message) {
+        return parsed.message;
+      }
+    } catch {
+      return error.message;
+    }
+  }
+
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+  ) {
     return error.message;
   }
 
@@ -47,6 +73,7 @@ export function useQuizBuilder() {
     title: persistence.title,
     description: persistence.description,
     questions: persistence.questions,
+    timeLimitMinutes: persistence.timeLimitMinutes,
     setQuiz: persistence.setQuiz,
     setActiveQuestion,
     refreshTeacherQuizzes: persistence.refreshTeacherQuizzes,
@@ -64,9 +91,14 @@ export function useQuizBuilder() {
       persistence.markClean();
       return true;
     } catch (error) {
-      setSaveError(
-        getErrorMessage(error, "Failed to save draft. Please try again."),
+      const message = getErrorMessage(
+        error,
+        "Failed to save draft. Please try again.",
       );
+
+      setSaveError(message);
+      toast.error(message);
+
       return false;
     } finally {
       setIsSaving(false);
@@ -93,9 +125,13 @@ export function useQuizBuilder() {
       persistence.markClean();
       setShowCodeDialog(true);
     } catch (error) {
-      setSaveError(
-        getErrorMessage(error, "Failed to publish quiz. Please try again."),
+      const message = getErrorMessage(
+        error,
+        "Failed to publish quiz. Please try again.",
       );
+
+      setSaveError(message);
+      toast.error(message);
     } finally {
       setIsPublishing(false);
     }
@@ -120,6 +156,7 @@ export function useQuizBuilder() {
     title: persistence.title,
     description: persistence.description,
     questions: persistence.questions,
+    timeLimitMinutes: persistence.timeLimitMinutes,
     activeQuestion,
 
     isLoading: persistence.isLoading,
@@ -131,6 +168,7 @@ export function useQuizBuilder() {
 
     setTitle: persistence.setTitle,
     setDescription: persistence.setDescription,
+    setTimeLimitMinutes: persistence.setTimeLimitMinutes,
     setActiveQuestion,
     setShowCodeDialog,
 

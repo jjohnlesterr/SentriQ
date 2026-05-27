@@ -1,5 +1,6 @@
-import { ArrowLeft, Loader2, Menu, Rocket, Save } from "lucide-react";
+import { ArrowLeft, Clock, Loader2, Menu, Rocket, Save } from "lucide-react";
 
+import AppLogo from "@/components/shared/AppLogo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -9,11 +10,25 @@ type Props = {
   isPublishing: boolean;
   isPublished?: boolean;
   disablePublish: boolean;
+  timeLimitMinutes: number | null;
   onBack: () => void;
   onSave: () => void;
   onPublish: () => void;
+  onOpenTimer: () => void;
   onOpenSidebar?: () => void;
 };
+
+function formatTimerLabel(minutes: number | null) {
+  if (!minutes) return "Set Timer";
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+
+  if (hours > 0 && remainingMinutes > 0)
+    return `${hours}h ${remainingMinutes}m`;
+  if (hours > 0) return `${hours}h`;
+  return `${remainingMinutes}m`;
+}
 
 export default function BuilderHeader({
   questionCount,
@@ -21,100 +36,124 @@ export default function BuilderHeader({
   isPublishing,
   isPublished,
   disablePublish,
+  timeLimitMinutes,
   onBack,
   onSave,
   onPublish,
+  onOpenTimer,
   onOpenSidebar,
 }: Props) {
   return (
-    <header className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 shadow-[0_18px_70px_rgba(0,0,0,0.25)] backdrop-blur-xl md:p-5">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex min-w-0 items-center gap-3">
-          {onOpenSidebar && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={onOpenSidebar}
-              aria-label="Open sidebar"
-              className="h-11 w-11 shrink-0 cursor-pointer rounded-2xl border border-white/10 bg-white/5 p-0 text-slate-300 hover:bg-white/10 hover:text-white lg:hidden"
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-          )}
-
+    <>
+      <div className="mb-4 flex items-center justify-between lg:hidden">
+        {onOpenSidebar ? (
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            onClick={onBack}
-            aria-label="Go back"
-            className="hidden h-11 w-11 shrink-0 cursor-pointer rounded-2xl border border-white/10 bg-white/5 p-0 text-slate-300 hover:bg-white/10 hover:text-white lg:inline-flex"
+            onClick={onOpenSidebar}
+            aria-label="Open sidebar"
+            className="h-11 w-11 rounded-2xl border border-white/10 bg-white/5 p-0 text-slate-300 hover:bg-white/10 hover:text-white"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <Menu className="h-5 w-5" />
           </Button>
+        ) : (
+          <div className="h-11 w-11" />
+        )}
 
-          <div className="min-w-0">
-            <Badge
-              className="border-cyan-400/20 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-200"
+        <AppLogo className="text-2xl" />
+
+        <div className="h-11 w-11" />
+      </div>
+
+      <header className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 shadow-[0_18px_70px_rgba(0,0,0,0.25)] backdrop-blur-xl md:p-5">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              aria-label="Go back"
+              className="hidden h-11 w-11 shrink-0 cursor-pointer rounded-2xl border border-white/10 bg-white/5 p-0 text-slate-300 hover:bg-white/10 hover:text-white lg:inline-flex"
             >
-              Assessment Setup
-            </Badge>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
 
-            <h1 className="mt-1 truncate text-2xl font-extrabold leading-tight text-white md:text-3xl">
-              Quiz Builder
-            </h1>
+            <div className="min-w-0">
+              <Badge className="border-cyan-400/20 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-200">
+                Assessment Setup
+              </Badge>
 
-            <p className="mt-1 text-sm text-slate-400">
-              {questionCount} question{questionCount !== 1 ? "s" : ""} in this
-              draft
-            </p>
+              <h1 className="mt-1 truncate text-2xl font-extrabold leading-tight text-white md:text-3xl">
+                Quiz Builder
+              </h1>
+
+              <p className="mt-1 text-sm text-slate-400">
+                {questionCount} question{questionCount !== 1 ? "s" : ""} in this
+                draft
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 md:flex md:items-center">
+            <Button
+              type="button"
+              onClick={onOpenTimer}
+              variant="ghost"
+              className={
+                timeLimitMinutes
+                  ? "h-11 cursor-pointer rounded-2xl border border-cyan-400/40 bg-cyan-500/10 px-4 text-xs font-semibold text-cyan-100 hover:bg-cyan-500/15 hover:text-white sm:text-sm"
+                  : "h-11 cursor-pointer rounded-2xl border border-white/10 bg-white/5 px-4 text-xs text-slate-200 hover:bg-white/10 hover:text-white sm:text-sm"
+              }
+            >
+              <Clock className="h-4 w-4" />
+              {formatTimerLabel(timeLimitMinutes)}
+            </Button>
+
+            <Button
+              type="button"
+              onClick={onSave}
+              disabled={isSaving}
+              variant="ghost"
+              className="h-11 cursor-pointer rounded-2xl border border-white/10 bg-white/5 px-4 text-xs text-slate-200 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:bg-black/30 disabled:text-slate-500 sm:text-sm"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  Save Draft
+                </>
+              )}
+            </Button>
+
+            <Button
+              type="button"
+              onClick={onPublish}
+              disabled={isPublishing || disablePublish}
+              className="h-11 cursor-pointer rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 px-4 text-xs font-semibold text-white shadow-lg shadow-blue-500/20 hover:from-cyan-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:bg-black/30 disabled:from-black/30 disabled:to-black/30 disabled:text-slate-500 sm:text-sm"
+            >
+              {isPublishing ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Publishing...
+                </>
+              ) : isPublished ? (
+                "Published"
+              ) : (
+                <>
+                  <Rocket className="h-4 w-4" />
+                  Publish
+                </>
+              )}
+            </Button>
           </div>
         </div>
-
-        <div className="grid grid-cols-2 gap-3 md:flex md:items-center">
-          <Button
-            type="button"
-            onClick={onSave}
-            disabled={isSaving}
-            variant="ghost"
-            className="h-11 cursor-pointer rounded-2xl border border-white/10 bg-white/5 px-4 text-xs text-slate-200 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:bg-black/30 disabled:text-slate-500 sm:text-sm"
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4" />
-                Save Draft
-              </>
-            )}
-          </Button>
-
-          <Button
-            type="button"
-            onClick={onPublish}
-            disabled={isPublishing || disablePublish}
-            className="h-11 cursor-pointer rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 px-4 text-xs font-semibold text-white shadow-lg shadow-blue-500/20 hover:from-cyan-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:bg-black/30 disabled:from-black/30 disabled:to-black/30 disabled:text-slate-500 sm:text-sm"
-          >
-            {isPublishing ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Publishing...
-              </>
-            ) : isPublished ? (
-              "Published"
-            ) : (
-              <>
-                <Rocket className="h-4 w-4" />
-                Publish
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
-    </header>
+      </header>
+    </>
   );
 }

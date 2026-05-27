@@ -11,11 +11,17 @@ type Params = {
   quizId: string;
 };
 
-function createSnapshot(title: string, description: string, questions: Question[]) {
+function createSnapshot(
+  title: string,
+  description: string,
+  questions: Question[],
+  timeLimitMinutes: number | null,
+) {
   return JSON.stringify({
     title: title.trim(),
     description: description.trim(),
     questions,
+    timeLimitMinutes,
   });
 }
 
@@ -27,20 +33,28 @@ export function useQuizPersistence({ quizId }: Params) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [timeLimitMinutes, setTimeLimitMinutes] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const savedSnapshotRef = useRef("");
 
   const currentSnapshot = useMemo(
-    () => createSnapshot(title, description, questions),
-    [title, description, questions]
+    () => createSnapshot(title, description, questions, timeLimitMinutes),
+    [title, description, questions, timeLimitMinutes],
   );
 
-  const isDirty = savedSnapshotRef.current !== "" && currentSnapshot !== savedSnapshotRef.current;
+  const isDirty =
+    savedSnapshotRef.current !== "" &&
+    currentSnapshot !== savedSnapshotRef.current;
 
   const markClean = useCallback(() => {
-    savedSnapshotRef.current = createSnapshot(title, description, questions);
-  }, [title, description, questions]);
+    savedSnapshotRef.current = createSnapshot(
+      title,
+      description,
+      questions,
+      timeLimitMinutes,
+    );
+  }, [title, description, questions, timeLimitMinutes]);
 
   const refreshTeacherQuizzes = useCallback(async () => {
     const session = await getTeacherSession();
@@ -94,11 +108,13 @@ export function useQuizPersistence({ quizId }: Params) {
         setTitle(quizData.title);
         setDescription(quizData.description);
         setQuestions(normalizedQuestions);
+        setTimeLimitMinutes(quizData.timeLimitMinutes ?? null);
 
         savedSnapshotRef.current = createSnapshot(
           quizData.title,
           quizData.description,
-          normalizedQuestions
+          normalizedQuestions,
+          quizData.timeLimitMinutes ?? null,
         );
       } finally {
         setIsLoading(false);
@@ -114,6 +130,7 @@ export function useQuizPersistence({ quizId }: Params) {
     title,
     description,
     questions,
+    timeLimitMinutes,
     isLoading,
     isDirty,
 
@@ -122,6 +139,7 @@ export function useQuizPersistence({ quizId }: Params) {
     setTitle,
     setDescription,
     setQuestions,
+    setTimeLimitMinutes,
 
     markClean,
     refreshTeacherQuizzes,

@@ -9,6 +9,13 @@ import WaitingApprovalState from "@/components/student/quiz/status/WaitingApprov
 import RejectedRequestState from "@/components/student/quiz/status/RejectedRequestState";
 import { useStudentQuiz } from "@/hooks/student/useStudentQuiz";
 
+function formatRemainingTime(seconds: number) {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+
+  return `${minutes}:${String(remainingSeconds).padStart(2, "0")}`;
+}
+
 export default function StudentQuizContent() {
   const quizState = useStudentQuiz();
 
@@ -43,6 +50,12 @@ export default function StudentQuizContent() {
   return (
     <PageShell>
       <section className="mx-auto max-w-5xl px-4 py-5 sm:px-6 md:px-10 md:py-8">
+        {quizState.remainingSeconds !== null && (
+          <div className="mb-4 rounded-2xl border border-cyan-400/20 bg-cyan-500/10 px-4 py-3 text-center font-semibold text-cyan-100">
+            Time left: {formatRemainingTime(quizState.remainingSeconds)}
+          </div>
+        )}
+
         <QuizHeader
           title={quizState.quiz.title}
           studentName={quizState.session.studentName}

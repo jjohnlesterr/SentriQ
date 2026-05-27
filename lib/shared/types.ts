@@ -1,7 +1,4 @@
-export type QuestionType =
-  | "multiple_choice"
-  | "true_false"
-  | "identification";
+export type QuestionType = "multiple_choice" | "true_false" | "identification";
 
 export type Question = {
   id: string;
@@ -23,6 +20,7 @@ export type Quiz = {
   createdBy: string;
   published: boolean;
   status: "draft" | "published";
+  timeLimitMinutes?: number | null;
 };
 
 export type SessionEventType =
@@ -36,7 +34,8 @@ export type SessionEventType =
   | "copy-attempt"
   | "paste-attempt"
   | "answered-question"
-  | "completed";
+  | "completed"
+  | "time-expired";
 
 export type SessionEvent = {
   type: SessionEventType;
@@ -54,12 +53,13 @@ export type QuizSession = {
   studentName: string;
   startedAt: Date | string;
   completedAt?: Date | string;
+  timedOutAt?: Date | string;
   currentQuestion: number;
   answers: Record<number, number | string>;
   tabSwitches: number;
   events: SessionEvent[];
   score?: number;
-  status: "in-progress" | "completed";
+  status: "in-progress" | "completed" | "timed-out";
   approvalStatus: "pending" | "approved" | "rejected";
   reportVisibility: ReportVisibility;
 };
@@ -70,4 +70,3 @@ export type TeacherAccount = {
   email: string;
   password: string;
 };
-
