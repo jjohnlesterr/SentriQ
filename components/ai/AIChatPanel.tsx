@@ -8,6 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Question } from "@/lib/shared/types";
 
+type AIAction =
+  | "chat"
+  | "suggest_wrong_answers"
+  | "generate_question_ideas"
+  | "suggest_topics"
+  | "write_question"
+  | "create_outline";
+
 type Message = {
   role: "user" | "ai";
   content: string;
@@ -62,7 +70,9 @@ export default function AIChatPanel({
     ];
   }, [canSuggestWrongAnswers]);
 
-  function askAI(message: string, action: "chat" | "suggest_wrong_answers") {
+  function askAI(message: string, action: AIAction) {
+    if (isPending) return;
+
     setMessages((current) => [...current, { role: "user", content: message }]);
 
     startTransition(async () => {
@@ -105,8 +115,30 @@ export default function AIChatPanel({
   }
 
   function handleChipClick(chip: string) {
+    if (isPending) return;
+
     if (chip === "Suggest 3 wrong answers") {
       askAI(chip, "suggest_wrong_answers");
+      return;
+    }
+
+    if (chip === "Generate question ideas") {
+      askAI(chip, "generate_question_ideas");
+      return;
+    }
+
+    if (chip === "Suggest topics") {
+      askAI(chip, "suggest_topics");
+      return;
+    }
+
+    if (chip === "Help me write a question") {
+      askAI(chip, "write_question");
+      return;
+    }
+
+    if (chip === "Create quiz outline") {
+      askAI(chip, "create_outline");
       return;
     }
 
@@ -114,6 +146,8 @@ export default function AIChatPanel({
   }
 
   function handleSubmit() {
+    if (isPending) return;
+
     const message = input.trim();
     if (!message) return;
 
@@ -123,7 +157,6 @@ export default function AIChatPanel({
 
   return (
     <div className="fixed inset-x-3 bottom-20 top-4 z-[9999] flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-slate-950/95 shadow-2xl shadow-black/50 backdrop-blur-xl md:inset-x-auto md:right-6 md:top-8 md:h-[calc(100dvh-7rem)] md:w-[440px] lg:top-auto lg:h-[620px] lg:w-[390px]">
-      {" "}
       <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-5 py-4">
         <div className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-violet-300" />
@@ -142,6 +175,7 @@ export default function AIChatPanel({
           <X className="h-5 w-5" />
         </button>
       </div>
+
       <div className="shrink-0 border-b border-white/10 p-4">
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
           Suggested actions
@@ -168,6 +202,7 @@ export default function AIChatPanel({
           </p>
         )}
       </div>
+
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {messages.map((message, index) => (
           <div
@@ -211,6 +246,7 @@ export default function AIChatPanel({
           </div>
         )}
       </div>
+
       <div className="flex shrink-0 gap-2 border-t border-white/10 p-4">
         <Input
           value={input}
@@ -220,13 +256,14 @@ export default function AIChatPanel({
           }}
           placeholder="Ask anything about your quiz..."
           className="h-11 rounded-2xl border-white/10 bg-slate-950/60 text-white"
+          disabled={isPending}
         />
 
         <Button
           type="button"
           onClick={handleSubmit}
           disabled={isPending}
-          className="h-11 w-11 shrink-0 rounded-2xl bg-violet-500 p-0 hover:bg-violet-600"
+          className="h-11 w-11 shrink-0 rounded-2xl bg-violet-500 p-0 hover:bg-violet-600 disabled:cursor-not-allowed disabled:opacity-50"
           aria-label="Send message"
         >
           <Send className="h-4 w-4" />
