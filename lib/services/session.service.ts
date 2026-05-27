@@ -368,3 +368,50 @@ export async function completeSessionService(
 
   return getSessionWithEvents(sessionId);
 }
+
+export async function expireSessionService(
+  sessionId: string,
+  submittedScore?: number,
+): Promise<QuizSession> {
+  const session = await getSessionByIdService(sessionId);
+
+  if (!session) {
+    throw new Error("Session not found");
+  }
+
+  if (session.approvalStatus !== "approved") {
+    throw new Error("Session is not approved yet");
+  }
+
+  if (session.status === "completed" || session.status === "timed-out") {
+    return session;
+  }
+
+  const now = new Date().toISOString();
+
+  const { error: sessionError } = await supabase
+    .from("sessions")
+    .update({
+      status: "timed-out",
+      completed_at: now,
+      timed_out_at: now,
+      score: submittedScore ?? 0,
+    })
+    .eq("id", sessionId);
+
+  if (sessionError) {
+    throw new Error(sessionError.message);
+  }
+
+  const { error: eventError } = await supabase.from("session_events").insert({
+    session_id: sessionId,
+    type: "time-expired",
+    description: "Time expired. Answers were automatically saved.",
+  });
+
+  if (eventError) {
+    throw new Error(eventError.message);
+  }
+
+  return getSessionWithEvents(sessionId);
+}

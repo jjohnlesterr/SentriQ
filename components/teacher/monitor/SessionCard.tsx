@@ -25,6 +25,18 @@ function countEvents(session: QuizSession, type: string) {
   return session.events.filter((event) => event.type === type).length;
 }
 
+function isTimedOut(session: QuizSession) {
+  return session.status === "timed-out";
+}
+
+function isCompleted(session: QuizSession) {
+  return session.status === "completed" || !!session.completedAt;
+}
+
+function isFinished(session: QuizSession) {
+  return isCompleted(session) || isTimedOut(session);
+}
+
 function getRiskLevel(session: QuizSession) {
   const tabLeft = countEvents(session, "tab-left");
   const fullscreenExit = countEvents(session, "fullscreen-exit");
@@ -69,13 +81,31 @@ function getReportLabel(reportVisibility: QuizSession["reportVisibility"]) {
 function getStatusLabel(session: QuizSession) {
   if (session.approvalStatus === "pending") return "Pending";
   if (session.approvalStatus === "rejected") return "Rejected";
-  return session.status === "completed" ? "Completed" : "In Progress";
+  if (isTimedOut(session)) return "Timed Out";
+  if (isCompleted(session)) return "Completed";
+
+  return "In Progress";
 }
 
 function getStatusClass(session: QuizSession) {
   if (session.approvalStatus === "pending") return "text-yellow-300";
   if (session.approvalStatus === "rejected") return "text-red-300";
-  return session.status === "completed" ? "text-emerald-300" : "text-blue-300";
+  if (isTimedOut(session)) return "text-orange-300";
+  if (isCompleted(session)) return "text-emerald-300";
+
+  return "text-blue-300";
+}
+
+function getStatusBadgeClass(session: QuizSession) {
+  if (isTimedOut(session)) {
+    return "border-orange-400/20 bg-orange-500/10 text-orange-200";
+  }
+
+  if (isCompleted(session)) {
+    return "border-emerald-400/20 bg-emerald-500/10 text-emerald-200";
+  }
+
+  return "border-blue-400/20 bg-blue-500/10 text-blue-200";
 }
 
 export default function SessionCard({
@@ -102,7 +132,6 @@ export default function SessionCard({
 
   return (
     <GlassCard className="overflow-hidden p-4 md:p-6">
-      {/* MOBILE */}
       <div className="md:hidden">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
@@ -113,16 +142,8 @@ export default function SessionCard({
             <div className="mt-2 flex flex-wrap gap-2">
               {isApproved && (
                 <>
-                  <Badge
-                    className={
-                      session.status === "completed"
-                        ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-200"
-                        : "border-blue-400/20 bg-blue-500/10 text-blue-200"
-                    }
-                  >
-                    {session.status === "completed"
-                      ? "Completed"
-                      : "In Progress"}
+                  <Badge className={getStatusBadgeClass(session)}>
+                    {getStatusLabel(session)}
                   </Badge>
 
                   <Badge className={risk.className}>
@@ -162,12 +183,12 @@ export default function SessionCard({
 
               <p
                 className={
-                  session.status === "completed"
+                  isFinished(session)
                     ? "mt-1 text-2xl font-bold text-emerald-300"
                     : "mt-1 text-2xl font-bold text-slate-500"
                 }
               >
-                {session.status === "completed"
+                {isFinished(session)
                   ? `${session.score ?? 0}/${totalQuestions}`
                   : "--"}
               </p>
@@ -212,7 +233,7 @@ export default function SessionCard({
 
             <span
               className={`text-sm font-semibold ${getReportClass(
-                session.reportVisibility
+                session.reportVisibility,
               )}`}
             >
               {getReportLabel(session.reportVisibility)}
@@ -255,7 +276,6 @@ export default function SessionCard({
         </div>
       </div>
 
-      {/* DESKTOP */}
       <div className="hidden md:block">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex-1">
@@ -278,16 +298,8 @@ export default function SessionCard({
 
               {isApproved && (
                 <>
-                  <Badge
-                    className={
-                      session.status === "completed"
-                        ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-200"
-                        : "border-blue-400/20 bg-blue-500/10 text-blue-200"
-                    }
-                  >
-                    {session.status === "completed"
-                      ? "Completed"
-                      : "In Progress"}
+                  <Badge className={getStatusBadgeClass(session)}>
+                    {getStatusLabel(session)}
                   </Badge>
 
                   <Badge className={risk.className}>
@@ -320,12 +332,12 @@ export default function SessionCard({
 
                 <p
                   className={
-                    session.status === "completed"
+                    isFinished(session)
                       ? "mt-1 font-bold text-emerald-300"
                       : "mt-1 font-bold text-slate-500"
                   }
                 >
-                  {session.status === "completed"
+                  {isFinished(session)
                     ? `${session.score ?? 0} / ${totalQuestions}`
                     : "Pending"}
                 </p>
@@ -336,7 +348,7 @@ export default function SessionCard({
 
                 <p
                   className={`mt-1 font-semibold ${getReportClass(
-                    session.reportVisibility
+                    session.reportVisibility,
                   )}`}
                 >
                   {getReportLabel(session.reportVisibility)}

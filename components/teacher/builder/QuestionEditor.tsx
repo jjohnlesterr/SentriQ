@@ -41,6 +41,7 @@ type Props = {
   onMoveOptionUp: (questionIndex: number, optionIndex: number) => void;
   onMoveOptionDown: (questionIndex: number, optionIndex: number) => void;
   onDuplicateOption: (questionIndex: number, optionIndex: number) => void;
+  onAddQuestionDirect: () => void;
 };
 
 const QUESTION_COUNT_WARNING_AT = 160;
@@ -50,10 +51,6 @@ function getQuestionLabel(question: Question) {
   if (question.type === "multiple_choice") return "Multiple Choice";
   if (question.type === "true_false") return "True/False";
   return "Identification";
-}
-
-function sanitizeInput(value: string) {
-  return value.replace(/^\s+/, "");
 }
 
 export default function QuestionEditor({
@@ -71,6 +68,7 @@ export default function QuestionEditor({
   onMoveOptionUp,
   onMoveOptionDown,
   onDuplicateOption,
+  onAddQuestionDirect,
 }: Props) {
   const [questionMenuOpen, setQuestionMenuOpen] = useState(false);
   const [questionTouched, setQuestionTouched] = useState(false);
@@ -181,6 +179,7 @@ export default function QuestionEditor({
                       }
                     >
                       <span>Question {index + 1}</span>
+
                       <span className="text-xs text-slate-500">
                         {getQuestionLabel(item)}
                       </span>
@@ -260,10 +259,9 @@ export default function QuestionEditor({
             <Textarea
               value={hintDraft}
               maxLength={HINT_MAX_LENGTH}
+              spellCheck={false}
               onChange={(event) =>
-                setHintDraft(
-                  sanitizeInput(event.target.value).slice(0, HINT_MAX_LENGTH),
-                )
+                setHintDraft(event.target.value.slice(0, HINT_MAX_LENGTH))
               }
               placeholder="Example: We discussed this during class."
               rows={3}
@@ -296,117 +294,119 @@ export default function QuestionEditor({
             </div>
           </div>
         )}
-      </div>
 
-      <div className="grid gap-5 xl:grid-cols-[220px_minmax(0,1fr)]">
-        <QuestionField label="Question Type">
-          <div className="relative w-full xl:w-[220px]">
-            <select
-              value={question.type}
-              onChange={(e) =>
-                onChangeQuestionType(
-                  activeQuestion,
-                  e.target.value as QuestionType,
-                )
-              }
-              className="h-12 w-full appearance-none rounded-2xl border border-cyan-400/20 bg-slate-950/60 px-4 pr-10 text-sm text-white outline-none transition focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20"
-            >
-              <option
-                className="bg-slate-950 text-white"
-                value="multiple_choice"
+        <div className="grid gap-5 xl:grid-cols-[220px_minmax(0,1fr)]">
+          <QuestionField label="Question Type">
+            <div className="relative w-full xl:w-[220px]">
+              <select
+                value={question.type}
+                onChange={(e) =>
+                  onChangeQuestionType(
+                    activeQuestion,
+                    e.target.value as QuestionType,
+                  )
+                }
+                className="h-12 w-full appearance-none rounded-2xl border border-cyan-400/20 bg-slate-950/60 px-4 pr-10 text-sm text-white outline-none transition focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20"
               >
-                Multiple Choice
-              </option>
+                <option
+                  className="bg-slate-950 text-white"
+                  value="multiple_choice"
+                >
+                  Multiple Choice
+                </option>
 
-              <option className="bg-slate-950 text-white" value="true_false">
-                True / False
-              </option>
+                <option className="bg-slate-950 text-white" value="true_false">
+                  True / False
+                </option>
 
-              <option
-                className="bg-slate-950 text-white"
-                value="identification"
-              >
-                Identification
-              </option>
-            </select>
+                <option
+                  className="bg-slate-950 text-white"
+                  value="identification"
+                >
+                  Identification
+                </option>
+              </select>
 
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-300" />
-          </div>
-        </QuestionField>
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-300" />
+            </div>
+          </QuestionField>
 
-        <QuestionField
-          label="Question Text"
-          rightText={
-            showQuestionCount
-              ? `${question.text.length}/${VALIDATION_LIMITS.QUESTION_MAX}`
-              : undefined
-          }
+          <QuestionField
+            label="Question Text"
+            rightText={
+              showQuestionCount
+                ? `${question.text.length}/${VALIDATION_LIMITS.QUESTION_MAX}`
+                : undefined
+            }
+          >
+            <div className="space-y-2">
+              <Textarea
+                value={question.text}
+                wrap="soft"
+                maxLength={VALIDATION_LIMITS.QUESTION_MAX}
+                spellCheck={false}
+                onBlur={() => setQuestionTouched(true)}
+                onChange={(e) => {
+                  setQuestionTouched(true);
+
+                  onUpdateQuestion(activeQuestion, {
+                    text: e.target.value.slice(
+                      0,
+                      VALIDATION_LIMITS.QUESTION_MAX,
+                    ),
+                  });
+                }}
+                placeholder="Enter your question"
+                rows={3}
+                className="min-h-[112px] w-full resize-none rounded-2xl border-white/10 bg-slate-950/40 px-4 py-3 text-base text-white placeholder:text-slate-600"
+              />
+
+              {showQuestionWarning && (
+                <p className="text-xs text-red-400">
+                  Question text is required.
+                </p>
+              )}
+            </div>
+          </QuestionField>
+        </div>
+
+        {question.type === "multiple_choice" && (
+          <MultipleChoiceEditor {...optionEditorProps} />
+        )}
+
+        {question.type === "true_false" && (
+          <TrueFalseEditor {...optionEditorProps} />
+        )}
+
+        {question.type === "identification" && (
+          <IdentificationEditor
+            question={question}
+            activeQuestion={activeQuestion}
+            onUpdateQuestion={onUpdateQuestion}
+          />
+        )}
+
+        <Button
+          type="button"
+          onClick={() => {
+            if (!question.text.trim()) {
+              setQuestionTouched(true);
+              return;
+            }
+
+            onAddQuestionDirect();
+          }}
+          className="mt-5 h-12 w-full cursor-pointer rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-600 hover:to-blue-600"
         >
-          <div className="space-y-2">
-            <Textarea
-              value={question.text}
-              wrap="soft"
-              maxLength={VALIDATION_LIMITS.QUESTION_MAX}
-              onBlur={() => setQuestionTouched(true)}
-              onChange={(e) => {
-                setQuestionTouched(true);
+          <Plus className="h-4 w-4" />
+          Add Another Question
+        </Button>
 
-                onUpdateQuestion(activeQuestion, {
-                  text: sanitizeInput(e.target.value).slice(
-                    0,
-                    VALIDATION_LIMITS.QUESTION_MAX,
-                  ),
-                });
-              }}
-              placeholder="Enter your question"
-              rows={3}
-              className="min-h-[112px] w-full resize-none rounded-2xl border-white/10 bg-slate-950/40 px-4 py-3 text-base text-white placeholder:text-slate-600"
-            />
-
-            {showQuestionWarning && (
-              <p className="text-xs text-red-400">Question text is required.</p>
-            )}
-          </div>
-        </QuestionField>
-      </div>
-
-      {question.type === "multiple_choice" && (
-        <MultipleChoiceEditor {...optionEditorProps} />
-      )}
-
-      {question.type === "true_false" && (
-        <TrueFalseEditor {...optionEditorProps} />
-      )}
-
-      {question.type === "identification" && (
-        <IdentificationEditor
+        <AIChatHead
           question={question}
-          activeQuestion={activeQuestion}
-          onUpdateQuestion={onUpdateQuestion}
+          onApplyWrongAnswers={applyWrongAnswers}
         />
-      )}
-
-      <Button
-        type="button"
-        onClick={() => {
-          if (!question.text.trim()) {
-            setQuestionTouched(true);
-            return;
-          }
-
-          const trigger = document.querySelector<HTMLButtonElement>(
-            "[data-add-question-trigger]",
-          );
-
-          trigger?.click();
-        }}
-        className="mt-5 h-12 w-full cursor-pointer rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-600 hover:to-blue-600"
-      >
-        <Plus className="h-4 w-4" />
-        Add Another Question
-      </Button>
-
-      <AIChatHead question={question} onApplyWrongAnswers={applyWrongAnswers} />
+      </div>
     </QuestionSection>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import {
@@ -30,19 +30,18 @@ export function useTeacherMonitor() {
   const params = useParams();
   const quizId = params.id as string;
 
-  const refreshTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [teacherName, setTeacherName] = useState("Teacher");
 
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-  const [sessions, setSessions] = useState<QuizSession[]>([]);
+  const [rawSessions, setRawSessions] = useState<QuizSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [openSessionId, setOpenSessionId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
 
   async function loadInitialData() {
     try {
@@ -63,9 +62,10 @@ export function useTeacherMonitor() {
       ]);
 
       setQuiz(quizData);
-      setSessions(sessionData);
+      setRawSessions(sessionData);
       setQuizzes(teacherQuizzes);
       setLastUpdated(new Date());
+      setNow(Date.now());
     } catch (error) {
       console.error("Teacher monitor load error:", error);
     } finally {
@@ -77,26 +77,26 @@ export function useTeacherMonitor() {
     try {
       const sessionData = await getQuizSessions(quizId);
 
-      setSessions(sessionData);
+      setRawSessions(sessionData);
       setLastUpdated(new Date());
+      setNow(Date.now());
     } catch (error) {
       console.error("Teacher monitor sessions load error:", error);
     }
   }
 
-  function queueSessionsReload() {
-    if (refreshTimeout.current) {
-      clearTimeout(refreshTimeout.current);
-    }
-
-    refreshTimeout.current = setTimeout(() => {
-      loadSessionsOnly();
-    }, 250);
-  }
-
   useEffect(() => {
     loadInitialData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quizId]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (!autoRefresh) return;
@@ -111,7 +111,9 @@ export function useTeacherMonitor() {
           table: "sessions",
           filter: `quiz_id=eq.${quizId}`,
         },
-        queueSessionsReload
+        async () => {
+          await loadSessionsOnly();
+        },
       )
       .on(
         "postgres_changes",
@@ -120,18 +122,50 @@ export function useTeacherMonitor() {
           schema: "public",
           table: "session_events",
         },
-        queueSessionsReload
+        async () => {
+          await loadSessionsOnly();
+        },
       )
       .subscribe();
 
     return () => {
-      if (refreshTimeout.current) {
-        clearTimeout(refreshTimeout.current);
-      }
-
       supabase.removeChannel(channel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quizId, autoRefresh]);
+
+  function isSessionTimedOut(session: QuizSession) {
+    if (!quiz?.timeLimitMinutes) return false;
+    if (session.status === "completed" || session.status === "timed-out") {
+      return false;
+    }
+    if (!session.startedAt) return false;
+
+    const startedAtMs = new Date(session.startedAt).getTime();
+
+    if (Number.isNaN(startedAtMs)) return false;
+
+    const expiresAtMs = startedAtMs + quiz.timeLimitMinutes * 60 * 1000;
+
+    return now >= expiresAtMs;
+  }
+
+  const sessions = useMemo(
+    () =>
+      rawSessions.map((session) => {
+        if (!isSessionTimedOut(session)) return session;
+
+        return {
+          ...session,
+          status: "timed-out" as QuizSession["status"],
+          completedAt: new Date(
+            new Date(session.startedAt).getTime() +
+              (quiz?.timeLimitMinutes ?? 0) * 60 * 1000,
+          ),
+        };
+      }),
+    [rawSessions, quiz?.timeLimitMinutes, now],
+  );
 
   function goBack() {
     router.push("/teacher/dashboard");
@@ -164,100 +198,104 @@ export function useTeacherMonitor() {
 
   function formatTime(value: Date | string | undefined) {
     if (!value) return "—";
-
     return new Date(value).toLocaleTimeString();
   }
 
   async function handleApproveSession(sessionId: string) {
     const updatedSession = await approveSession(sessionId);
 
-    setSessions((prev) =>
+    setRawSessions((prev) =>
       prev.map((session) =>
-        session.id === sessionId ? updatedSession : session
-      )
+        session.id === sessionId ? updatedSession : session,
+      ),
     );
   }
 
   async function handleRejectSession(sessionId: string) {
     const updatedSession = await rejectSession(sessionId);
 
-    setSessions((prev) =>
+    setRawSessions((prev) =>
       prev.map((session) =>
-        session.id === sessionId ? updatedSession : session
-      )
+        session.id === sessionId ? updatedSession : session,
+      ),
     );
   }
 
   async function handleBulkUpdateReportVisibility(
-    visibility: ReportVisibility
+    visibility: ReportVisibility,
   ) {
     const approved = sessions.filter(
-      (session) => session.approvalStatus === "approved"
+      (session) => session.approvalStatus === "approved",
     );
 
     const updatedSessions = await Promise.all(
       approved.map((session) =>
-        updateSessionReportVisibility(session.id, visibility)
-      )
+        updateSessionReportVisibility(session.id, visibility),
+      ),
     );
 
-    setSessions((prev) =>
+    setRawSessions((prev) =>
       prev.map((session) => {
         const updated = updatedSessions.find((item) => item.id === session.id);
-
         return updated ?? session;
-      })
+      }),
     );
   }
 
   const pendingRequests = useMemo(
     () => sessions.filter((session) => session.approvalStatus === "pending"),
-    [sessions]
+    [sessions],
   );
 
   const approvedSessions = useMemo(
     () => sessions.filter((session) => session.approvalStatus === "approved"),
-    [sessions]
+    [sessions],
   );
 
   const inProgress = useMemo(
     () =>
-      approvedSessions.filter((session) => session.status === "in-progress"),
-    [approvedSessions]
+      approvedSessions.filter(
+        (session) => session.status === "in-progress" && !session.completedAt,
+      ),
+    [approvedSessions],
   );
 
   const completed = useMemo(
-    () => approvedSessions.filter((session) => session.status === "completed"),
-    [approvedSessions]
+    () =>
+      approvedSessions.filter(
+        (session) =>
+          session.status === "completed" ||
+          session.status === "timed-out" ||
+          !!session.completedAt,
+      ),
+    [approvedSessions],
   );
 
   const suspicious = useMemo(
     () =>
       approvedSessions.filter((session) =>
-        session.events.some((event) => VIOLATION_TYPES.includes(event.type))
+        session.events.some((event) => VIOLATION_TYPES.includes(event.type)),
       ),
-    [approvedSessions]
+    [approvedSessions],
   );
 
   const selectedSession = useMemo(
     () => sessions.find((session) => session.id === openSessionId),
-    [sessions, openSessionId]
+    [sessions, openSessionId],
   );
 
   const reportVisibilityState: ReportVisibility | "mixed" = useMemo(() => {
     if (approvedSessions.length === 0) return "locked";
 
     if (
-      approvedSessions.every(
-        (session) => session.reportVisibility === "locked"
-      )
+      approvedSessions.every((session) => session.reportVisibility === "locked")
     ) {
       return "locked";
     }
 
     if (
       approvedSessions.every(
-        (session) => session.reportVisibility === "summary"
+        (session) => session.reportVisibility === "summary",
       )
     ) {
       return "summary";

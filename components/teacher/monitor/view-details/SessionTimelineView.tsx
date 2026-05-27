@@ -7,6 +7,7 @@ import {
   Maximize,
   RotateCcw,
   ShieldAlert,
+  TimerOff,
   UserRoundCheck,
 } from "lucide-react";
 
@@ -25,6 +26,7 @@ function getEventLabel(type: SessionEventType) {
     "paste-attempt": "Paste Detected",
     "answered-question": "Answered Question",
     completed: "Completed",
+    "time-expired": "Time Expired",
   };
 
   return labels[type];
@@ -35,6 +37,13 @@ function getEventMeta(type: SessionEventType) {
     return {
       icon: UserRoundCheck,
       className: "border-indigo-300/20 bg-indigo-500/20 text-indigo-200",
+    };
+  }
+
+  if (type === "time-expired") {
+    return {
+      icon: TimerOff,
+      className: "border-orange-300/20 bg-orange-500/20 text-orange-200",
     };
   }
 

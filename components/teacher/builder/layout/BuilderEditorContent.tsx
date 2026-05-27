@@ -13,13 +13,20 @@ export default function BuilderEditorContent({
   builder,
   onOpenQuestionSelector,
 }: Props) {
-  if (builder.questions.length === 0 || !builder.currentQuestion) {
-    return <EmptyQuestionState onAddQuestion={builder.addQuestion} />;
+  const currentQuestion =
+    builder.questions[builder.activeQuestion];
+
+  if (!currentQuestion) {
+    return (
+      <EmptyQuestionState
+        onAddQuestion={builder.addQuestion}
+      />
+    );
   }
 
   return (
     <QuestionEditor
-      question={builder.currentQuestion}
+      question={currentQuestion}
       questions={builder.questions}
       activeQuestion={builder.activeQuestion}
       onSelectQuestion={builder.setActiveQuestion}
@@ -33,6 +40,7 @@ export default function BuilderEditorContent({
       onMoveOptionUp={builder.moveOptionUp}
       onMoveOptionDown={builder.moveOptionDown}
       onDuplicateOption={builder.duplicateOption}
+      onAddQuestionDirect={builder.addQuestion}
     />
   );
 }

@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import {
   completeSession,
+  expireSession,
   getQuizById,
   getSessionById,
   updateSessionAnswer,
@@ -27,8 +28,11 @@ export function useStudentQuiz() {
   const [session, setSession] = useState<QuizSession | null>(null);
 
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const timeoutHandledRef = useRef(false);
 
   const fullscreen = useFullscreenGuard();
 
@@ -59,7 +63,10 @@ export function useStudentQuiz() {
         return;
       }
 
-      if (sessionData.status === "completed") {
+      if (
+        sessionData.status === "completed" ||
+        sessionData.status === "timed-out"
+      ) {
         router.replace(`/student/results/${sessionId}`);
         return;
       }
@@ -84,6 +91,7 @@ export function useStudentQuiz() {
 
   useEffect(() => {
     loadQuizSession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
   useStudentQuizSession({
@@ -106,6 +114,7 @@ export function useStudentQuiz() {
         "Fullscreen request was blocked or cancelled.",
       );
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.approvalStatus]);
 
   useEffect(() => {
@@ -114,13 +123,15 @@ export function useStudentQuiz() {
     return monitoring.initializeMonitoring({
       onFullscreenChange: fullscreen.setFullscreenActive,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.approvalStatus]);
 
   async function persistAnswer(answer?: number | string) {
     if (
       answer === undefined ||
       answer === "" ||
-      !fullscreen.isFullscreenActive
+      session?.status === "completed" ||
+      session?.status === "timed-out"
     ) {
       return;
     }
@@ -134,8 +145,97 @@ export function useStudentQuiz() {
     setSession(updatedSession);
   }
 
+  async function handleTimeout() {
+    if (!quiz || !session || timeoutHandledRef.current) return;
+
+    timeoutHandledRef.current = true;
+    setIsSubmitting(true);
+
+    try {
+      await persistAnswer(answersState.answers[currentIndex]);
+
+      const finalAnswers = {
+        ...answersState.answers,
+        ...(answersState.answers[currentIndex] !== undefined &&
+        answersState.answers[currentIndex] !== ""
+          ? { [currentIndex]: answersState.answers[currentIndex] }
+          : {}),
+      };
+
+      const score = calculateQuizScore(quiz, finalAnswers);
+      const expiredSession = await expireSession(sessionId, score);
+
+      sessionStorage.setItem(
+        "lastResult",
+        JSON.stringify({
+          session: expiredSession,
+          quiz,
+          reason: "time-expired",
+        }),
+      );
+
+      router.replace(`/student/results/${sessionId}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!quiz?.timeLimitMinutes || !session?.startedAt) {
+      setRemainingSeconds(null);
+      return;
+    }
+
+    if (
+      session.approvalStatus !== "approved" ||
+      session.status === "completed" ||
+      session.status === "timed-out"
+    ) {
+      return;
+    }
+
+    function updateRemainingTime() {
+      if (!quiz?.timeLimitMinutes || !session?.startedAt) return;
+
+      const startedAtMs = new Date(session.startedAt).getTime();
+      const expiresAtMs = startedAtMs + quiz.timeLimitMinutes * 60 * 1000;
+      const diffSeconds = Math.max(
+        0,
+        Math.ceil((expiresAtMs - Date.now()) / 1000),
+      );
+
+      setRemainingSeconds(diffSeconds);
+
+      if (diffSeconds <= 0) {
+        void handleTimeout();
+      }
+    }
+
+    updateRemainingTime();
+
+    const timer = window.setInterval(updateRemainingTime, 1000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    quiz?.timeLimitMinutes,
+    session?.startedAt,
+    session?.approvalStatus,
+    session?.status,
+    currentIndex,
+    answersState.answers,
+  ]);
+
   function handleAnswer(answer: number | string) {
-    if (!fullscreen.isFullscreenActive) return;
+    if (
+      !fullscreen.isFullscreenActive ||
+      session?.status === "completed" ||
+      session?.status === "timed-out"
+    ) {
+      return;
+    }
 
     const updatedAnswers = {
       ...answersState.answers,
@@ -165,38 +265,51 @@ export function useStudentQuiz() {
     }
   }
 
-  async function handleSubmit() {
-    if (!quiz || !session || !fullscreen.isFullscreenActive) {
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      await persistAnswer(answersState.answers[currentIndex]);
-
-      const score = calculateQuizScore(quiz, answersState.answers);
-
-      const completedSession = await completeSession(sessionId, score);
-
-      sessionStorage.setItem(
-        "lastResult",
-        JSON.stringify({
-          session: completedSession,
-          quiz,
-        }),
-      );
-
-      router.replace(`/student/results/${sessionId}`);
-    } finally {
-      setIsSubmitting(false);
-    }
+async function handleSubmit() {
+  if (!quiz || !session) {
+    return;
   }
 
+  setIsSubmitting(true);
+
+  try {
+    await persistAnswer(answersState.answers[currentIndex]);
+
+    const finalAnswers = {
+      ...answersState.answers,
+      ...(answersState.answers[currentIndex] !== undefined &&
+      answersState.answers[currentIndex] !== ""
+        ? { [currentIndex]: answersState.answers[currentIndex] }
+        : {}),
+    };
+
+    const score = calculateQuizScore(quiz, finalAnswers);
+
+    const completedSession = await completeSession(
+      sessionId,
+      score,
+    );
+
+    setSession(completedSession);
+
+    sessionStorage.setItem(
+      "lastResult",
+      JSON.stringify({
+        session: completedSession,
+        quiz,
+      }),
+    );
+
+    router.replace(`/student/results/${sessionId}`);
+  } catch (error) {
+    console.error("Submit failed:", error);
+  } finally {
+    setIsSubmitting(false);
+  }
+}
+
   const currentQuestion = quiz?.questions[currentIndex];
-
   const selectedAnswer = answersState.answers[currentIndex];
-
   const answeredCount = Object.keys(answersState.answers).length;
 
   const progress = useMemo(() => {
@@ -220,6 +333,8 @@ export function useStudentQuiz() {
 
     progress,
     isCurrentAnswered,
+
+    remainingSeconds,
 
     isLoading,
     isSubmitting,

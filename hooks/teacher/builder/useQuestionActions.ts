@@ -1,6 +1,7 @@
 "use client";
 
 import type { Dispatch, SetStateAction } from "react";
+import { toast } from "sonner";
 
 import {
   createEmptyQuestion,
@@ -34,7 +35,9 @@ export function useQuestionActions({
 
   function addQuestion() {
     if (!canAddQuestion) {
-      alert("Please complete the current question before adding another one.");
+      toast.error(
+        "Please complete the current question before adding another one.",
+      );
       return;
     }
 
@@ -49,8 +52,8 @@ export function useQuestionActions({
   function updateQuestion(index: number, updates: Partial<Question>) {
     setQuestions((prev) =>
       prev.map((question, questionIndex) =>
-        questionIndex === index ? { ...question, ...updates } : question
-      )
+        questionIndex === index ? { ...question, ...updates } : question,
+      ),
     );
   }
 
@@ -61,13 +64,16 @@ export function useQuestionActions({
       const oldIndex = prev.findIndex((question) => question.id === activeId);
       const newIndex = prev.findIndex((question) => question.id === overId);
 
-      if (oldIndex === -1 || newIndex === -1) return prev;
+      if (oldIndex === -1 || newIndex === -1) {
+        toast.error("Unable to reorder questions.");
+        return prev;
+      }
 
       const activeQuestionId = prev[activeQuestion]?.id;
       const updated = reorder(prev, oldIndex, newIndex);
 
       const updatedActiveIndex = updated.findIndex(
-        (question) => question.id === activeQuestionId
+        (question) => question.id === activeQuestionId,
       );
 
       setActiveQuestion(updatedActiveIndex === -1 ? 0 : updatedActiveIndex);
@@ -79,14 +85,26 @@ export function useQuestionActions({
   function handleChangeQuestionType(index: number, type: QuestionType) {
     const current = questions[index];
 
-    if (!current) return;
+    if (!current) {
+      toast.error("Question not found.");
+      return;
+    }
 
     updateQuestion(index, getQuestionTypeDefaults(current, type));
   }
 
   function removeQuestion(index: number) {
+    const question = questions[index];
+
+    if (!question) {
+      toast.error("Question not found.");
+      return;
+    }
+
     setQuestions((prev) => {
-      const updated = prev.filter((_, questionIndex) => questionIndex !== index);
+      const updated = prev.filter(
+        (_, questionIndex) => questionIndex !== index,
+      );
 
       setActiveQuestion((current) => {
         if (updated.length === 0) return 0;
@@ -97,17 +115,25 @@ export function useQuestionActions({
 
       return updated;
     });
+
+    toast.success("Question removed.");
   }
 
   function moveQuestionUp(index: number) {
-    if (index <= 0) return;
+    if (index <= 0) {
+      toast.error("This question is already at the top.");
+      return;
+    }
 
     setQuestions((prev) => reorder(prev, index, index - 1));
     setActiveQuestion(index - 1);
   }
 
   function moveQuestionDown(index: number) {
-    if (index >= questions.length - 1) return;
+    if (index >= questions.length - 1) {
+      toast.error("This question is already at the bottom.");
+      return;
+    }
 
     setQuestions((prev) => reorder(prev, index, index + 1));
     setActiveQuestion(index + 1);
@@ -116,7 +142,10 @@ export function useQuestionActions({
   function duplicateQuestion(index: number) {
     const question = questions[index];
 
-    if (!question) return;
+    if (!question) {
+      toast.error("Question not found.");
+      return;
+    }
 
     const duplicate: Question = {
       ...question,
@@ -132,6 +161,7 @@ export function useQuestionActions({
     });
 
     setActiveQuestion(index + 1);
+    toast.success("Question duplicated.");
   }
 
   return {

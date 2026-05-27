@@ -2,6 +2,7 @@
 
 import {
   completeSessionService,
+  expireSessionService,
   getSessionByIdService,
   joinQuizService,
   recordSessionEventService,
@@ -25,7 +26,7 @@ export async function recordSessionEvent(
     type: SessionEventType;
     description?: string;
     durationSeconds?: number;
-  }
+  },
 ) {
   return recordSessionEventService(sessionId, event);
 }
@@ -40,18 +41,22 @@ export async function recordTabSwitch(sessionId: string) {
 export async function updateSessionAnswer(
   sessionId: string,
   questionIndex: number,
-  answer: number | string
+  answer: number | string,
 ) {
   return updateSessionAnswerService(sessionId, questionIndex, answer);
 }
 
 export async function updateSessionReportVisibility(
   sessionId: string,
-  visibility: ReportVisibility
+  visibility: ReportVisibility,
 ) {
   return updateSessionReportVisibilityService(sessionId, visibility);
 }
 
 export async function completeSession(sessionId: string, submittedScore?: number) {
   return completeSessionService(sessionId, submittedScore);
+}
+
+export async function expireSession(sessionId: string, submittedScore?: number) {
+  return expireSessionService(sessionId, submittedScore);
 }

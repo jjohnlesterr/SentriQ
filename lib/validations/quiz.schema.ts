@@ -10,9 +10,6 @@ import {
 const optionalDescriptionSchema = z
   .string()
   .transform((value) => sanitizeText(value))
-  .refine((value) => value.length === 0 || isMeaningfulText(value), {
-    message: "Quiz description is invalid.",
-  })
   .refine(
     (value) =>
       value.length === 0 ||
@@ -26,7 +23,7 @@ const quizTitleSchema = z
   .string()
   .transform((value) => sanitizeText(value))
   .refine((value) => isMeaningfulText(value), {
-    message: "Quiz title is invalid.",
+    message: "Quiz title must contain at least one letter.",
   })
   .refine((value) => value.length >= VALIDATION_LIMITS.QUIZ_TITLE_MIN, {
     message: "Quiz title is too short.",
@@ -55,10 +52,10 @@ export const questionSchema = z
       .string()
       .transform((value) => sanitizeText(value))
       .refine((value) => isMeaningfulText(value), {
-        message: "Question is invalid.",
+        message: "Question must contain meaningful text.",
       })
       .refine((value) => value.length >= VALIDATION_LIMITS.QUESTION_MIN, {
-        message: "Question is too short.",
+        message: `Question must be at least ${VALIDATION_LIMITS.QUESTION_MIN} characters.`,
       })
       .refine((value) => value.length <= VALIDATION_LIMITS.QUESTION_MAX, {
         message: "Question is too long.",
@@ -102,7 +99,7 @@ export const questionSchema = z
       ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Correct answer is invalid.",
+          message: "Please select a valid correct answer.",
           path: ["correctAnswer"],
         });
       }
@@ -112,7 +109,7 @@ export const questionSchema = z
       if (question.correctAnswer !== 0 && question.correctAnswer !== 1) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "True/False answer is invalid.",
+          message: "Please select a valid True/False answer.",
           path: ["correctAnswer"],
         });
       }
@@ -124,7 +121,7 @@ export const questionSchema = z
       if (!isMeaningfulText(cleanedAnswer)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Identification answer is invalid.",
+          message: "Identification answer must contain meaningful text.",
           path: ["correctTextAnswer"],
         });
       }
