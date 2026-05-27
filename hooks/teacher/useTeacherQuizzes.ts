@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import { createQuiz, deleteQuiz, getTeacherQuizzes } from "@/lib/actions";
 import {
@@ -30,16 +31,20 @@ export function useTeacherQuizzes() {
 
   useEffect(() => {
     async function loadSession() {
-      const session = await getTeacherSession();
+      try {
+        const session = await getTeacherSession();
 
-      if (!session) {
-        router.push("/teacher/login");
-        return;
+        if (!session) {
+          router.push("/teacher/login");
+          return;
+        }
+
+        setTeacherId(session.user.id);
+        setTeacherName(session.user.email ?? "Teacher");
+        await loadQuizzes(session.user.id);
+      } catch {
+        toast.error("Failed to load teacher session.");
       }
-
-      setTeacherId(session.user.id);
-      setTeacherName(session.user.email ?? "Teacher");
-      loadQuizzes(session.user.id);
     }
 
     loadSession();
@@ -53,6 +58,8 @@ export function useTeacherQuizzes() {
     try {
       const data = await getTeacherQuizzes(id);
       setQuizzes(data);
+    } catch {
+      toast.error("Failed to load quizzes.");
     } finally {
       setIsLoading(false);
     }
@@ -60,8 +67,7 @@ export function useTeacherQuizzes() {
 
   async function createNewQuiz(title: string, description: string) {
     if (!teacherId) {
-      alert("Teacher session not found.");
-      return;
+      throw new Error("Teacher session not found.");
     }
 
     const quiz = await createQuiz(title, description, teacherId);
@@ -74,14 +80,19 @@ export function useTeacherQuizzes() {
     try {
       await deleteQuiz(quizId);
       setQuizzes((prev) => prev.filter((quiz) => quiz.id !== quizId));
+      toast.success("Quiz deleted.");
     } catch {
-      alert("Failed to delete quiz.");
+      toast.error("Failed to delete quiz.");
     }
   }
 
-  function handleLogout() {
-    clearTeacherSession();
-    router.push("/");
+  async function handleLogout() {
+    try {
+      await clearTeacherSession();
+      router.push("/");
+    } catch {
+      toast.error("Failed to logout.");
+    }
   }
 
   return {

@@ -119,9 +119,9 @@ export default function QuizList({ items, onDeleteQuiz }: Props) {
 
             <Button
               type="button"
-              variant="ghost"
+              variant="destructive"
               onClick={() => setQuizToDelete(quiz)}
-              className="h-10 cursor-pointer border-red-400/20 bg-red-500/10 text-red-200 hover:bg-red-500/20 hover:text-red-100"
+              className="h-10 cursor-pointer"
             >
               <Trash2 className="h-4 w-4" />
               Delete
@@ -232,7 +232,9 @@ export default function QuizList({ items, onDeleteQuiz }: Props) {
         title="Delete quiz?"
         description={`Are you sure you want to delete "${quizToDelete?.title}"? This will also delete its sessions.`}
         confirmText="Delete Quiz"
+        loadingText="Deleting..."
         isLoading={isDeleting}
+        confirmVariant="destructive"
         onOpenChange={(open) => {
           if (!open) setQuizToDelete(null);
         }}
