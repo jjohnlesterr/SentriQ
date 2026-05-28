@@ -32,10 +32,25 @@ type AIResponse =
   | { success: false; message: string };
 
 function cleanJsonResponse(value: string) {
-  return value
-    .replace(/```json/g, "")
-    .replace(/```/g, "")
-    .trim();
+  return value.replace(/```json/g, "").replace(/```/g, "").trim();
+}
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  return "AI is unavailable right now.";
+}
+
+function getErrorStatus(error: unknown) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    typeof error.status === "number"
+  ) {
+    return error.status;
+  }
+
+  return null;
 }
 
 export async function generateAIResponse(
@@ -199,15 +214,15 @@ Keep your answer concise and useful.
       type: "chat",
       message: text.trim(),
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Gemini AI error:", error);
 
     return {
       success: false,
       message:
-        error?.status === 429
+        getErrorStatus(error) === 429
           ? "AI quota/rate limit reached. Please wait a few seconds and try again."
-          : error?.message || "AI is unavailable right now.",
+          : getErrorMessage(error),
     };
   }
 }

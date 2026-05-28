@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, BookOpen, Users } from "lucide-react";
+import { BookOpen, Users } from "lucide-react";
 
 import PortalCard from "@/components/landing/PortalCard";
 
