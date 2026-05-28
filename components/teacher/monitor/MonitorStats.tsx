@@ -44,31 +44,34 @@ export default function MonitorStats({
 
   return (
     <>
-      {/* MOBILE CAROUSEL */}
       <div className="mb-6 md:hidden">
         <h2 className="mb-3 text-lg font-semibold text-white">
           Sessions Overview
         </h2>
 
         <div className="-mx-4 overflow-x-auto px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="flex w-max gap-3 pr-10">
+          <div className="flex w-max gap-2.5 pr-8">
             {stats.map((stat) => {
               const Icon = stat.icon;
 
               return (
                 <Card
                   key={stat.label}
-                  className="w-[135px] shrink-0 rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl"
+                  className="flex min-h-[104px] w-[112px] shrink-0 flex-col justify-between rounded-3xl border border-white/10 bg-white/5 p-2.5 backdrop-blur-xl"
                 >
-                  <Icon className={`mb-4 h-7 w-7 ${stat.className}`} />
+                  <div className="flex items-start justify-between gap-2">
+                    <Icon className={`h-5 w-5 shrink-0 ${stat.className}`} />
+                  </div>
 
-                  <p className={`text-3xl font-bold ${stat.className}`}>
-                    {stat.value}
-                  </p>
+                  <div>
+                    <p className={`text-2xl font-extrabold leading-none ${stat.className}`}>
+                      {stat.value}
+                    </p>
 
-                  <p className="mt-1 text-sm text-slate-400">
-                    {stat.label}
-                  </p>
+                    <p className="mt-1 text-[11px] leading-4 text-slate-400">
+                      {stat.label}
+                    </p>
+                  </div>
                 </Card>
               );
             })}
@@ -76,37 +79,25 @@ export default function MonitorStats({
         </div>
       </div>
 
-      {/* DESKTOP OLD GRID */}
       <div className="mb-5 hidden grid-cols-2 gap-3 md:mb-6 md:grid md:gap-4 xl:grid-cols-4">
-        <Card className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-          <Eye className="mb-3 h-7 w-7 text-blue-300 md:h-8 md:w-8" />
-          <p className="text-sm text-slate-400">Total Sessions</p>
-          <p className="mt-2 text-3xl font-bold text-white">{total}</p>
-        </Card>
+        {stats.map((stat) => {
+          const Icon = stat.icon;
 
-        <Card className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-          <Activity className="mb-3 h-7 w-7 text-indigo-300 md:h-8 md:w-8" />
-          <p className="text-sm text-slate-400">In Progress</p>
-          <p className="mt-2 text-3xl font-bold text-indigo-300">
-            {inProgress}
-          </p>
-        </Card>
+          return (
+            <Card
+              key={stat.label}
+              className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl"
+            >
+              <Icon className={`mb-3 h-7 w-7 md:h-8 md:w-8 ${stat.className}`} />
 
-        <Card className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-          <CheckCircle2 className="mb-3 h-7 w-7 text-emerald-300 md:h-8 md:w-8" />
-          <p className="text-sm text-slate-400">Completed</p>
-          <p className="mt-2 text-3xl font-bold text-emerald-300">
-            {completed}
-          </p>
-        </Card>
+              <p className="text-sm text-slate-400">{stat.label}</p>
 
-        <Card className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-          <AlertTriangle className="mb-3 h-7 w-7 text-red-300 md:h-8 md:w-8" />
-          <p className="text-sm text-slate-400">Suspicious Activity</p>
-          <p className="mt-2 text-3xl font-bold text-red-300">
-            {suspicious}
-          </p>
-        </Card>
+              <p className={`mt-2 text-3xl font-bold ${stat.className}`}>
+                {stat.value}
+              </p>
+            </Card>
+          );
+        })}
       </div>
     </>
   );

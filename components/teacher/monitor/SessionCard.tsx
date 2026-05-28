@@ -131,11 +131,11 @@ export default function SessionCard({
   const risk = getRiskLevel(session);
 
   return (
-    <GlassCard className="overflow-hidden p-4 md:p-6">
+    <GlassCard className="overflow-hidden p-3 md:p-6">
       <div className="md:hidden">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h3 className="truncate text-xl font-bold text-white">
+            <h3 className="truncate text-lg font-bold text-white">
               {session.studentName}
             </h3>
 
@@ -168,24 +168,24 @@ export default function SessionCard({
           </div>
         </div>
 
-        <div className="mt-4 rounded-3xl border border-white/10 bg-white/[0.03] p-4">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="mt-3 rounded-3xl border border-white/10 bg-white/[0.03] p-3">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <p className="text-xs text-slate-500">Status</p>
+              <p className="text-[11px] text-slate-500">Status</p>
 
-              <p className={`mt-1 text-2xl font-bold ${getStatusClass(session)}`}>
+              <p className={`mt-1 text-xl font-bold ${getStatusClass(session)}`}>
                 {getStatusLabel(session)}
               </p>
             </div>
 
             <div>
-              <p className="text-xs text-slate-500">Score</p>
+              <p className="text-[11px] text-slate-500">Score</p>
 
               <p
                 className={
                   isFinished(session)
-                    ? "mt-1 text-2xl font-bold text-emerald-300"
-                    : "mt-1 text-2xl font-bold text-slate-500"
+                    ? "mt-1 text-xl font-bold text-emerald-300"
+                    : "mt-1 text-xl font-bold text-slate-500"
                 }
               >
                 {isFinished(session)
@@ -195,31 +195,31 @@ export default function SessionCard({
             </div>
           </div>
 
-          <div className="mt-4 flex items-center gap-2 text-xs text-slate-400">
+          <div className="mt-3 flex items-center gap-2 text-[11px] text-slate-400">
             <Monitor className="h-3.5 w-3.5" />
             Requested at {formatTime(session.startedAt)}
           </div>
 
           {isApproved && (
-            <div className="mt-4 grid grid-cols-4 gap-2">
-              <div className="rounded-xl border border-red-400/10 bg-red-500/5 px-2 py-2 text-center">
+            <div className="mt-3 grid grid-cols-4 gap-2">
+              <div className="rounded-xl border border-red-400/10 bg-red-500/5 px-1.5 py-2 text-center">
                 <p className="text-sm font-bold text-red-300">{tabLeft}</p>
                 <p className="mt-1 text-[10px] text-slate-400">Tab</p>
               </div>
 
-              <div className="rounded-xl border border-orange-400/10 bg-orange-500/5 px-2 py-2 text-center">
+              <div className="rounded-xl border border-orange-400/10 bg-orange-500/5 px-1.5 py-2 text-center">
                 <p className="text-sm font-bold text-orange-300">
                   {fullscreenExit}
                 </p>
                 <p className="mt-1 text-[10px] text-slate-400">Full</p>
               </div>
 
-              <div className="rounded-xl border border-blue-400/10 bg-blue-500/5 px-2 py-2 text-center">
+              <div className="rounded-xl border border-blue-400/10 bg-blue-500/5 px-1.5 py-2 text-center">
                 <p className="text-sm font-bold text-blue-300">{copyAttempt}</p>
                 <p className="mt-1 text-[10px] text-slate-400">Copy</p>
               </div>
 
-              <div className="rounded-xl border border-pink-400/10 bg-pink-500/5 px-2 py-2 text-center">
+              <div className="rounded-xl border border-pink-400/10 bg-pink-500/5 px-1.5 py-2 text-center">
                 <p className="text-sm font-bold text-pink-300">
                   {pasteAttempt}
                 </p>
@@ -228,7 +228,7 @@ export default function SessionCard({
             </div>
           )}
 
-          <div className="mt-4 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-3 py-3">
+          <div className="mt-3 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5">
             <span className="text-sm text-slate-400">Report</span>
 
             <span
@@ -240,13 +240,13 @@ export default function SessionCard({
             </span>
           </div>
 
-          <div className="mt-4">
+          <div className="mt-3">
             {isPending ? (
               <div className="grid grid-cols-2 gap-2">
                 <Button
                   type="button"
                   onClick={() => onApprove(session.id)}
-                  className="h-11 bg-emerald-500 text-white hover:bg-emerald-600"
+                  className="h-10 bg-emerald-500 text-white hover:bg-emerald-600"
                 >
                   <CheckCircle2 className="h-4 w-4" />
                   Approve
@@ -256,7 +256,7 @@ export default function SessionCard({
                   type="button"
                   variant="secondary"
                   onClick={() => onReject(session.id)}
-                  className="h-11 border-red-400/20 bg-red-500/10 text-red-200 hover:bg-red-500/20 hover:text-red-100"
+                  className="h-10 border-red-400/20 bg-red-500/10 text-red-200 hover:bg-red-500/20 hover:text-red-100"
                 >
                   <XCircle className="h-4 w-4" />
                   Reject
@@ -266,7 +266,7 @@ export default function SessionCard({
               <Button
                 variant="ghost"
                 onClick={() => onView(session.id)}
-                className="h-12 w-full justify-between rounded-2xl border border-white/10 bg-white/5 px-4 hover:bg-white/10 hover:text-white"
+                className="h-11 w-full justify-between rounded-2xl border border-white/10 bg-white/5 px-4 hover:bg-white/10 hover:text-white"
               >
                 View Details
                 <ChevronRight className="h-4 w-4" />

@@ -37,11 +37,11 @@ export default function MonitorHeader({
       : "h-11 border-white/10 bg-white/5 hover:bg-white/10 hover:text-white";
   }
 
-  function mobileButtonClass(visibility: ReportVisibility) {
-    return reportVisibilityState === visibility
-      ? "h-16 w-full justify-start rounded-2xl px-5 text-left"
-      : "h-16 w-full justify-start rounded-2xl border-white/10 bg-white/5 px-5 text-left hover:bg-white/10 hover:text-white";
-  }
+function mobileButtonClass(visibility: ReportVisibility) {
+  return reportVisibilityState === visibility
+    ? "h-10 w-full justify-start rounded-xl px-3 text-left text-xs"
+    : "h-10 w-full justify-start rounded-xl border-white/10 bg-white/5 px-3 text-left text-xs hover:bg-white/10 hover:text-white";
+}
 
   function buttonVariant(visibility: ReportVisibility) {
     return reportVisibilityState === visibility ? "primary" : "secondary";
@@ -49,18 +49,18 @@ export default function MonitorHeader({
 
   return (
     <Card className="mb-5 overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-0 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl md:mb-6">
-      <div className="relative p-5 md:p-8">
-        <div className="absolute right-0 top-0 h-28 w-28 rounded-full bg-blue-500/10 blur-2xl md:h-32 md:w-32" />
+      <div className="relative p-4 md:p-8">
+        <div className="absolute right-0 top-0 h-24 w-24 rounded-full bg-blue-500/10 blur-2xl md:h-32 md:w-32" />
 
-        <div className="relative z-10 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+        <div className="relative z-10 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex items-start gap-3 md:gap-4">
             <Button
               variant="ghost"
               size="sm"
               onClick={onBack}
-              className="h-10 w-10 shrink-0 border border-white/10 bg-white/5 p-0 hover:bg-white/10 md:h-11 md:w-11"
+              className="h-9 w-9 shrink-0 border border-white/10 bg-white/5 p-0 hover:bg-white/10 md:h-11 md:w-11"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
 
             <div className="min-w-0">
@@ -70,14 +70,14 @@ export default function MonitorHeader({
                 title="Live Monitor"
                 description={quiz?.title || "Quiz not found"}
                 variant="page"
-                badgeClassName="mb-3 border-sky-400/20 bg-sky-400/10 px-3 py-1.5 text-xs text-sky-200"
-                iconClassName="h-3.5 w-3.5"
-                titleClassName="text-3xl md:text-4xl"
-                descriptionClassName="mt-2 text-sm text-slate-300 md:text-base"
+                badgeClassName="mb-2 border-sky-400/20 bg-sky-400/10 px-2.5 py-1 text-[10px] text-sky-200 md:mb-3 md:px-3 md:py-1.5 md:text-xs"
+                iconClassName="h-3 w-3 md:h-3.5 md:w-3.5"
+                titleClassName="text-2xl md:text-4xl"
+                descriptionClassName="mt-1 text-sm text-slate-300 md:mt-2 md:text-base"
               />
 
               {quiz?.published && (
-                <p className="mt-3 inline-flex rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 font-mono text-xs text-cyan-200 md:text-sm">
+                <p className="mt-2 inline-flex rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 font-mono text-xs text-cyan-200 md:mt-3 md:text-sm">
                   Join Code: {quiz.code}
                 </p>
               )}
@@ -104,26 +104,25 @@ export default function MonitorHeader({
           </div>
         </div>
 
-        {/* MOBILE REPORT RELEASE */}
-        <div className="relative z-10 mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 md:hidden">
+        <div className="relative z-10 mt-4 rounded-2xl border border-white/10 bg-white/5 p-3 md:hidden">
           <button
             type="button"
             onClick={() => setReportOpen((prev) => !prev)}
-            className="flex w-full items-center justify-between gap-4"
+            className="flex w-full items-center justify-between gap-3"
           >
             <div className="min-w-0">
-              <h3 className="text-left font-semibold text-white">
+              <h3 className="text-left text-sm font-semibold text-white">
                 Student Result Access
               </h3>
 
-              <p className="mt-1 text-left text-sm text-slate-400">
+              <p className="mt-1 text-left text-xs leading-5 text-slate-400">
                 Control what students can see after the quiz.
               </p>
             </div>
 
-            <div className="shrink-0 rounded-2xl border border-white/10 bg-white/5 p-3">
+            <div className="shrink-0 rounded-2xl border border-white/10 bg-white/5 p-2.5">
               <ChevronDown
-                className={`h-5 w-5 transition ${
+                className={`h-4 w-4 transition ${
                   reportOpen ? "rotate-180" : ""
                 }`}
               />
@@ -137,14 +136,14 @@ export default function MonitorHeader({
           )}
 
           {reportOpen && (
-            <div className="mt-4 grid gap-3">
+            <div className="mt-4 grid gap-2">
               <Button
                 type="button"
                 variant={buttonVariant("locked")}
                 onClick={() => onBulkUpdateReportVisibility("locked")}
                 className={mobileButtonClass("locked")}
               >
-                <Lock className="mr-3 h-5 w-5" />
+                <Lock className="mr-2 h-4 w-4" />
                 Lock All Reports
               </Button>
 
@@ -154,7 +153,7 @@ export default function MonitorHeader({
                 onClick={() => onBulkUpdateReportVisibility("summary")}
                 className={mobileButtonClass("summary")}
               >
-                <Unlock className="mr-3 h-5 w-5" />
+                <Unlock className="mr-2 h-4 w-4" />
                 Release Answers
               </Button>
 
@@ -164,14 +163,13 @@ export default function MonitorHeader({
                 onClick={() => onBulkUpdateReportVisibility("full")}
                 className={mobileButtonClass("full")}
               >
-                <Unlock className="mr-3 h-5 w-5" />
+                <Unlock className="mr-2 h-4 w-4" />
                 Release Full Review
               </Button>
             </div>
           )}
         </div>
 
-        {/* DESKTOP REPORT RELEASE */}
         <div className="relative z-10 mt-6 hidden rounded-2xl border border-white/10 bg-white/5 p-4 md:block">
           <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <div>
