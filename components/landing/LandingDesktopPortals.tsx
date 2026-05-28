@@ -23,7 +23,7 @@ const portals = [
     title: "Student Portal",
     description:
       "Request access using a quiz code and complete your exam in a focused, monitored environment.",
-    buttonText: "Request Access",
+    buttonText: "Enter Quiz Code",
     href: "/student/join",
     variant: "secondary" as const,
     glowClass: "bg-violet-500/10",
