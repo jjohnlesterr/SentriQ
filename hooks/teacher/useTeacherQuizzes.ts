@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -29,6 +29,24 @@ export function useTeacherQuizzes() {
     [quizzes],
   );
 
+  const loadQuizzes = useCallback(
+    async (id = teacherId) => {
+      if (!id) return;
+
+      setIsLoading(true);
+
+      try {
+        const data = await getTeacherQuizzes(id);
+        setQuizzes(data);
+      } catch {
+        toast.error("Failed to load quizzes.");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [teacherId],
+  );
+
   useEffect(() => {
     async function loadSession() {
       try {
@@ -41,29 +59,15 @@ export function useTeacherQuizzes() {
 
         setTeacherId(session.user.id);
         setTeacherName(session.user.email ?? "Teacher");
+
         await loadQuizzes(session.user.id);
       } catch {
         toast.error("Failed to load teacher session.");
       }
     }
 
-    loadSession();
-  }, [router]);
-
-  async function loadQuizzes(id = teacherId) {
-    if (!id) return;
-
-    setIsLoading(true);
-
-    try {
-      const data = await getTeacherQuizzes(id);
-      setQuizzes(data);
-    } catch {
-      toast.error("Failed to load quizzes.");
-    } finally {
-      setIsLoading(false);
-    }
-  }
+    void loadSession();
+  }, [router, loadQuizzes]);
 
   async function createNewQuiz(title: string, description: string) {
     if (!teacherId) {
@@ -79,7 +83,11 @@ export function useTeacherQuizzes() {
   async function handleDeleteQuiz(quizId: string) {
     try {
       await deleteQuiz(quizId);
-      setQuizzes((prev) => prev.filter((quiz) => quiz.id !== quizId));
+
+      setQuizzes((prev) =>
+        prev.filter((quiz) => quiz.id !== quizId),
+      );
+
       toast.success("Quiz deleted.");
     } catch {
       toast.error("Failed to delete quiz.");

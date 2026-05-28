@@ -181,10 +181,13 @@ export function useStudentQuiz() {
   }
 
   useEffect(() => {
-    if (!quiz?.timeLimitMinutes || !session?.startedAt) {
-      setRemainingSeconds(null);
-      return;
-    }
+if (!quiz?.timeLimitMinutes || !session?.startedAt) {
+  const id = requestAnimationFrame(() => {
+    setRemainingSeconds(null);
+  });
+
+  return () => cancelAnimationFrame(id);
+}
 
     if (
       session.approvalStatus !== "approved" ||
@@ -306,7 +309,7 @@ async function handleSubmit() {
   } finally {
     setIsSubmitting(false);
   }
-}
+}                                                                                               
 
   const currentQuestion = quiz?.questions[currentIndex];
   const selectedAnswer = answersState.answers[currentIndex];

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import {
@@ -43,7 +43,7 @@ export function useTeacherMonitor() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
-  async function loadInitialData() {
+  const loadInitialData = useCallback(async () => {
     try {
       const teacherSession = await getTeacherSession();
 
@@ -71,9 +71,9 @@ export function useTeacherMonitor() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [quizId, router]);
 
-  async function loadSessionsOnly() {
+  const loadSessionsOnly = useCallback(async () => {
     try {
       const sessionData = await getQuizSessions(quizId);
 
@@ -83,12 +83,15 @@ export function useTeacherMonitor() {
     } catch (error) {
       console.error("Teacher monitor sessions load error:", error);
     }
-  }
-
-  useEffect(() => {
-    loadInitialData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quizId]);
+
+useEffect(() => {
+  const id = requestAnimationFrame(() => {
+    void loadInitialData();
+  });
+
+  return () => cancelAnimationFrame(id);
+}, [loadInitialData]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -111,8 +114,8 @@ export function useTeacherMonitor() {
           table: "sessions",
           filter: `quiz_id=eq.${quizId}`,
         },
-        async () => {
-          await loadSessionsOnly();
+        () => {
+          void loadSessionsOnly();
         },
       )
       .on(
@@ -122,49 +125,41 @@ export function useTeacherMonitor() {
           schema: "public",
           table: "session_events",
         },
-        async () => {
-          await loadSessionsOnly();
+        () => {
+          void loadSessionsOnly();
         },
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quizId, autoRefresh]);
-
-  function isSessionTimedOut(session: QuizSession) {
-    if (!quiz?.timeLimitMinutes) return false;
-    if (session.status === "completed" || session.status === "timed-out") {
-      return false;
-    }
-    if (!session.startedAt) return false;
-
-    const startedAtMs = new Date(session.startedAt).getTime();
-
-    if (Number.isNaN(startedAtMs)) return false;
-
-    const expiresAtMs = startedAtMs + quiz.timeLimitMinutes * 60 * 1000;
-
-    return now >= expiresAtMs;
-  }
+  }, [quizId, autoRefresh, loadSessionsOnly]);
 
   const sessions = useMemo(
     () =>
       rawSessions.map((session) => {
-        if (!isSessionTimedOut(session)) return session;
+        if (!quiz?.timeLimitMinutes) return session;
+        if (session.status === "completed" || session.status === "timed-out") {
+          return session;
+        }
+        if (!session.startedAt) return session;
+
+        const startedAtMs = new Date(session.startedAt).getTime();
+
+        if (Number.isNaN(startedAtMs)) return session;
+
+        const expiresAtMs = startedAtMs + quiz.timeLimitMinutes * 60 * 1000;
+
+        if (now < expiresAtMs) return session;
 
         return {
           ...session,
           status: "timed-out" as QuizSession["status"],
-          completedAt: new Date(
-            new Date(session.startedAt).getTime() +
-              (quiz?.timeLimitMinutes ?? 0) * 60 * 1000,
-          ),
+          completedAt: new Date(expiresAtMs),
         };
       }),
-    [rawSessions, quiz?.timeLimitMinutes, now],
+    [rawSessions, quiz, now],
   );
 
   function goBack() {
