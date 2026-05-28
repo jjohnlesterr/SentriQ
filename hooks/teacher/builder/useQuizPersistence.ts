@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { getQuizById, getTeacherQuizzes } from "@/lib/actions";
@@ -35,24 +35,18 @@ export function useQuizPersistence({ quizId }: Params) {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [timeLimitMinutes, setTimeLimitMinutes] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  const savedSnapshotRef = useRef("");
+  const [savedSnapshot, setSavedSnapshot] = useState("");
 
   const currentSnapshot = useMemo(
     () => createSnapshot(title, description, questions, timeLimitMinutes),
     [title, description, questions, timeLimitMinutes],
   );
 
-  const isDirty =
-    savedSnapshotRef.current !== "" &&
-    currentSnapshot !== savedSnapshotRef.current;
+  const isDirty = savedSnapshot !== "" && currentSnapshot !== savedSnapshot;
 
   const markClean = useCallback(() => {
-    savedSnapshotRef.current = createSnapshot(
-      title,
-      description,
-      questions,
-      timeLimitMinutes,
+    setSavedSnapshot(
+      createSnapshot(title, description, questions, timeLimitMinutes),
     );
   }, [title, description, questions, timeLimitMinutes]);
 
@@ -109,19 +103,20 @@ export function useQuizPersistence({ quizId }: Params) {
         setDescription(quizData.description);
         setQuestions(normalizedQuestions);
         setTimeLimitMinutes(quizData.timeLimitMinutes ?? null);
-
-        savedSnapshotRef.current = createSnapshot(
-          quizData.title,
-          quizData.description,
-          normalizedQuestions,
-          quizData.timeLimitMinutes ?? null,
+        setSavedSnapshot(
+          createSnapshot(
+            quizData.title,
+            quizData.description,
+            normalizedQuestions,
+            quizData.timeLimitMinutes ?? null,
+          ),
         );
       } finally {
         setIsLoading(false);
       }
     }
 
-    loadQuiz();
+    void loadQuiz();
   }, [quizId, router]);
 
   return {

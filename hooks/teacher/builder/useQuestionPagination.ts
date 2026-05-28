@@ -29,11 +29,15 @@ export function useQuestionPagination<T>(items: T[], pageSize = 5) {
     [items.length, pageSize, visibleCount]
   );
 
-  useEffect(() => {
-    if (visibleCount > items.length) {
-      setVisibleCount(Math.max(pageSize, items.length));
-    }
-  }, [items.length, pageSize, visibleCount]);
+useEffect(() => {
+  if (visibleCount <= items.length) return;
+
+  const id = requestAnimationFrame(() => {
+    setVisibleCount(Math.max(pageSize, items.length));
+  });
+
+  return () => cancelAnimationFrame(id);
+}, [items.length, pageSize, visibleCount]);
 
   return {
     visibleItems,

@@ -46,7 +46,7 @@ export default function ConfirmDialog({
 }: ConfirmDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md border-cyan-400/20 bg-slate-950">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-md border-cyan-400/20 bg-slate-950 p-5 sm:p-6">
         <DialogHeader>
           <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-300">
             <AlertTriangle className="h-6 w-6" />
@@ -57,14 +57,14 @@ export default function ConfirmDialog({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
-        <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <div className="mt-6 grid gap-3 sm:flex sm:justify-end">
           {showCancel && (
             <Button
               type="button"
               variant="ghost"
               disabled={isLoading}
               onClick={() => onOpenChange(false)}
-              className="border-white/10 bg-white/5 hover:bg-white/10"
+              className="h-11 border-white/10 bg-white/5 hover:bg-white/10 sm:min-w-[110px]"
             >
               {cancelText}
             </Button>
@@ -76,6 +76,7 @@ export default function ConfirmDialog({
               variant="destructive"
               disabled={isLoading}
               onClick={onDiscard}
+              className="h-11 sm:min-w-[140px]"
             >
               {discardText}
             </Button>
@@ -86,6 +87,7 @@ export default function ConfirmDialog({
             variant={confirmVariant}
             disabled={isLoading}
             onClick={onConfirm}
+            className="h-11 sm:min-w-[150px]"
           >
             {isLoading ? loadingText : confirmText}
           </Button>

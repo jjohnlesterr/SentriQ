@@ -52,10 +52,14 @@ export default function MultipleChoiceEditor({
     {},
   );
 
-  useEffect(() => {
+useEffect(() => {
+  const id = requestAnimationFrame(() => {
     setTouchedOptions({});
     setOpenMenuIndex(null);
-  }, [question.id]);
+  });
+
+  return () => cancelAnimationFrame(id);
+}, [question.id]);
 
   const hasDuplicateOptions = useMemo(() => {
     const meaningfulOptions = question.options

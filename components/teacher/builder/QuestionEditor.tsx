@@ -75,12 +75,16 @@ export default function QuestionEditor({
   const [hintOpen, setHintOpen] = useState(false);
   const [hintDraft, setHintDraft] = useState(question.hint || "");
 
-  useEffect(() => {
+useEffect(() => {
+  const id = requestAnimationFrame(() => {
     setQuestionTouched(false);
     setQuestionMenuOpen(false);
     setHintOpen(false);
     setHintDraft(question.hint || "");
-  }, [question.id, question.hint]);
+  });
+
+  return () => cancelAnimationFrame(id);
+}, [question.id, question.hint]);
 
   const showQuestionCount = question.text.length >= QUESTION_COUNT_WARNING_AT;
   const showQuestionWarning = questionTouched && !question.text.trim();

@@ -24,7 +24,6 @@ export default function TrueFalseEditor({
   activeQuestion,
   onUpdateQuestion,
   onUpdateOption,
-  onAddOption,
   onRemoveOption,
   onMoveOptionUp,
   onMoveOptionDown,

@@ -19,14 +19,17 @@ type Props = {
 };
 
 function formatTimerLabel(minutes: number | null) {
-  if (!minutes) return "Set Timer";
+  if (!minutes) return "Timer";
 
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
 
-  if (hours > 0 && remainingMinutes > 0)
+  if (hours > 0 && remainingMinutes > 0) {
     return `${hours}h ${remainingMinutes}m`;
+  }
+
   if (hours > 0) return `${hours}h`;
+
   return `${remainingMinutes}m`;
 }
 
@@ -81,7 +84,7 @@ export default function BuilderHeader({
             </Button>
 
             <div className="min-w-0">
-              <Badge className="border-cyan-400/20 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-200">
+              <Badge className="border-cyan-400/20 bg-cyan-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-200 sm:text-[11px]">
                 Assessment Setup
               </Badge>
 
@@ -90,25 +93,26 @@ export default function BuilderHeader({
               </h1>
 
               <p className="mt-1 text-sm text-slate-400">
-                {questionCount} question{questionCount !== 1 ? "s" : ""} in this
-                draft
+                {questionCount} question{questionCount !== 1 ? "s" : ""} in
+                this draft
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 md:flex md:items-center">
+          <div className="grid grid-cols-3 gap-2 md:flex md:items-center md:gap-3">
             <Button
               type="button"
               onClick={onOpenTimer}
               variant="ghost"
+              title={timeLimitMinutes ? "Edit Timer" : "Set Timer"}
               className={
                 timeLimitMinutes
-                  ? "h-11 cursor-pointer rounded-2xl border border-cyan-400/40 bg-cyan-500/10 px-4 text-xs font-semibold text-cyan-100 hover:bg-cyan-500/15 hover:text-white sm:text-sm"
-                  : "h-11 cursor-pointer rounded-2xl border border-white/10 bg-white/5 px-4 text-xs text-slate-200 hover:bg-white/10 hover:text-white sm:text-sm"
+                  ? "h-11 min-w-0 cursor-pointer rounded-2xl border border-cyan-400/40 bg-cyan-500/10 px-2 text-[11px] font-semibold text-cyan-100 hover:bg-cyan-500/15 hover:text-white sm:px-4 sm:text-sm md:min-w-[120px]"
+                  : "h-11 min-w-0 cursor-pointer rounded-2xl border border-white/10 bg-white/5 px-2 text-[11px] text-slate-200 hover:bg-white/10 hover:text-white sm:px-4 sm:text-sm md:min-w-[120px]"
               }
             >
-              <Clock className="h-4 w-4" />
-              {formatTimerLabel(timeLimitMinutes)}
+              <Clock className="h-4 w-4 shrink-0" />
+              <span className="truncate">{formatTimerLabel(timeLimitMinutes)}</span>
             </Button>
 
             <Button
@@ -116,17 +120,18 @@ export default function BuilderHeader({
               onClick={onSave}
               disabled={isSaving}
               variant="ghost"
-              className="h-11 cursor-pointer rounded-2xl border border-white/10 bg-white/5 px-4 text-xs text-slate-200 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:bg-black/30 disabled:text-slate-500 sm:text-sm"
+              title="Save Draft"
+              className="h-11 min-w-0 cursor-pointer rounded-2xl border border-white/10 bg-white/5 px-2 text-[11px] text-slate-200 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:bg-black/30 disabled:text-slate-500 sm:px-4 sm:text-sm md:min-w-[120px]"
             >
               {isSaving ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Saving...
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                  <span className="truncate">Saving</span>
                 </>
               ) : (
                 <>
-                  <Save className="h-4 w-4" />
-                  Save Draft
+                  <Save className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Save</span>
                 </>
               )}
             </Button>
@@ -135,19 +140,20 @@ export default function BuilderHeader({
               type="button"
               onClick={onPublish}
               disabled={isPublishing || disablePublish}
-              className="h-11 cursor-pointer rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 px-4 text-xs font-semibold text-white shadow-lg shadow-blue-500/20 hover:from-cyan-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:bg-black/30 disabled:from-black/30 disabled:to-black/30 disabled:text-slate-500 sm:text-sm"
+              title={isPublished ? "Published" : "Publish"}
+              className="h-11 min-w-0 cursor-pointer rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 px-2 text-[11px] font-semibold text-white shadow-lg shadow-blue-500/20 hover:from-cyan-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:bg-black/30 disabled:from-black/30 disabled:to-black/30 disabled:text-slate-500 sm:px-4 sm:text-sm md:min-w-[120px]"
             >
               {isPublishing ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Publishing...
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                  <span className="truncate">Publishing</span>
                 </>
               ) : isPublished ? (
-                "Published"
+                <span className="truncate">Published</span>
               ) : (
                 <>
-                  <Rocket className="h-4 w-4" />
-                  Publish
+                  <Rocket className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Publish</span>
                 </>
               )}
             </Button>

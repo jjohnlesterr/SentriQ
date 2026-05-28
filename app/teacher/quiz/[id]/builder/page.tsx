@@ -35,7 +35,6 @@ export default function QuizBuilderPage() {
   const [questionPanelOpen, setQuestionPanelOpen] = useState(false);
 
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
-  const [isSavingBeforeLeave, setIsSavingBeforeLeave] = useState(false);
   const [pendingLeaveAction, setPendingLeaveAction] = useState<
     (() => Promise<void> | void) | null
   >(null);
@@ -101,17 +100,8 @@ export default function QuizBuilderPage() {
     setLeaveDialogOpen(true);
   }
 
-  function handleCancelLeave() {
-    if (isSavingBeforeLeave) return;
-
-    setLeaveDialogOpen(false);
-    setPendingLeaveAction(null);
-  }
-
   async function handleSaveAndLeave() {
     if (!pendingLeaveAction) return;
-
-    setIsSavingBeforeLeave(true);
 
     try {
       const saved = await builder.saveDraftOnly();
@@ -127,8 +117,6 @@ export default function QuizBuilderPage() {
     } catch (error) {
       console.error(error);
       toast.error("Failed to save draft.");
-    } finally {
-      setIsSavingBeforeLeave(false);
     }
   }
 
@@ -261,16 +249,14 @@ export default function QuizBuilderPage() {
         open={leaveDialogOpen}
         title="Save draft before leaving?"
         description="You have unsaved quiz changes. Save this draft before leaving this page?"
-        confirmText="Save Draft & Leave"
         discardText="Discard & Leave"
-        loadingText="Saving..."
-        isLoading={isSavingBeforeLeave}
+        confirmText="Save Draft & Leave"
+        showCancel={false}
         showDiscard
-        onOpenChange={(open) => {
-          if (!open) handleCancelLeave();
-        }}
-        onConfirm={handleSaveAndLeave}
+        confirmVariant="primary"
+        onOpenChange={setLeaveDialogOpen}
         onDiscard={handleDiscardAndLeave}
+        onConfirm={handleSaveAndLeave}
       />
     </PageShell>
   );
