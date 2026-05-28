@@ -15,12 +15,14 @@ function normalize(value: string) {
 
 function isAnswerCorrect(
   question: Quiz["questions"][number],
-  answer: number | string | undefined
+  answer: number | string | undefined,
 ) {
   if (answer === undefined || answer === "") return false;
 
   if (question.type === "identification") {
-    return normalize(String(answer)) === normalize(question.correctTextAnswer || "");
+    return (
+      normalize(String(answer)) === normalize(question.correctTextAnswer || "")
+    );
   }
 
   return answer === question.correctAnswer;
@@ -69,8 +71,10 @@ function StatCard({
   }[tone];
 
   return (
-    <div className="min-h-[78px] rounded-2xl border border-white/10 bg-white/[0.04] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-      <p className="text-xs text-slate-400">{label}</p>
+    <div className="min-h-[68px] rounded-2xl border border-white/10 bg-white/[0.04] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:min-h-[78px] sm:p-4">
+      <p className="text-[11px] leading-4 text-slate-400 sm:text-xs">
+        {label}
+      </p>
       <p className={`mt-1 text-sm font-bold capitalize ${toneClass}`}>
         {value}
       </p>
@@ -86,7 +90,7 @@ export default function SessionStatsGrid({ session, quiz }: Props) {
   const score = getScore(session, quiz);
 
   return (
-    <div className="grid shrink-0 grid-cols-3 gap-3 lg:grid-cols-8">
+    <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-8">
       <StatCard
         label="Status"
         value={session.status}
@@ -129,11 +133,7 @@ export default function SessionStatsGrid({ session, quiz }: Props) {
         tone={pasteAttempt > 0 ? "danger" : "success"}
       />
 
-      <StatCard
-        label="Report Access"
-        value={session.reportVisibility}
-        tone="info"
-      />
+      <StatCard label="Report Access" value={session.reportVisibility} tone="info" />
     </div>
   );
 }

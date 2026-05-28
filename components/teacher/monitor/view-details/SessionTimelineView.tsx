@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -11,7 +14,10 @@ import {
   UserRoundCheck,
 } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import type { QuizSession, SessionEventType } from "@/lib/shared/types";
+
+const PREVIEW_LIMIT = 5;
 
 function getEventLabel(type: SessionEventType) {
   const labels: Record<SessionEventType, string> = {
@@ -108,6 +114,8 @@ export default function SessionTimelineView({
   formatTime: (value: Date | string | undefined) => string;
   compact?: boolean;
 }) {
+  const [visibleCount, setVisibleCount] = useState(PREVIEW_LIMIT);
+
   if (session.events.length === 0) {
     return (
       <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-sm text-slate-400">
@@ -116,7 +124,14 @@ export default function SessionTimelineView({
     );
   }
 
-  const events = compact ? session.events.slice(0, 4) : session.events;
+  const events = compact
+    ? session.events.slice(0, visibleCount)
+    : session.events;
+
+  const hasMore = compact && visibleCount < session.events.length;
+  const canShowLess = compact && visibleCount > PREVIEW_LIMIT;
+  const hiddenCount = session.events.length - visibleCount;
+  const nextCount = Math.min(PREVIEW_LIMIT, hiddenCount);
 
   return (
     <div className="relative pl-2">
@@ -126,7 +141,10 @@ export default function SessionTimelineView({
         const isLast = index === events.length - 1;
 
         return (
-          <div key={`${event.type}-${index}`} className="relative flex gap-4 pb-6">
+          <div
+            key={`${event.type}-${index}`}
+            className="relative flex gap-4 pb-6"
+          >
             {!isLast && (
               <div className="absolute left-[19px] top-10 h-full w-px bg-white/10" />
             )}
@@ -158,12 +176,38 @@ export default function SessionTimelineView({
         );
       })}
 
-      {compact && session.events.length > 4 ? (
-        <div className="ml-12 rounded-2xl border border-dashed border-white/10 bg-white/[0.025] p-3 text-center text-xs text-slate-400">
-          Showing 4 of {session.events.length} events.
+      {(hasMore || canShowLess) && (
+        <div className="ml-12 flex flex-col gap-2">
+          {hasMore && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() =>
+                setVisibleCount((current) =>
+                  Math.min(current + PREVIEW_LIMIT, session.events.length),
+                )
+              }
+              className="h-10 w-full rounded-2xl border border-white/10 bg-white/5 text-sm text-white hover:bg-white/10"
+            >
+              See More ({nextCount})
+            </Button>
+          )}
+
+          {canShowLess && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setVisibleCount(PREVIEW_LIMIT)}
+              className="h-10 w-full rounded-2xl border border-white/10 bg-white/5 text-sm text-slate-300 hover:bg-white/10 hover:text-white"
+            >
+              See Less
+            </Button>
+          )}
         </div>
-      ) : (
-        <div className="ml-12 border-t border-white/10 pt-4 text-center text-xs text-slate-500">
+      )}
+
+      {!hasMore && (
+        <div className="ml-12 mt-4 border-t border-white/10 pt-4 text-center text-xs text-slate-500">
           End of activity
         </div>
       )}

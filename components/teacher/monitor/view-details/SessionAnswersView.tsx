@@ -1,6 +1,12 @@
+"use client";
+
+import { useState } from "react";
 import { CheckCircle2, Circle, XCircle } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import type { Quiz, QuizSession } from "@/lib/shared/types";
+
+const PREVIEW_LIMIT = 5;
 
 function normalize(value: string) {
   return value.trim().toLowerCase();
@@ -8,10 +14,9 @@ function normalize(value: string) {
 
 function getStudentAnswerText(
   question: Quiz["questions"][number],
-  answer: number | string | undefined
+  answer: number | string | undefined,
 ) {
   if (answer === undefined || answer === "") return "No answer";
-
   if (question.type === "identification") return String(answer);
 
   if (typeof answer === "number") {
@@ -31,12 +36,14 @@ function getCorrectAnswerText(question: Quiz["questions"][number]) {
 
 function isAnswerCorrect(
   question: Quiz["questions"][number],
-  answer: number | string | undefined
+  answer: number | string | undefined,
 ) {
   if (answer === undefined || answer === "") return false;
 
   if (question.type === "identification") {
-    return normalize(String(answer)) === normalize(question.correctTextAnswer || "");
+    return (
+      normalize(String(answer)) === normalize(question.correctTextAnswer || "")
+    );
   }
 
   return answer === question.correctAnswer;
@@ -51,6 +58,8 @@ export default function SessionAnswersView({
   quiz: Quiz | null;
   compact?: boolean;
 }) {
+  const [visibleCount, setVisibleCount] = useState(PREVIEW_LIMIT);
+
   if (!quiz?.questions.length) {
     return (
       <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-sm text-slate-400">
@@ -59,7 +68,14 @@ export default function SessionAnswersView({
     );
   }
 
-  const questions = compact ? quiz.questions.slice(0, 2) : quiz.questions;
+  const questions = compact
+    ? quiz.questions.slice(0, visibleCount)
+    : quiz.questions;
+
+  const hasMore = compact && visibleCount < quiz.questions.length;
+  const canShowLess = compact && visibleCount > PREVIEW_LIMIT;
+  const hiddenCount = quiz.questions.length - visibleCount;
+  const nextCount = Math.min(PREVIEW_LIMIT, hiddenCount);
 
   return (
     <div className="space-y-3">
@@ -124,7 +140,8 @@ export default function SessionAnswersView({
             ) : (
               <div className="grid gap-2">
                 {question.options.map((choice, choiceIndex) => {
-                  const isCorrectChoice = choiceIndex === question.correctAnswer;
+                  const isCorrectChoice =
+                    choiceIndex === question.correctAnswer;
                   const isSelectedChoice = answer === choiceIndex;
                   const isWrongSelected = isSelectedChoice && !isCorrectChoice;
 
@@ -169,9 +186,33 @@ export default function SessionAnswersView({
         );
       })}
 
-      {compact && quiz.questions.length > 2 && (
-        <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.025] p-4 text-center text-xs text-slate-400">
-          Showing 2 of {quiz.questions.length} questions.
+      {(hasMore || canShowLess) && (
+        <div className="grid gap-2">
+          {hasMore && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() =>
+                setVisibleCount((current) =>
+                  Math.min(current + PREVIEW_LIMIT, quiz.questions.length),
+                )
+              }
+              className="h-10 w-full rounded-2xl border border-white/10 bg-white/5 text-sm text-white hover:bg-white/10"
+            >
+              See More ({nextCount})
+            </Button>
+          )}
+
+          {canShowLess && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setVisibleCount(PREVIEW_LIMIT)}
+              className="h-10 w-full rounded-2xl border border-white/10 bg-white/5 text-sm text-slate-300 hover:bg-white/10 hover:text-white"
+            >
+              See Less
+            </Button>
+          )}
         </div>
       )}
     </div>
