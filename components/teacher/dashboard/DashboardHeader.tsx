@@ -11,7 +11,7 @@ type Props = {
 export default function DashboardHeader({ teacherName, onOpenSidebar }: Props) {
   return (
     <header>
-      <div className="mb-6 flex items-center justify-between lg:hidden">
+      <div className="mb-4 flex items-center justify-between lg:hidden">
         <button
           type="button"
           onClick={onOpenSidebar}
@@ -37,8 +37,9 @@ export default function DashboardHeader({ teacherName, onOpenSidebar }: Props) {
           </>
         }
         variant="section"
-        badgeClassName="mb-3 px-4 py-2 text-slate-300"
-        descriptionClassName="mt-2 text-sm text-slate-400 md:text-base"
+        badgeClassName="mb-2 px-3 py-1.5 text-xs text-slate-300 md:mb-3 md:px-4 md:py-2 md:text-sm"
+        titleClassName="text-3xl md:text-4xl"
+        descriptionClassName="mt-1 text-sm text-slate-400 md:mt-2 md:text-base"
       />
     </header>
   );

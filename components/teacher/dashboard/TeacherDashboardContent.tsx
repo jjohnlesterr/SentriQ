@@ -4,13 +4,9 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import TeacherPageLayout from "@/components/layout/TeacherPageLayout";
-
 import DashboardHeader from "@/components/teacher/dashboard/DashboardHeader";
-
 import CreateQuizDialog from "@/components/teacher/dashboard/CreateQuizDialog";
-
 import DashboardStats from "@/components/teacher/dashboard/DashboardStats";
-
 import DashboardQuizTabs from "@/components/teacher/dashboard/DashboardQuizTabs";
 
 import { useCreateQuizDialog } from "@/hooks/teacher/useCreateQuizDialog";
@@ -24,9 +20,7 @@ export default function TeacherDashboardContent() {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const createDialog = useCreateQuizDialog(
-    teacher.createNewQuiz
-  );
+  const createDialog = useCreateQuizDialog(teacher.createNewQuiz);
 
   useEffect(() => {
     if (searchParams.get("create") === "true") {
@@ -56,8 +50,8 @@ export default function TeacherDashboardContent() {
       }}
     >
       <div className="min-h-screen">
-        <main className="min-w-0 px-4 py-5 sm:px-6 md:px-10 lg:px-8 xl:px-10">
-          <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+        <main className="min-w-0 px-4 py-4 sm:px-6 sm:py-5 md:px-10 lg:px-8 xl:px-10">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <DashboardHeader
               teacherName={teacher.teacherName}
               onOpenSidebar={() => setSidebarOpen(true)}
@@ -77,7 +71,7 @@ export default function TeacherDashboardContent() {
             </div>
           </div>
 
-          <div className="mt-7 md:mt-8">
+          <div className="mt-5 md:mt-8">
             <DashboardStats
               total={teacher.quizzes.length}
               published={teacher.publishedQuizzes.length}
@@ -85,7 +79,7 @@ export default function TeacherDashboardContent() {
             />
           </div>
 
-          <div className="mt-7 md:mt-8">
+          <div className="mt-5 md:mt-8">
             <DashboardQuizTabs
               isLoading={teacher.isLoading}
               quizzes={teacher.quizzes}

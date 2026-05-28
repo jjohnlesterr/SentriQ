@@ -41,6 +41,7 @@ export default function QuizList({ items, onDeleteQuiz }: Props) {
 
   useEffect(() => {
     expandable.showLess();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
   async function confirmDeleteQuiz() {
@@ -60,11 +61,11 @@ export default function QuizList({ items, onDeleteQuiz }: Props) {
     return (
       <Card
         key={quiz.id}
-        className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl transition hover:border-white/20 md:p-6"
+        className="rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl transition hover:border-white/20 md:p-6"
       >
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
-            <div className="mb-3 flex flex-wrap items-center gap-3">
+            <div className="mb-2 flex flex-wrap items-center gap-2.5">
               <h3 className="truncate text-lg font-bold text-white md:text-xl">
                 {quiz.title}
               </h3>
@@ -84,7 +85,7 @@ export default function QuizList({ items, onDeleteQuiz }: Props) {
               {quiz.description || "No description provided."}
             </p>
 
-            <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-400">
+            <div className="mt-3 flex flex-wrap gap-3 text-sm text-slate-400">
               <span>{quiz.questions.length} Questions</span>
 
               {quiz.published && (
@@ -100,9 +101,9 @@ export default function QuizList({ items, onDeleteQuiz }: Props) {
               type="button"
               variant="secondary"
               onClick={() => router.push(`/teacher/quiz/${quiz.id}/builder`)}
-              className="h-10 cursor-pointer border-white/10 bg-white/5 hover:bg-white/10 hover:text-white"
+              className="h-10 min-w-0 flex-1 cursor-pointer border-white/10 bg-white/5 px-3 text-xs hover:bg-white/10 hover:text-white sm:flex-none sm:text-sm"
             >
-              <Edit className="h-4 w-4" />
+              <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Edit
             </Button>
 
@@ -110,9 +111,9 @@ export default function QuizList({ items, onDeleteQuiz }: Props) {
               <Button
                 type="button"
                 onClick={() => router.push(`/teacher/quiz/${quiz.id}/monitor`)}
-                className="h-10 cursor-pointer"
+                className="h-10 min-w-0 flex-1 cursor-pointer px-3 text-xs sm:flex-none sm:text-sm"
               >
-                <Eye className="h-4 w-4" />
+                <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 Monitor
               </Button>
             )}
@@ -121,9 +122,9 @@ export default function QuizList({ items, onDeleteQuiz }: Props) {
               type="button"
               variant="destructive"
               onClick={() => setQuizToDelete(quiz)}
-              className="h-10 cursor-pointer"
+              className="h-10 min-w-0 flex-1 cursor-pointer px-3 text-xs sm:flex-none sm:text-sm"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Delete
             </Button>
           </div>

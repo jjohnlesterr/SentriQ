@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { History } from "lucide-react";
 
 import TeacherPageLayout from "@/components/layout/TeacherPageLayout";
 import PageLoader from "@/components/shared/PageLoader";
