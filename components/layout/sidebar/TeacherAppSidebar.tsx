@@ -56,14 +56,25 @@ export default function TeacherAppSidebar({
   const [logoutOpen, setLogoutOpen] = useState(false);
 
   const liveQuizzes = quizzes.filter((quiz) => quiz.published);
+useEffect(() => {
+  if (!isQuizActive) return;
 
-  useEffect(() => {
-    if (isQuizActive) setBuilderOpen(true);
-  }, [isQuizActive]);
+  const id = requestAnimationFrame(() => {
+    setBuilderOpen(true);
+  });
 
-  useEffect(() => {
-    if (isMonitorActive) setMonitorOpen(true);
-  }, [isMonitorActive]);
+  return () => cancelAnimationFrame(id);
+}, [isQuizActive]);
+
+useEffect(() => {
+  if (!isMonitorActive) return;
+
+  const id = requestAnimationFrame(() => {
+    setMonitorOpen(true);
+  });
+
+  return () => cancelAnimationFrame(id);
+}, [isMonitorActive]);
 
   function closeSidebar() {
     onClose?.();
