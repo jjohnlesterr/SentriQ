@@ -1,6 +1,7 @@
 "use server";
 
 import {
+  cancelJoinRequestService,
   completeSessionService,
   expireSessionService,
   getSessionByIdService,
@@ -14,6 +15,10 @@ import type { ReportVisibility, SessionEventType } from "@/lib/shared/types";
 
 export async function joinQuiz(studentName: string, quizCode: string) {
   return joinQuizService(studentName, quizCode);
+}
+
+export async function cancelJoinRequest(sessionId: string) {
+  return cancelJoinRequestService(sessionId);
 }
 
 export async function getSessionById(sessionId: string) {
@@ -53,7 +58,10 @@ export async function updateSessionReportVisibility(
   return updateSessionReportVisibilityService(sessionId, visibility);
 }
 
-export async function completeSession(sessionId: string, submittedScore?: number) {
+export async function completeSession(
+  sessionId: string,
+  submittedScore?: number,
+) {
   return completeSessionService(sessionId, submittedScore);
 }
 

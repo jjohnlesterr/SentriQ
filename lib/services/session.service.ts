@@ -109,7 +109,7 @@ function mapSessionRow(row: SessionRow): QuizSession {
       row.session_events
         ?.sort(
           (a, b) =>
-            new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+            new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
         )
         .map(mapEventRow) || [],
     status: row.status,
@@ -135,7 +135,7 @@ async function getSessionWithEvents(sessionId: string): Promise<QuizSession> {
 
 export async function joinQuizService(
   studentName: string,
-  quizCode: string
+  quizCode: string,
 ): Promise<{ session: QuizSession; quiz: Quiz }> {
   const normalizedCode = quizCode.replace(/\s/g, "").toUpperCase();
 
@@ -194,8 +194,38 @@ export async function joinQuizService(
   };
 }
 
+export async function cancelJoinRequestService(
+  sessionId: string,
+): Promise<void> {
+  const session = await getSessionByIdService(sessionId);
+
+  if (!session) return;
+
+  if (session.approvalStatus !== "pending") {
+    throw new Error("Only pending join requests can be cancelled.");
+  }
+
+  const { error: eventsError } = await supabase
+    .from("session_events")
+    .delete()
+    .eq("session_id", sessionId);
+
+  if (eventsError) {
+    throw new Error(eventsError.message);
+  }
+
+  const { error: sessionError } = await supabase
+    .from("sessions")
+    .delete()
+    .eq("id", sessionId);
+
+  if (sessionError) {
+    throw new Error(sessionError.message);
+  }
+}
+
 export async function getSessionByIdService(
-  sessionId: string
+  sessionId: string,
 ): Promise<QuizSession | null> {
   const { data, error } = await supabase
     .from("sessions")
@@ -218,7 +248,7 @@ export async function recordSessionEventService(
     type: SessionEventType;
     description?: string;
     durationSeconds?: number;
-  }
+  },
 ): Promise<QuizSession> {
   const session = await getSessionByIdService(sessionId);
 
@@ -257,7 +287,10 @@ export async function recordSessionEventService(
   return getSessionWithEvents(sessionId);
 }
 
-function getAnswerEventDescription(questionIndex: number, answer: number | string) {
+function getAnswerEventDescription(
+  questionIndex: number,
+  answer: number | string,
+) {
   const answerLabel =
     typeof answer === "number"
       ? `Selected option ${answer + 1}`
@@ -269,7 +302,7 @@ function getAnswerEventDescription(questionIndex: number, answer: number | strin
 export async function updateSessionAnswerService(
   sessionId: string,
   questionIndex: number,
-  answer: number | string
+  answer: number | string,
 ): Promise<QuizSession> {
   const session = await getSessionByIdService(sessionId);
 
@@ -313,7 +346,7 @@ export async function updateSessionAnswerService(
 
 export async function updateSessionReportVisibilityService(
   sessionId: string,
-  visibility: ReportVisibility
+  visibility: ReportVisibility,
 ): Promise<QuizSession> {
   const { error } = await supabase
     .from("sessions")
@@ -331,7 +364,7 @@ export async function updateSessionReportVisibilityService(
 
 export async function completeSessionService(
   sessionId: string,
-  submittedScore?: number
+  submittedScore?: number,
 ): Promise<QuizSession> {
   const session = await getSessionByIdService(sessionId);
 

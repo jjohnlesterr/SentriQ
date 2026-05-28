@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { joinQuiz } from "@/lib/actions";
+import { cancelJoinRequest, joinQuiz } from "@/lib/actions";
 import { supabase } from "@/lib/supabase/client";
 import { VALIDATION_LIMITS } from "@/lib/validations/constants";
 
@@ -59,7 +59,7 @@ export function useStudentJoin() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   }, [sessionId, isWaitingApproval, router]);
 
@@ -111,7 +111,19 @@ export function useStudentJoin() {
     }
   }
 
-  function resetRequest() {
+  async function resetRequest() {
+    if (sessionId) {
+      try {
+        await cancelJoinRequest(sessionId);
+      } catch (error) {
+        console.error("Failed to cancel join request:", error);
+      }
+    }
+
+    sessionStorage.removeItem("sessionId");
+    sessionStorage.removeItem("studentName");
+    sessionStorage.removeItem("quizId");
+
     setSessionId(null);
     setIsWaitingApproval(false);
     setError("");
