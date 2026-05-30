@@ -1,65 +1,96 @@
 import {
-  AlertTriangle,
   Clipboard,
   ClipboardPaste,
   Maximize,
+  MousePointerClick,
+  UsersRound,
 } from "lucide-react";
-
-import type { SessionEvent } from "@/lib/shared/types";
 
 type ResultActivitySummaryProps = {
   tabSwitches: number;
-  events: SessionEvent[];
+  fullscreenExits: number;
+  copyAttempts: number;
+  pasteAttempts: number;
 };
 
-function countEvents(events: SessionEvent[], type: string) {
-  return events.filter((event) => event.type === type).length;
-}
+const summaryCards = [
+  {
+    label: "Tab Switches",
+    valueKey: "tabSwitches",
+    icon: MousePointerClick,
+    className: "text-violet-300",
+  },
+  {
+    label: "Fullscreen Exits",
+    valueKey: "fullscreenExits",
+    icon: Maximize,
+    className: "text-orange-300",
+  },
+  {
+    label: "Copy Attempts",
+    valueKey: "copyAttempts",
+    icon: Clipboard,
+    className: "text-blue-300",
+  },
+  {
+    label: "Paste Attempts",
+    valueKey: "pasteAttempts",
+    icon: ClipboardPaste,
+    className: "text-emerald-300",
+  },
+] as const;
 
 export default function ResultActivitySummary({
   tabSwitches,
-  events,
+  fullscreenExits,
+  copyAttempts,
+  pasteAttempts,
 }: ResultActivitySummaryProps) {
-  const fullscreenExits = countEvents(events, "fullscreen-exit");
-  const copyAttempts = countEvents(events, "copy-attempt");
-  const pasteAttempts = countEvents(events, "paste-attempt");
+  const values = {
+    tabSwitches,
+    fullscreenExits,
+    copyAttempts,
+    pasteAttempts,
+  };
 
   return (
-    <div className="rounded-2xl border border-red-400/20 bg-red-500/10 p-4 backdrop-blur-md">
-      <div className="flex items-start gap-3">
-        <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-300" />
+    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-md sm:p-6">
+      <div className="mb-4 flex items-center gap-3">
+        <UsersRound className="h-5 w-5 text-violet-300" />
 
-        <div className="w-full">
-          <p className="font-semibold text-red-200">Activity Summary</p>
-
-          <div className="mt-3 grid gap-2 text-xs sm:grid-cols-2">
-            <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-              Tab Switches:{" "}
-              <span className="font-bold text-red-300">{tabSwitches}</span>
-            </div>
-
-            <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-              <Maximize className="mr-1 inline h-3 w-3" />
-              Fullscreen Exits:{" "}
-              <span className="font-bold text-orange-300">
-                {fullscreenExits}
-              </span>
-            </div>
-
-            <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-              <Clipboard className="mr-1 inline h-3 w-3" />
-              Copy Attempts:{" "}
-              <span className="font-bold text-red-300">{copyAttempts}</span>
-            </div>
-
-            <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-              <ClipboardPaste className="mr-1 inline h-3 w-3" />
-              Paste Attempts:{" "}
-              <span className="font-bold text-red-300">{pasteAttempts}</span>
-            </div>
-          </div>
-        </div>
+        <h2 className="text-lg font-bold text-white">Activity Summary</h2>
       </div>
-    </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {summaryCards.map((card) => {
+          const Icon = card.icon;
+
+          return (
+            <div
+              key={card.valueKey}
+              className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3"
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-current/20 bg-current/10 ${card.className}`}
+                >
+                  <Icon className="h-4 w-4" />
+                </div>
+
+                <div className="min-w-0">
+                  <p className="text-xl font-black text-white">
+                    {values[card.valueKey]}
+                  </p>
+
+                  <p className={`text-xs font-medium ${card.className}`}>
+                    {card.label}
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }

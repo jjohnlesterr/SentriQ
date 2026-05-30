@@ -1,62 +1,130 @@
-import { CheckCircle2, Trophy } from "lucide-react";
+import {
+  CheckCircle2,
+  ClipboardList,
+  Clock3,
+  PartyPopper,
+  XCircle,
+} from "lucide-react";
 
 type ResultSummaryCardProps = {
+  quizTitle: string;
+  quizDescription?: string;
   studentName: string;
   score: number;
+  incorrect: number;
   totalQuestions: number;
-  percentage: number;
-  passed: boolean;
+  timeSpentSeconds?: number;
 };
 
+function formatDuration(seconds?: number) {
+  if (seconds === undefined) return "N/A";
+
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+
+  if (minutes <= 0) return `${remainingSeconds}s`;
+
+  return `${minutes}m ${remainingSeconds}s`;
+}
+
 export default function ResultSummaryCard({
+  quizTitle,
+  quizDescription,
   studentName,
   score,
+  incorrect,
   totalQuestions,
-  percentage,
-  passed,
+  timeSpentSeconds,
 }: ResultSummaryCardProps) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-5 text-center shadow-inner">
-      <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full border border-emerald-400/20 bg-emerald-500/10">
-        {passed ? (
-          <Trophy className="h-7 w-7 text-emerald-300" />
-        ) : (
-          <CheckCircle2 className="h-7 w-7 text-violet-300" />
-        )}
+    <section className="relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-5 shadow-[0_16px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:p-6">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.14),transparent_34%),radial-gradient(circle_at_top_right,rgba(34,211,238,0.1),transparent_34%)]" />
+
+      <div className="relative z-10 space-y-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-violet-400/20 bg-violet-500/10 text-violet-300">
+                <PartyPopper className="h-5 w-5" />
+              </div>
+
+              <div className="min-w-0">
+                <h1 className="text-2xl font-black text-white sm:text-3xl">
+                  Quiz Complete!
+                </h1>
+
+                <p className="mt-1 text-sm text-slate-400">
+                  Great job,{" "}
+                  <span className="font-semibold text-violet-300">
+                    {studentName}
+                  </span>
+                  !
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
+              <div className="flex items-start gap-3">
+                <ClipboardList className="mt-0.5 h-5 w-5 shrink-0 text-cyan-300" />
+
+                <div className="min-w-0">
+                  <p className="line-clamp-2 text-lg font-bold leading-6 text-slate-100 sm:text-xl">
+                    {quizTitle || "Untitled Quiz"}
+                  </p>
+
+                  {quizDescription?.trim() && (
+                    <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-400">
+                      {quizDescription}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-violet-400/20 bg-violet-500/10 px-5 py-4 text-center lg:min-w-[160px]">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-violet-200/80">
+              Score
+            </p>
+
+            <p className="mt-2 text-4xl font-black text-white">
+              {score}
+              <span className="text-xl text-slate-400"> / {totalQuestions}</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="grid gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-3 sm:grid-cols-3">
+          <div className="flex items-center gap-3 rounded-xl px-2 py-2">
+            <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-400" />
+
+            <div>
+              <p className="text-xl font-black text-white">{score}</p>
+              <p className="text-xs text-slate-400">Correct</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 rounded-xl px-2 py-2">
+            <XCircle className="h-5 w-5 shrink-0 text-red-400" />
+
+            <div>
+              <p className="text-xl font-black text-white">{incorrect}</p>
+              <p className="text-xs text-slate-400">Incorrect</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 rounded-xl px-2 py-2">
+            <Clock3 className="h-5 w-5 shrink-0 text-violet-300" />
+
+            <div>
+              <p className="text-xl font-black text-violet-300">
+                {formatDuration(timeSpentSeconds)}
+              </p>
+              <p className="text-xs text-slate-400">Time Spent</p>
+            </div>
+          </div>
+        </div>
       </div>
-
-      <h1 className="bg-gradient-to-r from-violet-300 via-fuchsia-300 to-cyan-300 bg-clip-text text-3xl font-extrabold text-transparent">
-        Quiz Complete!
-      </h1>
-
-      <p className="mt-1.5 text-sm text-slate-300">
-        Great job, <span className="font-semibold text-white">{studentName}</span>!
-      </p>
-
-      <div className="mt-5 rounded-xl border border-white/10 bg-slate-950/30 p-4">
-        <p className="text-xs uppercase tracking-[0.25em] text-violet-300">
-          Your Score
-        </p>
-
-        <div className="mt-2 flex items-end justify-center gap-2">
-          <span className="text-5xl font-extrabold text-white">{score}</span>
-          <span className="pb-1 text-xl text-slate-400">/ {totalQuestions}</span>
-        </div>
-
-        <div className="mt-2 text-2xl font-bold text-violet-300">
-          {percentage}%
-        </div>
-
-        <div
-          className={`mt-2 inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${
-            passed
-              ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-300"
-              : "border-orange-400/20 bg-orange-500/10 text-orange-300"
-          }`}
-        >
-          {passed ? "Passed" : "Needs Review"}
-        </div>
-      </div>
-    </div>
+    </section>
   );
 }

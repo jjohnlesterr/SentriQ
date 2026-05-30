@@ -1,5 +1,6 @@
 "use client";
 
+import { Home } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import PageShell from "@/components/layout/PageShell";
@@ -9,11 +10,37 @@ import ResultSummaryCard from "@/components/student/results/summary/ResultSummar
 import ResultActivitySummary from "@/components/student/results/activity/ResultActivitySummary";
 import AnswerReviewList from "@/components/student/results/review/AnswerReviewList";
 import ResultReviewLocked from "@/components/student/results/review/ResultReviewLocked";
+import { Button } from "@/components/ui/button";
 import { useStudentResults } from "@/hooks/student/useStudentResults";
 
 type StudentResultsContentProps = {
   sessionId: string;
 };
+
+function countEvents(events: { type: string }[] | undefined, type: string) {
+  return events?.filter((event) => event.type === type).length ?? 0;
+}
+
+function getTimeSpentSeconds({
+  startedAt,
+  completedAt,
+  timedOutAt,
+}: {
+  startedAt: Date | string;
+  completedAt?: Date | string;
+  timedOutAt?: Date | string;
+}) {
+  const endTime = completedAt || timedOutAt;
+
+  if (!endTime) return undefined;
+
+  return Math.max(
+    0,
+    Math.floor(
+      (new Date(endTime).getTime() - new Date(startedAt).getTime()) / 1000,
+    ),
+  );
+}
 
 export default function StudentResultsContent({
   sessionId,
@@ -41,59 +68,74 @@ export default function StudentResultsContent({
     );
   }
 
+  const incorrect = Math.max(results.totalQuestions - results.score, 0);
+
+  const timeSpent = getTimeSpentSeconds({
+    startedAt: results.session.startedAt,
+    completedAt: results.session.completedAt,
+    timedOutAt: results.session.timedOutAt,
+  });
+
+  const fullscreenExits = countEvents(
+    results.session.events,
+    "fullscreen-exit",
+  );
+  const copyAttempts = countEvents(results.session.events, "copy-attempt");
+  const pasteAttempts = countEvents(results.session.events, "paste-attempt");
+
   return (
     <PageShell>
-      <section className="mx-auto flex min-h-screen max-w-7xl items-center justify-center px-4 py-6 sm:px-6 md:px-10 lg:px-16">
-        <div className="w-full max-w-2xl">
-          <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl">
-            <div className="relative p-4 sm:p-5 md:p-6">
-              <div className="absolute right-0 top-0 h-28 w-28 rounded-full bg-violet-500/10 blur-2xl md:h-36 md:w-36" />
-              <div className="absolute left-0 top-24 h-24 w-24 rounded-full bg-blue-500/10 blur-2xl md:h-28 md:w-28" />
+      <section className="mx-auto min-h-screen max-w-5xl px-4 py-6 sm:px-6 md:px-10 lg:px-12">
+        <div className="space-y-5">
+          <ResultSummaryCard
+            quizTitle={results.quiz.title}
+            quizDescription={results.quiz.description}
+            studentName={results.session.studentName}
+            score={results.score}
+            incorrect={incorrect}
+            totalQuestions={results.totalQuestions}
+            timeSpentSeconds={timeSpent}
+          />
 
-              <div className="relative z-10 space-y-4">
-                <ResultSummaryCard
-                  studentName={results.session.studentName}
-                  score={results.score}
-                  totalQuestions={results.totalQuestions}
-                  percentage={results.percentage}
-                  passed={results.passed}
-                />
+          {results.session.reportVisibility === "locked" && (
+            <ResultReviewLocked />
+          )}
 
-                {results.session.reportVisibility === "locked" && (
-                  <ResultReviewLocked />
-                )}
+          {results.session.reportVisibility === "summary" && (
+            <AnswerReviewList
+              quiz={results.quiz}
+              answers={results.session.answers}
+              score={results.score}
+              incorrect={incorrect}
+            />
+          )}
 
-                {results.session.reportVisibility === "summary" && (
-                  <AnswerReviewList
-                    quiz={results.quiz}
-                    answers={results.session.answers}
-                  />
-                )}
+          {results.session.reportVisibility === "full" && (
+            <>
+              <ResultActivitySummary
+                tabSwitches={results.session.tabSwitches}
+                fullscreenExits={fullscreenExits}
+                copyAttempts={copyAttempts}
+                pasteAttempts={pasteAttempts}
+              />
 
-                {results.session.reportVisibility === "full" && (
-                  <>
-                    <ResultActivitySummary
-                      tabSwitches={results.session.tabSwitches}
-                      events={results.session.events}
-                    />
+              <AnswerReviewList
+                quiz={results.quiz}
+                answers={results.session.answers}
+                score={results.score}
+                incorrect={incorrect}
+              />
+            </>
+          )}
 
-                    <AnswerReviewList
-                      quiz={results.quiz}
-                      answers={results.session.answers}
-                    />
-                  </>
-                )}
-
-                <button
-                  type="button"
-                  onClick={handleReturnHome}
-                  className="h-11 w-full rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 transition hover:brightness-110 md:h-12"
-                >
-                  Return Home
-                </button>
-              </div>
-            </div>
-          </div>
+          <Button
+            type="button"
+            onClick={handleReturnHome}
+            className="h-12 w-full rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-sm font-bold text-white shadow-lg shadow-violet-500/20 transition hover:brightness-110 sm:h-14 sm:text-base md:mx-auto md:flex md:max-w-sm"
+          >
+            <Home className="h-5 w-5" />
+            Return Home
+          </Button>
         </div>
       </section>
     </PageShell>
