@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef } from "react";
+
 import PageShell from "@/components/layout/PageShell";
 import PageLoader from "@/components/shared/PageLoader";
 import QuizHeader from "@/components/student/quiz/QuizHeader";
@@ -18,6 +20,24 @@ function formatRemainingTime(seconds: number) {
 
 export default function StudentQuizContent() {
   const quizState = useStudentQuiz();
+  const questionCardRef = useRef<HTMLDivElement>(null);
+  const hasMountedRef = useRef(false);
+
+  useEffect(() => {
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      return;
+    }
+
+    const id = requestAnimationFrame(() => {
+      questionCardRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+
+    return () => cancelAnimationFrame(id);
+  }, [quizState.currentIndex]);
 
   if (quizState.isLoading) {
     return (
@@ -49,19 +69,18 @@ export default function StudentQuizContent() {
 
   return (
     <PageShell>
-      <section className="mx-auto max-w-5xl px-4 py-5 sm:px-6 md:px-10 md:py-8">
-        {quizState.remainingSeconds !== null && (
-          <div className="mb-4 rounded-2xl border border-cyan-400/20 bg-cyan-500/10 px-4 py-3 text-center font-semibold text-cyan-100">
-            Time left: {formatRemainingTime(quizState.remainingSeconds)}
-          </div>
-        )}
-
+      <section className="mx-auto max-w-5xl px-4 py-4 sm:px-6 md:px-10 md:py-6">
         <QuizHeader
           title={quizState.quiz.title}
           studentName={quizState.session.studentName}
           currentIndex={quizState.currentIndex}
           totalQuestions={quizState.quiz.questions.length}
           progress={quizState.progress}
+          remainingTime={
+            quizState.remainingSeconds !== null
+              ? formatRemainingTime(quizState.remainingSeconds)
+              : null
+          }
         />
 
         <TabWarning
@@ -74,10 +93,11 @@ export default function StudentQuizContent() {
         />
 
         <div
+          ref={questionCardRef}
           className={
             quizState.isFullscreenActive
-              ? ""
-              : "pointer-events-none opacity-40 blur-[1px]"
+              ? "scroll-mt-32 md:scroll-mt-36"
+              : "pointer-events-none scroll-mt-32 opacity-40 blur-[1px] md:scroll-mt-36"
           }
         >
           <QuestionCard
