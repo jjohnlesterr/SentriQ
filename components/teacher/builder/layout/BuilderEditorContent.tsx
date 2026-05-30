@@ -13,15 +13,10 @@ export default function BuilderEditorContent({
   builder,
   onOpenQuestionSelector,
 }: Props) {
-  const currentQuestion =
-    builder.questions[builder.activeQuestion];
+  const currentQuestion = builder.questions[builder.activeQuestion];
 
   if (!currentQuestion) {
-    return (
-      <EmptyQuestionState
-        onAddQuestion={builder.addQuestion}
-      />
-    );
+    return <EmptyQuestionState onAddQuestion={builder.addQuestion} />;
   }
 
   return (
@@ -29,6 +24,7 @@ export default function BuilderEditorContent({
       question={currentQuestion}
       questions={builder.questions}
       activeQuestion={builder.activeQuestion}
+      quizTitle={builder.title}
       onSelectQuestion={builder.setActiveQuestion}
       onOpenQuestionSelector={onOpenQuestionSelector}
       onRemoveQuestion={builder.removeQuestion}

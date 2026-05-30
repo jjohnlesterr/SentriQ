@@ -26,6 +26,7 @@ type Props = {
   question: Question;
   questions: Question[];
   activeQuestion: number;
+  quizTitle?: string;
   onSelectQuestion: (index: number) => void;
   onOpenQuestionSelector?: () => void;
   onRemoveQuestion: (index: number) => void;
@@ -57,6 +58,7 @@ export default function QuestionEditor({
   question,
   questions,
   activeQuestion,
+  quizTitle,
   onSelectQuestion,
   onOpenQuestionSelector,
   onRemoveQuestion,
@@ -75,16 +77,16 @@ export default function QuestionEditor({
   const [hintOpen, setHintOpen] = useState(false);
   const [hintDraft, setHintDraft] = useState(question.hint || "");
 
-useEffect(() => {
-  const id = requestAnimationFrame(() => {
-    setQuestionTouched(false);
-    setQuestionMenuOpen(false);
-    setHintOpen(false);
-    setHintDraft(question.hint || "");
-  });
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      setQuestionTouched(false);
+      setQuestionMenuOpen(false);
+      setHintOpen(false);
+      setHintDraft(question.hint || "");
+    });
 
-  return () => cancelAnimationFrame(id);
-}, [question.id, question.hint]);
+    return () => cancelAnimationFrame(id);
+  }, [question.id, question.hint]);
 
   const showQuestionCount = question.text.length >= QUESTION_COUNT_WARNING_AT;
   const showQuestionWarning = questionTouched && !question.text.trim();
@@ -127,15 +129,9 @@ useEffect(() => {
       )
       .map(({ index }) => index);
 
-    answers
-      .slice(0, emptyWrongOptionIndexes.length)
-      .forEach((answer, answerIndex) => {
-        onUpdateOption(
-          activeQuestion,
-          emptyWrongOptionIndexes[answerIndex],
-          answer,
-        );
-      });
+    answers.slice(0, emptyWrongOptionIndexes.length).forEach((answer, answerIndex) => {
+      onUpdateOption(activeQuestion, emptyWrongOptionIndexes[answerIndex], answer);
+    });
   }
 
   return (
@@ -408,6 +404,7 @@ useEffect(() => {
 
         <AIChatHead
           question={question}
+          quizTitle={quizTitle}
           onApplyWrongAnswers={applyWrongAnswers}
         />
       </div>
