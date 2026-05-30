@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, Clock, FileText, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Clock, FileText, ShieldCheck, X } from "lucide-react";
 
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 
@@ -47,44 +46,49 @@ export default function SessionDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-h-[94dvh] min-h-[82dvh] w-[calc(100vw-2rem)] max-w-md overflow-hidden border-white/10 bg-[#050b1a]/95 p-0 text-white shadow-2xl shadow-black/40 backdrop-blur-xl sm:max-w-6xl lg:min-h-[76dvh]">
+      <DialogContent className="flex max-h-[94dvh] min-h-[82dvh] w-[calc(100vw-2rem)] max-w-md flex-col overflow-hidden border-white/10 bg-[#050b1a]/95 p-0 text-white shadow-2xl shadow-black/40 backdrop-blur-xl sm:max-w-6xl lg:min-h-[76dvh] [&>button]:hidden">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),transparent_36%),radial-gradient(circle_at_top_right,rgba(99,102,241,0.12),transparent_32%)]" />
 
-        {/* ONE GLOBAL SCROLL */}
-        <div className="relative h-full overflow-y-auto p-4 sm:p-7">
-          <DialogHeader className="mb-4 shrink-0 sm:mb-5">
+        <div className="relative z-10 flex shrink-0 items-start justify-between gap-3 border-b border-white/10 bg-[#050b1a]/85 px-4 py-4 backdrop-blur-xl sm:gap-4 sm:px-7 sm:py-5">
+          <div className="min-w-0 flex-1">
             {viewMode !== "overview" && (
               <button
                 type="button"
                 onClick={() => setViewMode("overview")}
-                className="mb-3 inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:border-cyan-300/30 hover:bg-cyan-400/10 hover:text-cyan-200 sm:mb-4"
+                className="mb-3 inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:border-cyan-300/30 hover:bg-cyan-400/10 hover:text-cyan-200"
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
                 Back to overview
               </button>
             )}
 
-            <DialogTitle className="flex items-center gap-2 text-lg font-bold tracking-tight sm:text-2xl">
+            <DialogTitle className="flex min-w-0 items-start gap-2 text-base font-bold leading-tight tracking-tight sm:items-center sm:text-2xl">
               {viewMode === "overview" && (
-                <>{session?.studentName || "Student"} - Session Details</>
+                <span className="line-clamp-2 min-w-0 leading-tight sm:truncate">
+                  {session?.studentName || "Student"} - Session Details
+                </span>
               )}
 
               {viewMode === "answers" && (
                 <>
-                  <FileText className="h-5 w-5 text-emerald-300" />
-                  Full Student Answers
+                  <FileText className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300 sm:mt-0 sm:h-5 sm:w-5" />
+                  <span className="line-clamp-2 min-w-0 leading-tight sm:truncate">
+                    Full Student Answers
+                  </span>
                 </>
               )}
 
               {viewMode === "timeline" && (
                 <>
-                  <Clock className="h-5 w-5 text-cyan-300" />
-                  Full Activity Timeline
+                  <Clock className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300 sm:mt-0 sm:h-5 sm:w-5" />
+                  <span className="line-clamp-2 min-w-0 leading-tight sm:truncate">
+                    Full Activity Timeline
+                  </span>
                 </>
               )}
             </DialogTitle>
 
-            <DialogDescription className="text-xs text-slate-400 sm:text-sm">
+            <DialogDescription className="mt-1 line-clamp-2 text-xs leading-5 text-slate-400 sm:text-sm">
               {viewMode === "overview" &&
                 "Activity monitoring and answer review."}
 
@@ -94,8 +98,19 @@ export default function SessionDetailsDialog({
               {viewMode === "timeline" &&
                 "Review the complete monitoring activity log for this session."}
             </DialogDescription>
-          </DialogHeader>
+          </div>
 
+          <button
+            type="button"
+            onClick={() => handleOpenChange(false)}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] text-slate-300 transition hover:border-red-300/30 hover:bg-red-500/10 hover:text-red-200"
+            aria-label="Close session details"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="relative z-10 min-h-0 flex-1 overflow-y-auto px-4 py-4 pr-6 sm:px-7 sm:py-5 sm:pr-10">
           {!session ? (
             <p className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-sm text-slate-400">
               Session not found.
@@ -110,7 +125,6 @@ export default function SessionDetailsDialog({
             <div className="space-y-4 sm:space-y-5">
               <SessionStatsGrid session={session} quiz={quiz} />
 
-              {/* DESKTOP */}
               <div className="hidden gap-4 lg:grid lg:grid-cols-[1.25fr_0.95fr]">
                 <section className="rounded-3xl border border-white/10 bg-white/[0.035]">
                   <SessionPanelHeader
@@ -147,7 +161,6 @@ export default function SessionDetailsDialog({
                 </section>
               </div>
 
-              {/* MOBILE */}
               <Tabs defaultValue="answers" className="flex flex-col lg:hidden">
                 <TabsList className="grid h-11 w-full grid-cols-2 rounded-2xl sm:h-12">
                   <TabsTrigger
