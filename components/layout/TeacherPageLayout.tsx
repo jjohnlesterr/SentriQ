@@ -1,7 +1,10 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useEffect, useState, type ReactNode } from "react";
 
 import PageShell from "@/components/layout/PageShell";
 import TeacherAppSidebar from "@/components/layout/sidebar/TeacherAppSidebar";
+import { cn } from "@/lib/shared/utils";
 import type { Quiz } from "@/lib/shared/types";
 
 type ActivePage = "dashboard" | "quiz-builder" | "drafts" | "monitor";
@@ -29,6 +32,25 @@ export default function TeacherPageLayout({
   onLogout,
   onNewQuiz,
 }: TeacherPageLayoutProps) {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      const saved = localStorage.getItem("teacher-sidebar-collapsed");
+      setSidebarCollapsed(saved === "true");
+    });
+
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  function toggleSidebarCollapsed() {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem("teacher-sidebar-collapsed", String(next));
+      return next;
+    });
+  }
+
   return (
     <PageShell>
       <TeacherAppSidebar
@@ -37,12 +59,21 @@ export default function TeacherPageLayout({
         activePage={activePage}
         activeQuizId={activeQuizId}
         open={sidebarOpen}
+        collapsed={sidebarCollapsed}
+        onToggleCollapsed={toggleSidebarCollapsed}
         onClose={onCloseSidebar}
         onLogout={onLogout}
         onNewQuiz={onNewQuiz}
       />
 
-      <main className="min-h-screen lg:pl-64">{children}</main>
+      <main
+        className={cn(
+          "min-h-screen transition-[padding] duration-300",
+          sidebarCollapsed ? "lg:pl-20" : "lg:pl-64",
+        )}
+      >
+        {children}
+      </main>
     </PageShell>
   );
 }
