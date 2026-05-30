@@ -9,18 +9,20 @@ import type { Question } from "@/lib/shared/types";
 
 type Props = {
   question: Question;
+  quizTitle?: string;
   onApplyWrongAnswers: (answers: string[]) => void;
 };
 
-export default function AIChatHead({ question, onApplyWrongAnswers }: Props) {
+export default function AIChatHead({
+  question,
+  quizTitle,
+  onApplyWrongAnswers,
+}: Props) {
   const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    const id = requestAnimationFrame(() => {
-      setMounted(true);
-    });
-
+    const id = requestAnimationFrame(() => setMounted(true));
     return () => cancelAnimationFrame(id);
   }, []);
 
@@ -31,6 +33,7 @@ export default function AIChatHead({ question, onApplyWrongAnswers }: Props) {
       {isOpen && (
         <AIChatPanel
           question={question}
+          quizTitle={quizTitle}
           onClose={() => setIsOpen(false)}
           onApplyWrongAnswers={onApplyWrongAnswers}
         />

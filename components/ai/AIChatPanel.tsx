@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import { Send, Sparkles, X } from "lucide-react";
 
 import { generateAIResponse } from "@/lib/actions/ai.actions";
@@ -13,8 +13,7 @@ type AIAction =
   | "suggest_wrong_answers"
   | "generate_question_ideas"
   | "suggest_topics"
-  | "write_question"
-  | "create_outline";
+  | "write_question";
 
 type Message = {
   role: "user" | "ai";
@@ -24,15 +23,78 @@ type Message = {
 
 type Props = {
   question: Question;
+  quizTitle?: string;
   onClose: () => void;
   onApplyWrongAnswers: (answers: string[]) => void;
 };
 
+const COOLDOWN_MS = 4000;
+
+function isUnclearTopic(value?: string) {
+  const topic = value?.trim().toLowerCase();
+
+  if (!topic) return true;
+
+  return [
+    "untitled",
+    "untitled quiz",
+    "untitled question",
+    "quiz",
+    "exam",
+    "test",
+    "chapter",
+    "question",
+    "new quiz",
+    "draft",
+  ].includes(topic);
+}
+
+function getMessageCacheKey({
+  action,
+  message,
+  topic,
+  questionText,
+  correctAnswer,
+}: {
+  action: AIAction;
+  message: string;
+  topic: string;
+  questionText: string;
+  correctAnswer: string;
+}) {
+  return JSON.stringify({
+    action,
+    message: message.trim().toLowerCase(),
+    topic: topic.trim().toLowerCase(),
+    questionText: questionText.trim().toLowerCase(),
+    correctAnswer: correctAnswer.trim().toLowerCase(),
+  });
+}
+
+function renderFormattedText(value: string) {
+  const parts = value.split(/(\*\*[^*]+\*\*)/g);
+
+  return parts.map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <strong key={index} className="font-bold text-white">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+
+    return <span key={index}>{part}</span>;
+  });
+}
+
 export default function AIChatPanel({
   question,
+  quizTitle,
   onClose,
   onApplyWrongAnswers,
 }: Props) {
+  const cacheRef = useRef<Map<string, Message>>(new Map());
+
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "ai",
@@ -41,12 +103,20 @@ export default function AIChatPanel({
   ]);
 
   const [input, setInput] = useState("");
+  const [topicOverride, setTopicOverride] = useState("");
+  const [pendingTopicAction, setPendingTopicAction] = useState<AIAction | null>(
+    null,
+  );
+  const [isCoolingDown, setIsCoolingDown] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const correctAnswer =
     question.type === "identification"
       ? (question.correctTextAnswer ?? "")
       : (question.options?.[question.correctAnswer] ?? "");
+
+  const topic = topicOverride || quizTitle || question.text;
+  const topicIsUnclear = isUnclearTopic(topic);
 
   const canSuggestWrongAnswers =
     question.type === "multiple_choice" &&
@@ -59,7 +129,6 @@ export default function AIChatPanel({
         "Suggest 3 wrong answers",
         "Improve this question",
         "Generate explanation",
-        "Make this harder",
       ];
     }
 
@@ -67,23 +136,83 @@ export default function AIChatPanel({
       "Generate question ideas",
       "Suggest topics",
       "Help me write a question",
-      "Create quiz outline",
     ];
   }, [canSuggestWrongAnswers]);
 
-  function askAI(message: string, action: AIAction) {
-    if (isPending) return;
+  function addMessage(message: Message) {
+    setMessages((current) => [...current, message]);
+  }
+
+  function startCooldown() {
+    setIsCoolingDown(true);
+
+    window.setTimeout(() => {
+      setIsCoolingDown(false);
+    }, COOLDOWN_MS);
+  }
+
+  function shouldAskForTopic(action: AIAction) {
+    return (
+      topicIsUnclear &&
+      (action === "generate_question_ideas" ||
+        action === "suggest_topics" ||
+        action === "write_question")
+    );
+  }
+
+  function requestTopic(action: AIAction, userMessage: string) {
+    setPendingTopicAction(action);
 
     setMessages((current) => [
       ...current,
-      { role: "user", content: message },
+      { role: "user", content: userMessage },
+      {
+        role: "ai",
+        content: "What subject or topic is this quiz about?",
+      },
     ]);
+  }
+
+  function askAI(message: string, action: AIAction, overrideTopic?: string) {
+    if (isPending) return;
+
+    if (isCoolingDown) {
+      addMessage({
+        role: "ai",
+        content: "Please wait a few seconds before sending another AI request.",
+      });
+      return;
+    }
+
+    const activeTopic =
+      overrideTopic || topicOverride || quizTitle || question.text;
+
+    const cacheKey = getMessageCacheKey({
+      action,
+      message,
+      topic: activeTopic,
+      questionText: question.text,
+      correctAnswer,
+    });
+
+    setMessages((current) => [...current, { role: "user", content: message }]);
+
+    const cachedMessage = cacheRef.current.get(cacheKey);
+
+    if (cachedMessage) {
+      setMessages((current) => [...current, cachedMessage]);
+      return;
+    }
+
+    startCooldown();
 
     startTransition(async () => {
       const response = await generateAIResponse({
         action,
         message,
         context: {
+          quizTitle,
+          topicOverride: overrideTopic || topicOverride,
           questionType: question.type,
           questionText: question.text,
           correctAnswer,
@@ -100,27 +229,29 @@ export default function AIChatPanel({
       }
 
       if (response.type === "wrong_answers") {
-        setMessages((current) => [
-          ...current,
-          {
-            role: "ai",
-            content: "Here are 3 suggested wrong answers:",
-            wrongAnswers: response.wrongAnswers,
-          },
-        ]);
+        const aiMessage: Message = {
+          role: "ai",
+          content: "Here are 3 suggested wrong answers:",
+          wrongAnswers: response.wrongAnswers,
+        };
 
+        cacheRef.current.set(cacheKey, aiMessage);
+        setMessages((current) => [...current, aiMessage]);
         return;
       }
 
-      setMessages((current) => [
-        ...current,
-        { role: "ai", content: response.message },
-      ]);
+      const aiMessage: Message = {
+        role: "ai",
+        content: response.message,
+      };
+
+      cacheRef.current.set(cacheKey, aiMessage);
+      setMessages((current) => [...current, aiMessage]);
     });
   }
 
   function handleChipClick(chip: string) {
-    if (isPending) return;
+    if (isPending || isCoolingDown) return;
 
     if (chip === "Suggest 3 wrong answers") {
       askAI(chip, "suggest_wrong_answers");
@@ -128,22 +259,32 @@ export default function AIChatPanel({
     }
 
     if (chip === "Generate question ideas") {
+      if (shouldAskForTopic("generate_question_ideas")) {
+        requestTopic("generate_question_ideas", chip);
+        return;
+      }
+
       askAI(chip, "generate_question_ideas");
       return;
     }
 
     if (chip === "Suggest topics") {
+      if (shouldAskForTopic("suggest_topics")) {
+        requestTopic("suggest_topics", chip);
+        return;
+      }
+
       askAI(chip, "suggest_topics");
       return;
     }
 
     if (chip === "Help me write a question") {
-      askAI(chip, "write_question");
-      return;
-    }
+      if (shouldAskForTopic("write_question")) {
+        requestTopic("write_question", chip);
+        return;
+      }
 
-    if (chip === "Create quiz outline") {
-      askAI(chip, "create_outline");
+      askAI(chip, "write_question");
       return;
     }
 
@@ -158,6 +299,15 @@ export default function AIChatPanel({
     if (!message) return;
 
     setInput("");
+
+    if (pendingTopicAction) {
+      setTopicOverride(message);
+      const action = pendingTopicAction;
+      setPendingTopicAction(null);
+      askAI(message, action, message);
+      return;
+    }
+
     askAI(message, "chat");
   }
 
@@ -196,7 +346,7 @@ export default function AIChatPanel({
             <button
               key={chip}
               type="button"
-              disabled={isPending}
+              disabled={isPending || isCoolingDown}
               onClick={() => handleChipClick(chip)}
               className="rounded-xl border border-violet-400/30 bg-violet-500/10 px-3 py-2 text-[11px] font-semibold text-violet-200 transition hover:bg-violet-500/20 disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -224,7 +374,7 @@ export default function AIChatPanel({
             }
           >
             <p className="break-words whitespace-pre-wrap">
-              {message.content}
+              {renderFormattedText(message.content)}
             </p>
 
             {message.wrongAnswers && (
@@ -274,7 +424,7 @@ export default function AIChatPanel({
         <Button
           type="button"
           onClick={handleSubmit}
-          disabled={isPending}
+          disabled={isPending || isCoolingDown}
           className="h-10 w-10 shrink-0 rounded-2xl bg-violet-500 p-0 hover:bg-violet-600 disabled:cursor-not-allowed disabled:opacity-50"
           aria-label="Send message"
         >

@@ -7,13 +7,14 @@ type AIAction =
   | "suggest_wrong_answers"
   | "generate_question_ideas"
   | "suggest_topics"
-  | "write_question"
-  | "create_outline";
+  | "write_question";
 
 type GenerateAIResponseInput = {
   action: AIAction;
   message?: string;
   context: {
+    quizTitle?: string;
+    topicOverride?: string;
     questionType: string;
     questionText: string;
     correctAnswer?: string;
@@ -53,6 +54,14 @@ function getErrorStatus(error: unknown) {
   return null;
 }
 
+function getTopic(input: GenerateAIResponseInput) {
+  return (
+    input.context.topicOverride?.trim() ||
+    input.context.quizTitle?.trim() ||
+    input.context.questionText.trim()
+  );
+}
+
 export async function generateAIResponse(
   input: GenerateAIResponseInput,
 ): Promise<AIResponse> {
@@ -70,12 +79,13 @@ export async function generateAIResponse(
   const model = genAI.getGenerativeModel({
     model: "gemini-2.5-flash-lite",
     generationConfig: {
-      maxOutputTokens: 250,
-      temperature: 0.7,
+      maxOutputTokens: 280,
+      temperature: 0.4,
     },
   });
 
   let prompt = "";
+  const topic = getTopic(input);
 
   if (input.action === "suggest_wrong_answers") {
     prompt = `
@@ -93,7 +103,6 @@ ${input.context.options?.join(", ") || "None"}
 Generate exactly 3 plausible but incorrect answer choices.
 
 Rules:
-- Do NOT ask follow-up questions.
 - Do NOT include the correct answer.
 - Do NOT repeat existing choices.
 - Keep answers short.
@@ -110,60 +119,61 @@ JSON format:
 
   if (input.action === "generate_question_ideas") {
     prompt = `
-Generate 5 quiz question ideas.
+You are helping a teacher create student-facing quiz questions.
 
-Topic/context:
-${input.context.questionText || input.message || "General knowledge"}
+Quiz title/topic:
+${topic}
 
 Question type:
 ${input.context.questionType}
 
 Rules:
+- Generate exactly 5 student-facing question ideas about the quiz title/topic.
+- Treat broad but valid topics like Programming, Computer, Biology, Math, English, Science, RAM, CPU, Networking, Filipino, or Bacteriology as clear topics.
 - Do NOT ask follow-up questions.
-- Give direct suggestions.
-- Keep each question short.
-- Use numbered list.
+- Do NOT generate questions about quiz creation, assessment design, or how to write questions.
+- Do NOT use button labels as the topic.
+- Use a numbered list.
+- No markdown bold.
 `;
   }
 
   if (input.action === "suggest_topics") {
     prompt = `
-Suggest 10 quiz topics for a teacher.
+You are helping a teacher choose quiz topics.
 
-Context:
-${input.context.questionText || input.message || "General classroom quiz"}
+Quiz title/topic:
+${topic}
 
 Rules:
+- Suggest exactly 10 related subtopics about the quiz title/topic.
+- Treat broad but valid topics like Programming, Computer, Biology, Math, English, Science, RAM, CPU, Networking, Filipino, or Bacteriology as clear topics.
 - Do NOT ask follow-up questions.
-- Give direct topic ideas only.
+- Do NOT suggest topics about quiz creation or assessment writing.
 - Use bullet points.
+- No markdown bold.
 `;
   }
 
   if (input.action === "write_question") {
     prompt = `
-Write 5 quiz questions based on this topic:
+You are helping a teacher write student-facing quiz questions.
 
-${input.message || input.context.questionText || "General knowledge"}
+Quiz title/topic:
+${topic}
 
-Rules:
-- Do NOT ask follow-up questions.
-- Include answer after each question.
-- Keep it concise.
-`;
-  }
-
-  if (input.action === "create_outline") {
-    prompt = `
-Create a short quiz outline.
-
-Topic:
-${input.message || input.context.questionText || "General knowledge"}
+Question type:
+${input.context.questionType}
 
 Rules:
+- Generate exactly 5 multiple choice questions about the quiz title/topic.
+- Include 4 answer choices for each question.
+- Mark the correct answer clearly.
+- Treat broad but valid topics like Programming, Computer, Biology, Math, English, Science, RAM, CPU, Networking, Filipino, or Bacteriology as clear topics.
 - Do NOT ask follow-up questions.
-- Include 5 sections.
-- Include sample questions.
+- Do NOT generate questions about quiz creation, assessment design, or how to write questions.
+- Do NOT use button labels as the topic.
+- No markdown bold.
 `;
   }
 
@@ -171,7 +181,7 @@ Rules:
     prompt = `
 You are an AI assistant inside a quiz maker app.
 
-Current quiz context:
+Quiz title/topic: ${topic || "No topic yet"}
 Question type: ${input.context.questionType}
 Question text: ${input.context.questionText || "No question yet"}
 Correct answer: ${input.context.correctAnswer || "No correct answer yet"}
@@ -180,8 +190,11 @@ Existing options: ${input.context.options?.join(", ") || "None"}
 Teacher message:
 ${input.message || ""}
 
-Answer directly. Do NOT ask follow-up questions unless absolutely impossible.
-Keep your answer concise and useful.
+Rules:
+- Answer directly and concisely.
+- Base quiz suggestions on the quiz title/topic whenever possible.
+- Do NOT generate questions about quiz creation unless the teacher explicitly asks for quiz-writing advice.
+- No markdown bold.
 `;
   }
 
@@ -221,7 +234,7 @@ Keep your answer concise and useful.
       success: false,
       message:
         getErrorStatus(error) === 429
-          ? "AI quota/rate limit reached. Please wait a few seconds and try again."
+          ? "AI rate limit reached. Please wait a few seconds and try again."
           : getErrorMessage(error),
     };
   }
