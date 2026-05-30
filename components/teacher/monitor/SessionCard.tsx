@@ -1,11 +1,16 @@
+"use client";
+
+import { useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
   ChevronRight,
   Clock3,
+  UserX,
   XCircle,
 } from "lucide-react";
 
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import { GlassCard } from "@/components/shared/GlassCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -79,7 +84,7 @@ function getReportLabel(reportVisibility: QuizSession["reportVisibility"]) {
 
 function getStatusLabel(session: QuizSession) {
   if (session.approvalStatus === "pending") return "Pending";
-  if (session.approvalStatus === "rejected") return "Rejected";
+  if (session.approvalStatus === "rejected") return "Kicked";
   if (isTimedOut(session)) return "Timed Out";
   if (isCompleted(session)) return "Completed";
 
@@ -114,6 +119,8 @@ export default function SessionCard({
   onReject,
   formatTime,
 }: Props) {
+  const [kickDialogOpen, setKickDialogOpen] = useState(false);
+
   const totalQuestions = session.answers
     ? Object.keys(session.answers).length
     : 0;
@@ -128,6 +135,11 @@ export default function SessionCard({
   const pasteAttempt = countEvents(session, "paste-attempt");
 
   const risk = getRiskLevel(session);
+
+  function handleKick() {
+    onReject(session.id);
+    setKickDialogOpen(false);
+  }
 
   if (isPending) {
     return (
@@ -180,219 +192,227 @@ export default function SessionCard({
 
   return (
     <GlassCard className="overflow-hidden p-4 md:p-6">
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex-1">
-          <div className="mb-4 flex flex-wrap items-center gap-2">
-            <h3 className="text-lg font-bold text-white">
-              {session.studentName}
-            </h3>
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <h3 className="text-lg font-bold text-white">{session.studentName}</h3>
 
-            {isRejected && (
-              <Badge className="border-red-400/20 bg-red-500/10 text-red-200">
-                Rejected
-              </Badge>
-            )}
+        {isRejected && (
+          <Badge className="border-red-400/20 bg-red-500/10 text-red-200">
+            Kicked
+          </Badge>
+        )}
 
-            {isApproved && (
-              <>
-                <Badge className={getStatusBadgeClass(session)}>
-                  {getStatusLabel(session)}
-                </Badge>
+        {isApproved && (
+          <>
+            <Badge className={getStatusBadgeClass(session)}>
+              {getStatusLabel(session)}
+            </Badge>
 
-                <Badge className={risk.className}>
-                  <AlertTriangle className="mr-1 h-3 w-3" />
-                  {risk.label}
-                </Badge>
-              </>
-            )}
-          </div>
+            <Badge className={risk.className}>
+              <AlertTriangle className="mr-1 h-3 w-3" />
+              {risk.label}
+            </Badge>
+          </>
+        )}
+      </div>
 
-          <div className="space-y-3 md:hidden">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-slate-400">Status</p>
+      {/* Mobile layout unchanged */}
+      <div className="space-y-3 md:hidden">
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs text-slate-400">Status</p>
 
-                  <p
-                    className={`mt-2 text-xl font-bold ${getStatusClass(
-                      session,
-                    )}`}
-                  >
-                    {getStatusLabel(session)}
-                  </p>
-                </div>
+              <p className={`mt-2 text-xl font-bold ${getStatusClass(session)}`}>
+                {getStatusLabel(session)}
+              </p>
+            </div>
 
-                <div>
-                  <p className="text-xs text-slate-400">Score</p>
+            <div>
+              <p className="text-xs text-slate-400">Score</p>
 
-                  <p
-                    className={
-                      isFinished(session)
-                        ? "mt-2 text-xl font-bold text-emerald-300"
-                        : "mt-2 text-xl font-bold text-slate-500"
-                    }
-                  >
-                    {isFinished(session)
-                      ? `${session.score ?? 0}/${totalQuestions}`
-                      : "Pending"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-4 flex items-center gap-2 text-xs text-slate-400">
-                <Clock3 className="h-4 w-4" />
-                Requested at {formatTime(session.startedAt)}
-              </div>
-
-              {isApproved && (
-                <div className="mt-4 grid grid-cols-4 gap-2">
-                  <div className="rounded-xl border border-red-400/10 bg-red-500/5 p-2 text-center">
-                    <p className="text-lg font-bold text-red-300">{tabLeft}</p>
-                    <p className="mt-1 text-[10px] text-slate-400">Tab</p>
-                  </div>
-
-                  <div className="rounded-xl border border-orange-400/10 bg-orange-500/5 p-2 text-center">
-                    <p className="text-lg font-bold text-orange-300">
-                      {fullscreenExit}
-                    </p>
-                    <p className="mt-1 text-[10px] text-slate-400">Full</p>
-                  </div>
-
-                  <div className="rounded-xl border border-blue-400/10 bg-blue-500/5 p-2 text-center">
-                    <p className="text-lg font-bold text-blue-300">
-                      {copyAttempt}
-                    </p>
-                    <p className="mt-1 text-[10px] text-slate-400">Copy</p>
-                  </div>
-
-                  <div className="rounded-xl border border-pink-400/10 bg-pink-500/5 p-2 text-center">
-                    <p className="text-lg font-bold text-pink-300">
-                      {pasteAttempt}
-                    </p>
-                    <p className="mt-1 text-[10px] text-slate-400">Paste</p>
-                  </div>
-                </div>
-              )}
-
-              <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-400">Report</span>
-
-                  <span
-                    className={`text-sm font-semibold ${getReportClass(
-                      session.reportVisibility,
-                    )}`}
-                  >
-                    {getReportLabel(session.reportVisibility)}
-                  </span>
-                </div>
-              </div>
-
-              <Button
-                variant="ghost"
-                size="default"
-                onClick={() => onView(session.id)}
-                className="mt-4 h-11 w-full rounded-2xl"
+              <p
+                className={
+                  isFinished(session)
+                    ? "mt-2 text-xl font-bold text-emerald-300"
+                    : "mt-2 text-xl font-bold text-slate-500"
+                }
               >
-                View Details
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+                {isFinished(session)
+                  ? `${session.score ?? 0}/${totalQuestions}`
+                  : "Pending"}
+              </p>
             </div>
           </div>
 
-          <div className="hidden md:block">
-            <div className="grid gap-3 text-sm md:grid-cols-4">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-slate-400">Status</p>
+          <div className="mt-4 flex items-center gap-2 text-xs text-slate-400">
+            <Clock3 className="h-4 w-4" />
+            Requested at {formatTime(session.startedAt)}
+          </div>
 
-                <p className={`mt-1 font-semibold ${getStatusClass(session)}`}>
-                  {getStatusLabel(session)}
-                </p>
+          {isApproved && (
+            <div className="mt-4 grid grid-cols-4 gap-2">
+              <div className="rounded-xl border border-red-400/10 bg-red-500/5 p-2 text-center">
+                <p className="text-lg font-bold text-red-300">{tabLeft}</p>
+                <p className="mt-1 text-[10px] text-slate-400">Tab</p>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-slate-400">Score</p>
-
-                <p
-                  className={
-                    isFinished(session)
-                      ? "mt-1 font-bold text-emerald-300"
-                      : "mt-1 font-bold text-slate-500"
-                  }
-                >
-                  {isFinished(session)
-                    ? `${session.score ?? 0} / ${totalQuestions}`
-                    : "Pending"}
+              <div className="rounded-xl border border-orange-400/10 bg-orange-500/5 p-2 text-center">
+                <p className="text-lg font-bold text-orange-300">
+                  {fullscreenExit}
                 </p>
+                <p className="mt-1 text-[10px] text-slate-400">Full</p>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-slate-400">Requested</p>
-
-                <p className="mt-1 text-white">
-                  {formatTime(session.startedAt)}
+              <div className="rounded-xl border border-blue-400/10 bg-blue-500/5 p-2 text-center">
+                <p className="text-lg font-bold text-blue-300">
+                  {copyAttempt}
                 </p>
+                <p className="mt-1 text-[10px] text-slate-400">Copy</p>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-slate-400">Report</p>
-
-                <p
-                  className={`mt-1 font-semibold ${getReportClass(
-                    session.reportVisibility,
-                  )}`}
-                >
-                  {getReportLabel(session.reportVisibility)}
+              <div className="rounded-xl border border-pink-400/10 bg-pink-500/5 p-2 text-center">
+                <p className="text-lg font-bold text-pink-300">
+                  {pasteAttempt}
                 </p>
+                <p className="mt-1 text-[10px] text-slate-400">Paste</p>
               </div>
             </div>
+          )}
+
+          <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-slate-400">Report</span>
+
+              <span
+                className={`text-sm font-semibold ${getReportClass(
+                  session.reportVisibility,
+                )}`}
+              >
+                {getReportLabel(session.reportVisibility)}
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <Button
+              variant="ghost"
+              size="default"
+              onClick={() => onView(session.id)}
+              className="h-11 rounded-2xl"
+            >
+              View Details
+              <ChevronRight className="h-4 w-4" />
+            </Button>
 
             {isApproved && (
-              <div className="mt-3 grid gap-2 text-xs sm:grid-cols-4">
-                <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-slate-300">
-                  Tab Left:
-                  <span className="ml-1 font-bold text-red-300">
-                    {tabLeft}
-                  </span>
-                </div>
-
-                <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-slate-300">
-                  Fullscreen:
-                  <span className="ml-1 font-bold text-orange-300">
-                    {fullscreenExit}
-                  </span>
-                </div>
-
-                <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-slate-300">
-                  Copy:
-                  <span className="ml-1 font-bold text-blue-300">
-                    {copyAttempt}
-                  </span>
-                </div>
-
-                <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-slate-300">
-                  Paste:
-                  <span className="ml-1 font-bold text-pink-300">
-                    {pasteAttempt}
-                  </span>
-                </div>
-              </div>
+              <Button
+                variant="destructive"
+                size="default"
+                onClick={() => setKickDialogOpen(true)}
+                className="h-11 rounded-2xl"
+              >
+                <UserX className="h-4 w-4" />
+                Kick
+              </Button>
             )}
           </div>
-        </div>
-
-        <div className="hidden flex-col gap-2 md:flex sm:flex-row lg:flex-col">
-          <Button
-            variant="ghost"
-            size="default"
-            onClick={() => onView(session.id)}
-            className="h-11"
-          >
-            View Details
-            <ChevronRight className="h-4 w-4" />
-          </Button>
         </div>
       </div>
+
+      {/* Desktop layout fixed */}
+ <div className="hidden md:grid md:grid-cols-[repeat(4,minmax(0,1fr))_160px] md:gap-x-3 md:gap-y-3">
+  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+    <p className="text-slate-400">Status</p>
+    <p className={`mt-1 font-semibold ${getStatusClass(session)}`}>
+      {getStatusLabel(session)}
+    </p>
+  </div>
+
+  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+    <p className="text-slate-400">Score</p>
+    <p className={isFinished(session) ? "mt-1 font-bold text-emerald-300" : "mt-1 font-bold text-slate-500"}>
+      {isFinished(session) ? `${session.score ?? 0} / ${totalQuestions}` : "Pending"}
+    </p>
+  </div>
+
+  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+    <p className="text-slate-400">Requested</p>
+    <p className="mt-1 text-white">{formatTime(session.startedAt)}</p>
+  </div>
+
+  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+    <p className="text-slate-400">Report</p>
+    <p className={`mt-1 font-semibold ${getReportClass(session.reportVisibility)}`}>
+      {getReportLabel(session.reportVisibility)}
+    </p>
+  </div>
+
+  <div className="row-span-2 flex flex-col justify-center gap-3">
+    <Button
+      variant="ghost"
+      size="default"
+      onClick={() => onView(session.id)}
+      className="h-12 w-full rounded-2xl"
+    >
+      View Details
+      <ChevronRight className="h-4 w-4" />
+    </Button>
+
+    {isApproved && (
+      <Button
+        variant="destructive"
+        size="default"
+        onClick={() => setKickDialogOpen(true)}
+        className="h-12 w-full rounded-2xl"
+      >
+        <UserX className="h-4 w-4" />
+        Kick
+      </Button>
+    )}
+  </div>
+
+  {isApproved ? (
+    <>
+      <div className="flex items-center rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-300">
+        Tab Left:
+        <span className="ml-1 font-bold text-red-300">{tabLeft}</span>
+      </div>
+
+      <div className="flex items-center rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-300">
+        Fullscreen:
+        <span className="ml-1 font-bold text-orange-300">{fullscreenExit}</span>
+      </div>
+
+      <div className="flex items-center rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-300">
+        Copy:
+        <span className="ml-1 font-bold text-blue-300">{copyAttempt}</span>
+      </div>
+
+      <div className="flex items-center rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-300">
+        Paste:
+        <span className="ml-1 font-bold text-pink-300">{pasteAttempt}</span>
+      </div>
+    </>
+  ) : (
+    <>
+      <div />
+      <div />
+      <div />
+      <div />
+    </>
+  )}
+</div>
+
+      <ConfirmDialog
+        open={kickDialogOpen}
+        title="Kick student?"
+        description={`Are you sure you want to kick ${session.studentName}? They will lose access to this quiz.`}
+        confirmText="Kick"
+        cancelText="Cancel"
+        confirmVariant="destructive"
+        onOpenChange={setKickDialogOpen}
+        onConfirm={handleKick}
+      />
     </GlassCard>
   );
 }
