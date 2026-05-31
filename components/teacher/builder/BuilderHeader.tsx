@@ -131,7 +131,7 @@ export default function BuilderHeader({
               ) : (
                 <>
                   <Save className="h-4 w-4 shrink-0" />
-                  <span className="truncate">Save</span>
+                  <span className="truncate">Draft</span>
                 </>
               )}
             </Button>
