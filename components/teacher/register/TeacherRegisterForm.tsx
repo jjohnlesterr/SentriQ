@@ -36,8 +36,15 @@ export default function TeacherRegisterForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
+    const normalizedEmail = email.trim().toLowerCase();
+
     setError("");
     setSuccess("");
+
+    if (!normalizedEmail) {
+      setError("Please enter your email address.");
+      return;
+    }
 
     if (!captchaToken) {
       setError("Please complete the security check.");
@@ -56,8 +63,8 @@ export default function TeacherRegisterForm() {
 
     setIsLoading(true);
 
-    const { error } = await supabaseBrowser.auth.signUp({
-      email,
+    const { data, error } = await supabaseBrowser.auth.signUp({
+      email: normalizedEmail,
       password,
       options: {
         captchaToken,
@@ -72,7 +79,24 @@ export default function TeacherRegisterForm() {
       return;
     }
 
-    setSuccess("Account created. Please check your email to confirm your account.");
+    const isDuplicateSignup =
+      data.user && data.user.identities && data.user.identities.length === 0;
+
+    if (isDuplicateSignup) {
+      setError(
+        "An account with this email already exists. Please sign in instead.",
+      );
+      return;
+    }
+
+    if (!data.user) {
+      setError("Account could not be created. Please try again.");
+      return;
+    }
+
+    setSuccess(
+      "Account created. Please check your email to confirm your account.",
+    );
     setEmail("");
     setPassword("");
     setConfirmPassword("");
