@@ -61,7 +61,7 @@ export default function ResultActivitySummary({
         <h2 className="text-lg font-bold text-white">Activity Summary</h2>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {summaryCards.map((card) => {
           const Icon = card.icon;
 
@@ -70,14 +70,14 @@ export default function ResultActivitySummary({
               key={card.valueKey}
               className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3"
             >
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col items-center justify-center gap-2 text-center sm:flex-row sm:text-left">
                 <div
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-current/20 bg-current/10 ${card.className}`}
                 >
                   <Icon className="h-4 w-4" />
                 </div>
 
-                <div className="min-w-0">
+                <div className="min-w-0 text-center sm:text-left">
                   <p className="text-xl font-black text-white">
                     {values[card.valueKey]}
                   </p>

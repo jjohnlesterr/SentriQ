@@ -117,14 +117,20 @@ function SessionList({
           </div>
 
           {(hasHiddenItems || expanded) && (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={expanded ? showLess : showMore}
-              className="h-11 w-full rounded-2xl text-sm"
-            >
-              {expanded ? "See Less" : `See More (${hiddenCount})`}
-            </Button>
+            <div className="pt-2 text-center">
+              <p className="mb-3 text-xs text-slate-400">
+                Showing {visibleItems.length} of {filteredItems.length} sessions
+              </p>
+
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={expanded ? showLess : showMore}
+                className="h-12 w-full max-w-[280px] rounded-2xl border border-white/10 bg-white/5 text-sm font-semibold text-white hover:bg-white/10"
+              >
+                {expanded ? "Show Less" : `Show More (${hiddenCount} left)`}
+              </Button>
+            </div>
           )}
         </>
       )}

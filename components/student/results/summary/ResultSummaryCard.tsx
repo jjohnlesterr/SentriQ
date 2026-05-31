@@ -89,13 +89,16 @@ export default function ResultSummaryCard({
 
             <p className="mt-2 text-4xl font-black text-white">
               {score}
-              <span className="text-xl text-slate-400"> / {totalQuestions}</span>
+              <span className="text-xl text-slate-400">
+                {" "}
+                / {totalQuestions}
+              </span>
             </p>
           </div>
         </div>
 
-        <div className="grid gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-3 sm:grid-cols-3">
-          <div className="flex items-center gap-3 rounded-xl px-2 py-2">
+        <div className="grid grid-cols-3 gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-3">
+          <div className="flex flex-col items-center justify-center gap-2 rounded-xl px-2 py-3 text-center">
             <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-400" />
 
             <div>
@@ -104,7 +107,7 @@ export default function ResultSummaryCard({
             </div>
           </div>
 
-          <div className="flex items-center gap-3 rounded-xl px-2 py-2">
+          <div className="flex flex-col items-center justify-center gap-2 rounded-xl px-2 py-3 text-center">
             <XCircle className="h-5 w-5 shrink-0 text-red-400" />
 
             <div>
@@ -113,7 +116,7 @@ export default function ResultSummaryCard({
             </div>
           </div>
 
-          <div className="flex items-center gap-3 rounded-xl px-2 py-2">
+          <div className="flex flex-col items-center justify-center gap-2 rounded-xl px-2 py-3 text-center">
             <Clock3 className="h-5 w-5 shrink-0 text-violet-300" />
 
             <div>
