@@ -24,6 +24,13 @@ export default function TeacherLoginForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail) {
+      setError("Please enter your email address.");
+      return;
+    }
+
     if (!captchaToken) {
       setError("Please complete the security check.");
       return;
@@ -32,8 +39,8 @@ export default function TeacherLoginForm() {
     setIsLoading(true);
     setError("");
 
-    const { error } = await supabaseBrowser.auth.signInWithPassword({
-      email,
+    const { data, error } = await supabaseBrowser.auth.signInWithPassword({
+      email: normalizedEmail,
       password,
       options: {
         captchaToken,
@@ -47,7 +54,28 @@ export default function TeacherLoginForm() {
       return;
     }
 
-    router.push("/teacher/dashboard");
+    if (!data.user) {
+      setError("Login failed. Please try again.");
+      return;
+    }
+
+    const { data: profile, error: profileError } = await supabaseBrowser
+      .from("profiles")
+      .select("role")
+      .eq("id", data.user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      setError("Login successful, but your account role could not be checked.");
+      return;
+    }
+
+    if (profile?.role === "admin") {
+      router.push("/admin/dashboard");
+    } else {
+      router.push("/teacher/dashboard");
+    }
+
     router.refresh();
   }
 
@@ -110,7 +138,11 @@ export default function TeacherLoginForm() {
                   onClick={() => setShowPassword((prev) => !prev)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-black"
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </div>
@@ -132,7 +164,12 @@ export default function TeacherLoginForm() {
               </div>
             )}
 
-            <Button type="submit" variant="primary" className="h-11 w-full" disabled={isLoading}>
+            <Button
+              type="submit"
+              variant="primary"
+              className="h-11 w-full"
+              disabled={isLoading}
+            >
               {isLoading ? "Signing in..." : "Sign In"}
             </Button>
 

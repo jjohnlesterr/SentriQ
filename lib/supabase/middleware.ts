@@ -30,25 +30,47 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
+  const isAdminRoute = pathname.startsWith("/admin");
+
   const isTeacherProtectedRoute =
     pathname.startsWith("/teacher/dashboard") ||
     pathname.startsWith("/teacher/drafts") ||
     pathname.startsWith("/teacher/quiz");
 
-  const isTeacherAuthRoute = pathname.startsWith("/teacher/login");
+  const isTeacherAuthRoute =
+    pathname.startsWith("/teacher/login") ||
+    pathname.startsWith("/teacher/register");
 
-  if (isTeacherProtectedRoute && !user) {
+  if ((isTeacherProtectedRoute || isAdminRoute) && !user) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/teacher/login";
 
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (isTeacherAuthRoute && user) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/teacher/dashboard";
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
 
-    return NextResponse.redirect(redirectUrl);
+    const role = profile?.role ?? "teacher";
+
+    if (isAdminRoute && role !== "admin") {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/teacher/dashboard";
+
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    if (isTeacherAuthRoute) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname =
+        role === "admin" ? "/admin/dashboard" : "/teacher/dashboard";
+
+      return NextResponse.redirect(redirectUrl);
+    }
   }
 
   return response;
@@ -56,9 +78,11 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/admin/:path*",
     "/teacher/dashboard/:path*",
     "/teacher/drafts/:path*",
     "/teacher/quiz/:path*",
     "/teacher/login",
+    "/teacher/register",
   ],
 };
