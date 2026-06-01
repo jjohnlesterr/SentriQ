@@ -66,7 +66,7 @@ export default function TeacherLoginForm() {
       .maybeSingle();
 
     if (profileError) {
-      setError("Login successful, but your account role could not be checked.");
+      setError(profileError.message);
       return;
     }
 
@@ -108,6 +108,7 @@ export default function TeacherLoginForm() {
           <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
             <div className="space-y-2">
               <label className="text-sm text-slate-200">Email Address</label>
+
               <Input
                 type="email"
                 placeholder="teacher@example.com"

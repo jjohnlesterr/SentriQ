@@ -41,48 +41,42 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/teacher/login") ||
     pathname.startsWith("/teacher/register");
 
-  if ((isTeacherProtectedRoute || isAdminRoute) && !user) {
+  if ((isAdminRoute || isTeacherProtectedRoute) && !user) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/teacher/login";
-
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .maybeSingle();
+  if (!user) {
+    return response;
+  }
 
-    const role = profile?.role ?? "teacher";
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
 
-    if (isAdminRoute && role !== "admin") {
-      const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = "/teacher/dashboard";
+  const role = profile?.role ?? "teacher";
 
-      return NextResponse.redirect(redirectUrl);
-    }
+  if (isAdminRoute && role !== "admin") {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/teacher/dashboard";
+    return NextResponse.redirect(redirectUrl);
+  }
 
-    if (isTeacherAuthRoute) {
-      const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname =
-        role === "admin" ? "/admin/dashboard" : "/teacher/dashboard";
+  if (isTeacherProtectedRoute && role === "admin") {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/admin/dashboard";
+    return NextResponse.redirect(redirectUrl);
+  }
 
-      return NextResponse.redirect(redirectUrl);
-    }
+  if (isTeacherAuthRoute) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname =
+      role === "admin" ? "/admin/dashboard" : "/teacher/dashboard";
+    return NextResponse.redirect(redirectUrl);
   }
 
   return response;
 }
-
-export const config = {
-  matcher: [
-    "/admin/:path*",
-    "/teacher/dashboard/:path*",
-    "/teacher/drafts/:path*",
-    "/teacher/quiz/:path*",
-    "/teacher/login",
-    "/teacher/register",
-  ],
-};
