@@ -11,8 +11,8 @@ export default async function AdminEventsPage() {
 
   const { data: events } = await supabase
     .from("session_events")
-    .select("id, session_id, event_type, event_data, created_at")
-    .order("created_at", { ascending: false });
+    .select("id, session_id, type, timestamp, description, duration_seconds")
+    .order("timestamp", { ascending: false });
 
   return (
     <main className="min-h-screen px-4 py-6 text-white sm:px-6 md:px-10">

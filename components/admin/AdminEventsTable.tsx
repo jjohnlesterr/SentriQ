@@ -3,14 +3,16 @@
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 
+import DeleteEventButton from "@/components/admin/DeleteEventButton";
 import { Input } from "@/components/ui/input";
 
 type SessionEvent = {
   id: string;
   session_id: string | null;
-  event_type: string | null;
-  event_data: unknown;
-  created_at: string | null;
+  type: string | null;
+  timestamp: string | null;
+  description: string | null;
+  duration_seconds: number | null;
 };
 
 export default function AdminEventsTable({
@@ -22,26 +24,20 @@ export default function AdminEventsTable({
   const [eventTypeFilter, setEventTypeFilter] = useState("all");
 
   const eventTypes = Array.from(
-    new Set(events.map((event) => event.event_type).filter(Boolean)),
+    new Set(events.map((event) => event.type).filter(Boolean)),
   );
 
   const filteredEvents = useMemo(() => {
     const query = search.trim().toLowerCase();
 
     return events.filter((event) => {
-      const eventDataText = event.event_data
-        ? JSON.stringify(event.event_data).toLowerCase()
-        : "";
-
       const matchesSearch =
-        (event.event_type ?? "").toLowerCase().includes(query) ||
+        (event.type ?? "").toLowerCase().includes(query) ||
         (event.session_id ?? "").toLowerCase().includes(query) ||
-        eventDataText.includes(query);
+        (event.description ?? "").toLowerCase().includes(query);
 
       const matchesEventType =
-        eventTypeFilter === "all"
-          ? true
-          : event.event_type === eventTypeFilter;
+        eventTypeFilter === "all" ? true : event.type === eventTypeFilter;
 
       return matchesSearch && matchesEventType;
     });
@@ -56,7 +52,7 @@ export default function AdminEventsTable({
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search event type, session ID, or event data..."
+            placeholder="Search event type, session ID, or description..."
             className="h-11 pl-11"
           />
         </div>
@@ -76,13 +72,17 @@ export default function AdminEventsTable({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[900px] text-left text-sm">
+        <table className="w-full min-w-[1350px] table-auto text-left text-sm">
           <thead className="border-b border-white/10 text-slate-400">
             <tr>
-              <th className="px-5 py-3 font-medium">Event Type</th>
-              <th className="px-5 py-3 font-medium">Session ID</th>
-              <th className="px-5 py-3 font-medium">Event Data</th>
-              <th className="px-5 py-3 font-medium">Created</th>
+              <th className="w-[190px] px-5 py-3 font-medium">Event Type</th>
+              <th className="w-[280px] px-5 py-3 font-medium">Session ID</th>
+              <th className="w-[430px] px-5 py-3 font-medium">Description</th>
+              <th className="w-[120px] px-5 py-3 font-medium">Duration</th>
+              <th className="w-[220px] px-5 py-3 font-medium">Timestamp</th>
+              <th className="sticky right-0 w-[120px] bg-[#0b1020] px-5 py-3 font-medium">
+                Actions
+              </th>
             </tr>
           </thead>
 
@@ -90,27 +90,35 @@ export default function AdminEventsTable({
             {filteredEvents.map((event) => (
               <tr key={event.id} className="border-b border-white/5">
                 <td className="px-5 py-4">
-                  <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs text-cyan-200">
-                    {event.event_type || "unknown"}
+                  <span className="inline-flex whitespace-nowrap rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs text-cyan-200">
+                    {event.type || "unknown"}
                   </span>
                 </td>
 
                 <td className="px-5 py-4 text-slate-400">
-                  {event.session_id || "—"}
+                  <span className="block max-w-[250px] truncate">
+                    {event.session_id || "—"}
+                  </span>
                 </td>
 
                 <td className="px-5 py-4 text-slate-300">
-                  <pre className="max-w-md whitespace-pre-wrap break-words rounded-lg border border-white/10 bg-black/20 p-3 text-xs text-slate-300">
-                    {event.event_data
-                      ? JSON.stringify(event.event_data, null, 2)
-                      : "—"}
-                  </pre>
+                  {event.description || "—"}
                 </td>
 
                 <td className="px-5 py-4 text-slate-400">
-                  {event.created_at
-                    ? new Date(event.created_at).toLocaleString()
+                  {event.duration_seconds !== null
+                    ? `${event.duration_seconds}s`
                     : "—"}
+                </td>
+
+                <td className="px-5 py-4 text-slate-400">
+                  {event.timestamp
+                    ? new Date(event.timestamp).toLocaleString()
+                    : "—"}
+                </td>
+
+                <td className="sticky right-0 bg-[#0b1020] px-5 py-4">
+                  <DeleteEventButton eventId={event.id} />
                 </td>
               </tr>
             ))}
@@ -118,7 +126,7 @@ export default function AdminEventsTable({
             {!filteredEvents.length && (
               <tr>
                 <td
-                  colSpan={4}
+                  colSpan={6}
                   className="px-5 py-10 text-center text-slate-400"
                 >
                   No activity logs found.

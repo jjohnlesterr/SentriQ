@@ -51,6 +51,7 @@ export default function AdminQuizzesTable({
       <div className="grid gap-3 border-b border-white/10 px-5 py-4 md:grid-cols-[1fr_200px]">
         <div className="relative">
           <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -71,16 +72,18 @@ export default function AdminQuizzesTable({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[1000px] text-left text-sm">
+        <table className="w-full min-w-[1250px] table-auto text-left text-sm">
           <thead className="border-b border-white/10 text-slate-400">
             <tr>
-              <th className="px-5 py-3 font-medium">Title</th>
-              <th className="px-5 py-3 font-medium">Code</th>
-              <th className="px-5 py-3 font-medium">Created By</th>
-              <th className="px-5 py-3 font-medium">Status</th>
-              <th className="px-5 py-3 font-medium">Published</th>
-              <th className="px-5 py-3 font-medium">Created</th>
-              <th className="px-5 py-3 font-medium">Actions</th>
+              <th className="w-[220px] px-5 py-3 font-medium">Title</th>
+              <th className="w-[120px] px-5 py-3 font-medium">Code</th>
+              <th className="w-[260px] px-5 py-3 font-medium">Created By</th>
+              <th className="w-[140px] px-5 py-3 font-medium">Status</th>
+              <th className="w-[120px] px-5 py-3 font-medium">Published</th>
+              <th className="w-[140px] px-5 py-3 font-medium">Created</th>
+              <th className="sticky right-0 w-[140px] bg-[#0b1020] px-5 py-3 font-medium">
+                Actions
+              </th>
             </tr>
           </thead>
 
@@ -96,12 +99,14 @@ export default function AdminQuizzesTable({
                 </td>
 
                 <td className="px-5 py-4 text-slate-400">
-                  {quiz.created_by || "—"}
+                  <span className="block max-w-[230px] truncate">
+                    {quiz.created_by || "—"}
+                  </span>
                 </td>
 
                 <td className="px-5 py-4">
-                  <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs text-cyan-200">
-                    {quiz.status || "unknown"}
+                  <span className="inline-flex max-w-[120px] items-center rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs text-cyan-200">
+                    <span className="truncate">{quiz.status || "unknown"}</span>
                   </span>
                 </td>
 
@@ -119,7 +124,7 @@ export default function AdminQuizzesTable({
                     : "—"}
                 </td>
 
-                <td className="px-5 py-4">
+                <td className="sticky right-0 bg-[#0b1020] px-5 py-4">
                   <DeleteQuizButton quizId={quiz.id} />
                 </td>
               </tr>

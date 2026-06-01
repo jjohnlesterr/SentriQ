@@ -130,3 +130,19 @@ export async function updateUserRoleAction(
   revalidatePath("/admin/users");
   revalidatePath("/admin/dashboard");
 }
+
+export async function deleteEventAction(eventId: string) {
+  const supabase = await requireAdmin();
+
+  const { error } = await supabase
+    .from("session_events")
+    .delete()
+    .eq("id", eventId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/admin/events");
+  revalidatePath("/admin/dashboard");
+}

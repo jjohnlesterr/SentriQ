@@ -28,9 +28,10 @@ export default function DeleteQuizButton({ quizId }: DeleteQuizButtonProps) {
   return (
     <Button
       type="button"
-      variant="destructive"
+      variant="secondary"
       onClick={handleDelete}
       disabled={isPending}
+      className="border-red-500/30 bg-red-500/10 text-red-200 hover:bg-red-500/20"
     >
       <Trash2 className="h-4 w-4" />
       {isPending ? "Deleting..." : "Delete"}
