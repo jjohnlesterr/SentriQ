@@ -16,7 +16,7 @@ import BuilderDesktopLayout from "@/components/teacher/builder/layout/BuilderDes
 import BuilderEditorContent from "@/components/teacher/builder/layout/BuilderEditorContent";
 import BuilderMobileLayout from "@/components/teacher/builder/layout/BuilderMobileLayout";
 
-import { createQuiz } from "@/lib/actions";
+import { createQuiz, deleteQuiz } from "@/lib/actions";
 import {
   clearTeacherSession,
   getTeacherSession,
@@ -48,7 +48,7 @@ export default function QuizBuilderPage() {
     const quiz = await createQuiz(title, description, teacherId);
 
     setSidebarOpen(false);
-    router.push(`/teacher/quiz/${quiz.id}/builder`);
+    router.push(`/teacher/quiz/${quiz.id}/builder?fresh=1`);
   });
 
   useEffect(() => {
@@ -123,12 +123,28 @@ export default function QuizBuilderPage() {
   async function handleDiscardAndLeave() {
     if (!pendingLeaveAction) return;
 
-    setLeaveDialogOpen(false);
+    try {
+      const quiz = builder.quiz;
 
-    const action = pendingLeaveAction;
-    setPendingLeaveAction(null);
+      if (
+        quiz &&
+        builder.isFreshlyCreatedDraft &&
+        quiz.status === "draft" &&
+        !quiz.published
+      ) {
+        await deleteQuiz(quiz.id);
+      }
 
-    await action();
+      setLeaveDialogOpen(false);
+
+      const action = pendingLeaveAction;
+      setPendingLeaveAction(null);
+
+      await action();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to discard quiz.");
+    }
   }
 
   function handleNavigateRequest(path: string) {

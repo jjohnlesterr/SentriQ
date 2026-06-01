@@ -161,6 +161,7 @@ export function useQuizBuilder() {
 
     isLoading: persistence.isLoading,
     isDirty: persistence.isDirty,
+    isFreshlyCreatedDraft: persistence.isFreshlyCreatedDraft,
     isSaving,
     isPublishing,
     showCodeDialog,

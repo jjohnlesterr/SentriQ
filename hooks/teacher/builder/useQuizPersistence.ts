@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { getQuizById, getTeacherQuizzes } from "@/lib/actions";
 import { getTeacherSession } from "@/lib/auth/teacher-session";
@@ -27,6 +27,7 @@ function createSnapshot(
 
 export function useQuizPersistence({ quizId }: Params) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
@@ -36,6 +37,7 @@ export function useQuizPersistence({ quizId }: Params) {
   const [timeLimitMinutes, setTimeLimitMinutes] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [savedSnapshot, setSavedSnapshot] = useState("");
+  const [isFreshlyCreatedDraft, setIsFreshlyCreatedDraft] = useState(false);
 
   const currentSnapshot = useMemo(
     () => createSnapshot(title, description, questions, timeLimitMinutes),
@@ -48,6 +50,8 @@ export function useQuizPersistence({ quizId }: Params) {
     setSavedSnapshot(
       createSnapshot(title, description, questions, timeLimitMinutes),
     );
+
+    setIsFreshlyCreatedDraft(false);
   }, [title, description, questions, timeLimitMinutes]);
 
   const refreshTeacherQuizzes = useCallback(async () => {
@@ -111,13 +115,14 @@ export function useQuizPersistence({ quizId }: Params) {
             quizData.timeLimitMinutes ?? null,
           ),
         );
+        setIsFreshlyCreatedDraft(searchParams.get("fresh") === "1");
       } finally {
         setIsLoading(false);
       }
     }
 
     void loadQuiz();
-  }, [quizId, router]);
+  }, [quizId, router, searchParams]);
 
   return {
     quiz,
@@ -128,6 +133,7 @@ export function useQuizPersistence({ quizId }: Params) {
     timeLimitMinutes,
     isLoading,
     isDirty,
+    isFreshlyCreatedDraft,
 
     setQuiz,
     setQuizzes,

@@ -77,16 +77,14 @@ export function useTeacherQuizzes() {
     const quiz = await createQuiz(title, description, teacherId);
 
     setQuizzes((prev) => [...prev, quiz]);
-    router.push(`/teacher/quiz/${quiz.id}/builder`);
+    router.push(`/teacher/quiz/${quiz.id}/builder?fresh=1`);
   }
 
   async function handleDeleteQuiz(quizId: string) {
     try {
       await deleteQuiz(quizId);
 
-      setQuizzes((prev) =>
-        prev.filter((quiz) => quiz.id !== quizId),
-      );
+      setQuizzes((prev) => prev.filter((quiz) => quiz.id !== quizId));
 
       toast.success("Quiz deleted.");
     } catch {
