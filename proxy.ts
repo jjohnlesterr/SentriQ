@@ -1,6 +1,9 @@
 import { middleware } from "@/lib/supabase/middleware";
+import type { NextRequest } from "next/server";
 
-export { middleware };
+export function proxy(request: NextRequest) {
+  return middleware(request);
+}
 
 export const config = {
   matcher: [
