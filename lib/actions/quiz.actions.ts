@@ -3,6 +3,7 @@
 import { ZodError } from "zod";
 
 import type { Question } from "@/lib/shared/types";
+import { supabase } from "@/lib/supabase/client";
 
 import {
   createQuizService,
@@ -63,6 +64,30 @@ export async function publishQuiz(quizId: string) {
     return await publishQuizService(quizId);
   } catch (error) {
     throw new Error(getActionErrorMessage(error, "Failed to publish quiz."));
+  }
+}
+
+export async function updateQuizJoinLocked(
+  quizId: string,
+  joinLocked: boolean,
+) {
+  try {
+    const { data, error } = await supabase
+      .from("quizzes")
+      .update({ join_locked: joinLocked })
+      .eq("id", quizId)
+      .select("*, questions(*)")
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return getQuizByIdService(data.id);
+  } catch (error) {
+    throw new Error(
+      getActionErrorMessage(error, "Failed to update joining status."),
+    );
   }
 }
 

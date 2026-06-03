@@ -20,6 +20,7 @@ type Props = {
   reportVisibilityState: ReportVisibility | "mixed";
   onBack: () => void;
   onBulkUpdateReportVisibility: (visibility: ReportVisibility) => void;
+  onToggleJoining: () => void;
 };
 
 export default function MonitorHeader({
@@ -28,8 +29,11 @@ export default function MonitorHeader({
   reportVisibilityState,
   onBack,
   onBulkUpdateReportVisibility,
+  onToggleJoining,
 }: Props) {
   const [reportOpen, setReportOpen] = useState(false);
+
+  const joiningClosed = !!quiz?.joinLocked;
 
   function buttonClass(visibility: ReportVisibility) {
     return reportVisibilityState === visibility
@@ -37,11 +41,11 @@ export default function MonitorHeader({
       : "h-11 border-white/10 bg-white/5 hover:bg-white/10 hover:text-white";
   }
 
-function mobileButtonClass(visibility: ReportVisibility) {
-  return reportVisibilityState === visibility
-    ? "h-10 w-full justify-start rounded-xl px-3 text-left text-xs"
-    : "h-10 w-full justify-start rounded-xl border-white/10 bg-white/5 px-3 text-left text-xs hover:bg-white/10 hover:text-white";
-}
+  function mobileButtonClass(visibility: ReportVisibility) {
+    return reportVisibilityState === visibility
+      ? "h-10 w-full justify-start rounded-xl px-3 text-left text-xs"
+      : "h-10 w-full justify-start rounded-xl border-white/10 bg-white/5 px-3 text-left text-xs hover:bg-white/10 hover:text-white";
+  }
 
   function buttonVariant(visibility: ReportVisibility) {
     return reportVisibilityState === visibility ? "primary" : "secondary";
@@ -101,8 +105,46 @@ function mobileButtonClass(visibility: ReportVisibility) {
                 </span>
               </div>
             </div>
+
+            <Button
+              type="button"
+              variant={joiningClosed ? "secondary" : "dangerSoft"}
+              onClick={onToggleJoining}
+              className="hidden h-12 min-w-[180px] rounded-2xl font-semibold lg:inline-flex"
+            >
+              {joiningClosed ? (
+                <>
+                  <Unlock className="h-4 w-4" />
+                  Reopen Joining
+                </>
+              ) : (
+                <>
+                  <Lock className="h-4 w-4" />
+                  Close Joining
+                </>
+              )}
+            </Button>
           </div>
         </div>
+
+        <Button
+          type="button"
+          variant={joiningClosed ? "primary" : "dangerSoft"}
+          onClick={onToggleJoining}
+          className="relative z-10 mt-4 h-11 w-full rounded-2xl font-semibold lg:hidden"
+        >
+          {joiningClosed ? (
+            <>
+              <Unlock className="h-4 w-4" />
+              Reopen Joining
+            </>
+          ) : (
+            <>
+              <Lock className="h-4 w-4" />
+              Close Joining
+            </>
+          )}
+        </Button>
 
         <div className="relative z-10 mt-4 rounded-2xl border border-white/10 bg-white/5 p-3 md:hidden">
           <button

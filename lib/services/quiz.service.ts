@@ -16,6 +16,7 @@ type QuizRow = {
   status: "draft" | "published";
   created_at: string;
   time_limit_minutes?: number | null;
+  join_locked?: boolean | null;
   questions?: QuestionRow[];
 };
 
@@ -84,7 +85,10 @@ function mapQuizRow(row: QuizRow): Quiz {
     published: row.published,
     status: row.status,
     createdAt: new Date(row.created_at),
+
     timeLimitMinutes: row.time_limit_minutes ?? null,
+    joinLocked: row.join_locked ?? false,
+
     questions:
       row.questions
         ?.sort((a, b) => a.position - b.position)

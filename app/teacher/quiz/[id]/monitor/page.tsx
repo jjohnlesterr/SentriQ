@@ -59,6 +59,7 @@ export default function TeacherMonitorPage() {
               onBulkUpdateReportVisibility={
                 monitor.handleBulkUpdateReportVisibility
               }
+              onToggleJoining={monitor.handleToggleJoining}
             />
 
             <MonitorStats
@@ -69,6 +70,7 @@ export default function TeacherMonitorPage() {
             />
 
             <SessionTabs
+              quiz={monitor.quiz}
               sessions={monitor.approvedSessions}
               pendingRequests={monitor.pendingRequests}
               inProgress={monitor.inProgress}
