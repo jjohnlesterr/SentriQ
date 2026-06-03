@@ -1,7 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Edit, Eye, FileText, Plus, Search, Trash2 } from "lucide-react";
+import {
+  Edit,
+  Eye,
+  FileText,
+  Loader2,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
@@ -12,10 +20,10 @@ import { Input } from "@/components/ui/input";
 import { useExpandableList } from "@/hooks/shared/useExpandableList";
 import { useSearchableList } from "@/hooks/shared/useSearchableList";
 
-import type { Quiz } from "@/lib/shared/types";
+import type { DashboardQuiz } from "@/hooks/teacher/useTeacherQuizzes";
 
 type Props = {
-  items: Quiz[];
+  items: DashboardQuiz[];
   onDeleteQuiz: (quizId: string) => Promise<void> | void;
 };
 
@@ -25,7 +33,7 @@ const LOAD_MORE_STEP = 5;
 export default function QuizList({ items, onDeleteQuiz }: Props) {
   const router = useRouter();
 
-  const [quizToDelete, setQuizToDelete] = useState<Quiz | null>(null);
+  const [quizToDelete, setQuizToDelete] = useState<DashboardQuiz | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const { search, setSearch, filteredItems } = useSearchableList({
@@ -57,7 +65,7 @@ export default function QuizList({ items, onDeleteQuiz }: Props) {
     }
   }
 
-  function renderQuizCard(quiz: Quiz) {
+  function renderQuizCard(quiz: DashboardQuiz) {
     return (
       <Card
         key={quiz.id}
@@ -66,7 +74,7 @@ export default function QuizList({ items, onDeleteQuiz }: Props) {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
             <div className="mb-2 flex flex-wrap items-center gap-2.5">
-              <h3 className="truncate text-lg font-bold text-white md:text-xl">
+              <h3 className="text-lg font-bold leading-tight text-white md:text-xl">
                 {quiz.title}
               </h3>
 
@@ -79,6 +87,16 @@ export default function QuizList({ items, onDeleteQuiz }: Props) {
               >
                 {quiz.published ? "Published" : "Draft"}
               </span>
+
+              {quiz.isAnswering && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Answering
+                  {quiz.activeSessionCount > 0
+                    ? ` (${quiz.activeSessionCount})`
+                    : ""}
+                </span>
+              )}
             </div>
 
             <p className="text-sm leading-6 text-slate-400">
@@ -100,8 +118,14 @@ export default function QuizList({ items, onDeleteQuiz }: Props) {
             <Button
               type="button"
               variant="secondary"
+              disabled={quiz.isAnswering}
+              title={
+                quiz.isAnswering
+                  ? "Students are currently answering this quiz."
+                  : undefined
+              }
               onClick={() => router.push(`/teacher/quiz/${quiz.id}/builder`)}
-              className="h-10 min-w-0 flex-1 cursor-pointer border-white/10 bg-white/5 px-3 text-xs hover:bg-white/10 hover:text-white sm:flex-none sm:text-sm"
+              className="h-10 min-w-0 flex-1 cursor-pointer border-white/10 bg-white/5 px-3 text-xs hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-45 sm:flex-none sm:text-sm"
             >
               <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Edit
