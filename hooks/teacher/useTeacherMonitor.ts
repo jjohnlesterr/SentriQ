@@ -26,8 +26,12 @@ const VIOLATION_TYPES = [
   "paste-attempt",
 ];
 
+function wasApprovedBefore(session: QuizSession) {
+  return session.events.some((event) => event.type === "approved");
+}
+
 function isKicked(session: QuizSession) {
-  return session.approvalStatus === "rejected";
+  return session.approvalStatus === "rejected" && wasApprovedBefore(session);
 }
 
 function sortKickedLast(items: QuizSession[]) {
@@ -213,29 +217,26 @@ export function useTeacherMonitor() {
     return new Date(value).toLocaleTimeString();
   }
 
-async function handleToggleJoining() {
-  if (!quiz) return;
+  async function handleToggleJoining() {
+    if (!quiz) return;
 
-  try {
-    const updatedQuiz = await updateQuizJoinLocked(
-      quiz.id,
-      !quiz.joinLocked,
-    );
+    try {
+      const updatedQuiz = await updateQuizJoinLocked(quiz.id, !quiz.joinLocked);
 
-    if (!updatedQuiz) {
-      console.error("Joining update returned no quiz.");
-      return;
+      if (!updatedQuiz) {
+        console.error("Joining update returned no quiz.");
+        return;
+      }
+
+      setQuiz(updatedQuiz);
+
+      setQuizzes((prev) =>
+        prev.map((item) => (item.id === updatedQuiz.id ? updatedQuiz : item)),
+      );
+    } catch (error) {
+      console.error("Failed to toggle joining:", error);
     }
-
-    setQuiz(updatedQuiz);
-
-    setQuizzes((prev) =>
-      prev.map((item) => (item.id === updatedQuiz.id ? updatedQuiz : item)),
-    );
-  } catch (error) {
-    console.error("Failed to toggle joining:", error);
   }
-}
 
   async function handleApproveSession(sessionId: string) {
     const updatedSession = await approveSession(sessionId);
@@ -289,7 +290,7 @@ async function handleToggleJoining() {
   );
 
   const kickedSessions = useMemo(
-    () => sessions.filter((session) => session.approvalStatus === "rejected"),
+    () => sessions.filter((session) => isKicked(session)),
     [sessions],
   );
 
