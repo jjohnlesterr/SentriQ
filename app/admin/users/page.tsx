@@ -1,9 +1,8 @@
-import Link from "next/link";
-import { ArrowLeft, ShieldCheck, Users } from "lucide-react";
+import { ShieldCheck, Users } from "lucide-react";
 
+import AdminShell from "@/components/admin/AdminShell";
 import AdminUsersTable from "@/components/admin/AdminUsersTable";
 import { GlassCard } from "@/components/shared/GlassCard";
-import { Button } from "@/components/ui/button";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function AdminUsersPage() {
@@ -15,28 +14,19 @@ export default async function AdminUsersPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <main className="min-h-screen px-4 py-6 text-white sm:px-6 md:px-10">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-sm text-cyan-200">
-              <ShieldCheck className="h-4 w-4" />
-              Admin Control Panel
-            </div>
-
-            <h1 className="text-3xl font-bold md:text-4xl">Users</h1>
-
-            <p className="mt-2 text-sm text-slate-400">
-              Search, delete, and manage teacher/admin roles.
-            </p>
+    <AdminShell>
+      <div className="mx-auto max-w-7xl space-y-6">
+        <div>
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-sm text-cyan-200">
+            <ShieldCheck className="h-4 w-4" />
+            Admin Control Panel
           </div>
 
-          <Link href="/admin/dashboard">
-            <Button variant="secondary">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Dashboard
-            </Button>
-          </Link>
+          <h1 className="text-3xl font-bold md:text-4xl">Users</h1>
+
+          <p className="mt-2 text-sm text-slate-400">
+            Search, delete, and manage teacher/admin roles.
+          </p>
         </div>
 
         <GlassCard className="overflow-hidden p-0">
@@ -50,6 +40,6 @@ export default async function AdminUsersPage() {
           <AdminUsersTable profiles={profiles ?? []} />
         </GlassCard>
       </div>
-    </main>
+    </AdminShell>
   );
-}
+} 
