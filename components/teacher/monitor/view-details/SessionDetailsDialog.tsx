@@ -9,7 +9,6 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
-
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -38,6 +37,7 @@ export default function SessionDetailsDialog({
   formatTime,
 }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>("overview");
+  const effectiveQuiz = session?.quizSnapshot ?? quiz;
 
   function handleOpenChange(nextOpen: boolean) {
     if (!nextOpen) setViewMode("overview");
@@ -91,10 +91,8 @@ export default function SessionDetailsDialog({
             <DialogDescription className="mt-1 line-clamp-2 text-xs leading-5 text-slate-400 sm:text-sm">
               {viewMode === "overview" &&
                 "Activity monitoring and answer review."}
-
               {viewMode === "answers" &&
                 "Review all questions, choices, correct answers, and student selections."}
-
               {viewMode === "timeline" &&
                 "Review the complete monitoring activity log for this session."}
             </DialogDescription>
@@ -116,14 +114,14 @@ export default function SessionDetailsDialog({
               Session not found.
             </p>
           ) : viewMode === "answers" ? (
-            <SessionAnswersView session={session} quiz={quiz} />
+            <SessionAnswersView session={session} quiz={effectiveQuiz} />
           ) : viewMode === "timeline" ? (
             <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-4 sm:p-6">
               <SessionTimelineView session={session} formatTime={formatTime} />
             </div>
           ) : (
             <div className="space-y-4 sm:space-y-5">
-              <SessionStatsGrid session={session} quiz={quiz} />
+              <SessionStatsGrid session={session} quiz={effectiveQuiz} />
 
               <div className="hidden gap-4 lg:grid lg:grid-cols-[1.25fr_0.95fr]">
                 <section className="rounded-3xl border border-white/10 bg-white/[0.035]">
@@ -137,7 +135,11 @@ export default function SessionDetailsDialog({
                   <Separator className="bg-white/10" />
 
                   <div className="p-4">
-                    <SessionAnswersView session={session} quiz={quiz} compact />
+                    <SessionAnswersView
+                      session={session}
+                      quiz={effectiveQuiz}
+                      compact
+                    />
                   </div>
                 </section>
 
@@ -194,7 +196,11 @@ export default function SessionDetailsDialog({
                   <Separator className="bg-white/10" />
 
                   <div className="p-3 sm:p-4">
-                    <SessionAnswersView session={session} quiz={quiz} compact />
+                    <SessionAnswersView
+                      session={session}
+                      quiz={effectiveQuiz}
+                      compact
+                    />
                   </div>
                 </TabsContent>
 

@@ -21,6 +21,8 @@ export type Quiz = {
   published: boolean;
   status: "draft" | "published";
   timeLimitMinutes?: number | null;
+
+  joinLocked?: boolean; 
 };
 
 export type SessionEventType =
@@ -51,6 +53,7 @@ export type QuizSession = {
   quizId: string;
   studentId: string;
   studentName: string;
+  quizSnapshot?: Quiz;
   startedAt: Date | string;
   completedAt?: Date | string;
   timedOutAt?: Date | string;
@@ -70,3 +73,4 @@ export type TeacherAccount = {
   email: string;
   password: string;
 };
+

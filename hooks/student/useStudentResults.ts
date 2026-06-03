@@ -22,6 +22,10 @@ function getSavedResult(): SavedResult | null {
   }
 }
 
+function getEffectiveQuiz(session: QuizSession | null, quiz: Quiz | null) {
+  return session?.quizSnapshot ?? quiz;
+}
+
 export function useStudentResults(sessionId: string) {
   const [session, setSession] = useState<QuizSession | null>(null);
   const [quiz, setQuiz] = useState<Quiz | null>(null);
@@ -37,9 +41,16 @@ export function useStudentResults(sessionId: string) {
 
           if (saved) {
             setSession(saved.session);
-            setQuiz(saved.quiz);
+            setQuiz(saved.session.quizSnapshot ?? saved.quiz);
           }
 
+          return;
+        }
+
+        setSession(sessionData);
+
+        if (sessionData.quizSnapshot) {
+          setQuiz(sessionData.quizSnapshot);
           return;
         }
 
@@ -50,13 +61,12 @@ export function useStudentResults(sessionId: string) {
 
           if (saved) {
             setSession(saved.session);
-            setQuiz(saved.quiz);
+            setQuiz(saved.session.quizSnapshot ?? saved.quiz);
           }
 
           return;
         }
 
-        setSession(sessionData);
         setQuiz(quizData);
       } catch (error) {
         console.error(error);
@@ -65,11 +75,13 @@ export function useStudentResults(sessionId: string) {
       }
     }
 
-    loadResults();
+    void loadResults();
   }, [sessionId]);
 
   const result = useMemo(() => {
-    if (!session || !quiz) {
+    const effectiveQuiz = getEffectiveQuiz(session, quiz);
+
+    if (!session || !effectiveQuiz) {
       return {
         score: 0,
         totalQuestions: 0,
@@ -79,7 +91,7 @@ export function useStudentResults(sessionId: string) {
     }
 
     const score = session.score || 0;
-    const totalQuestions = quiz.questions.length;
+    const totalQuestions = effectiveQuiz.questions.length;
     const percentage =
       totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
 

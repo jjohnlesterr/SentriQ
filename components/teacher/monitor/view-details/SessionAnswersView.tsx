@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { CheckCircle2, Circle, XCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -60,7 +60,11 @@ export default function SessionAnswersView({
 }) {
   const [visibleCount, setVisibleCount] = useState(PREVIEW_LIMIT);
 
-  if (!quiz?.questions.length) {
+  const questions = useMemo(() => {
+    return session.quizSnapshot?.questions ?? quiz?.questions ?? [];
+  }, [quiz?.questions, session.quizSnapshot?.questions]);
+
+  if (!questions.length) {
     return (
       <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-sm text-slate-400">
         Quiz questions not available.
@@ -68,18 +72,18 @@ export default function SessionAnswersView({
     );
   }
 
-  const questions = compact
-    ? quiz.questions.slice(0, visibleCount)
-    : quiz.questions;
+  const visibleQuestions = compact
+    ? questions.slice(0, visibleCount)
+    : questions;
 
-  const hasMore = compact && visibleCount < quiz.questions.length;
+  const hasMore = compact && visibleCount < questions.length;
   const canShowLess = compact && visibleCount > PREVIEW_LIMIT;
-  const hiddenCount = quiz.questions.length - visibleCount;
+  const hiddenCount = questions.length - visibleCount;
   const nextCount = Math.min(PREVIEW_LIMIT, hiddenCount);
 
   return (
     <div className="space-y-3">
-      {questions.map((question, index) => {
+      {visibleQuestions.map((question, index) => {
         const answer = session.answers[index];
         const correct = isAnswerCorrect(question, answer);
 
@@ -194,7 +198,7 @@ export default function SessionAnswersView({
               variant="ghost"
               onClick={() =>
                 setVisibleCount((current) =>
-                  Math.min(current + PREVIEW_LIMIT, quiz.questions.length),
+                  Math.min(current + PREVIEW_LIMIT, questions.length),
                 )
               }
               className="h-10 w-full rounded-2xl border border-white/10 bg-white/5 text-sm text-white hover:bg-white/10"

@@ -28,28 +28,35 @@ function isAnswerCorrect(
   return answer === question.correctAnswer;
 }
 
+function getEffectiveQuiz(session: QuizSession, quiz: Quiz | null) {
+  return session.quizSnapshot ?? quiz;
+}
+
 function getScore(session: QuizSession, quiz: Quiz | null) {
+  const effectiveQuiz = getEffectiveQuiz(session, quiz);
+  const questions = effectiveQuiz?.questions ?? [];
+
   if (typeof session.score === "number") {
     return {
       correct: session.score,
-      total: quiz?.questions.length ?? 0,
+      total: questions.length,
     };
   }
 
-  if (!quiz?.questions.length) {
+  if (!questions.length) {
     return {
       correct: 0,
       total: 0,
     };
   }
 
-  const correct = quiz.questions.reduce((total, question, index) => {
+  const correct = questions.reduce((total, question, index) => {
     return total + (isAnswerCorrect(question, session.answers[index]) ? 1 : 0);
   }, 0);
 
   return {
     correct,
-    total: quiz.questions.length,
+    total: questions.length,
   };
 }
 
@@ -72,9 +79,8 @@ function StatCard({
 
   return (
     <div className="min-h-[68px] rounded-2xl border border-white/10 bg-white/[0.04] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:min-h-[78px] sm:p-4">
-      <p className="text-[11px] leading-4 text-slate-400 sm:text-xs">
-        {label}
-      </p>
+      <p className="text-[11px] leading-4 text-slate-400 sm:text-xs">{label}</p>
+
       <p className={`mt-1 text-sm font-bold capitalize ${toneClass}`}>
         {value}
       </p>
@@ -99,7 +105,9 @@ export default function SessionStatsGrid({ session, quiz }: Props) {
 
       <StatCard
         label="Score"
-        value={score.total > 0 ? `${score.correct}/${score.total}` : "Not graded"}
+        value={
+          score.total > 0 ? `${score.correct}/${score.total}` : "Not graded"
+        }
         tone={score.total > 0 ? "success" : "default"}
       />
 
@@ -133,7 +141,11 @@ export default function SessionStatsGrid({ session, quiz }: Props) {
         tone={pasteAttempt > 0 ? "danger" : "success"}
       />
 
-      <StatCard label="Report Access" value={session.reportVisibility} tone="info" />
+      <StatCard
+        label="Report Access"
+        value={session.reportVisibility}
+        tone="info"
+      />
     </div>
   );
 }

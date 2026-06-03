@@ -28,6 +28,8 @@ type QuizRow = {
   published: boolean;
   status: "draft" | "published";
   created_at: string;
+  time_limit_minutes?: number | null;
+  join_locked?: boolean | null;
   questions?: QuestionRow[];
 };
 
@@ -54,6 +56,7 @@ type SessionRow = {
   approval_status: QuizSession["approvalStatus"];
   report_visibility: ReportVisibility;
   score: number | null;
+  quiz_snapshot?: Quiz | null;
   session_events?: SessionEventRow[];
 };
 
@@ -78,6 +81,8 @@ function mapQuizRow(row: QuizRow): Quiz {
     published: row.published,
     status: row.status,
     createdAt: new Date(row.created_at),
+    timeLimitMinutes: row.time_limit_minutes ?? null,
+    joinLocked: row.join_locked ?? false,
     questions:
       row.questions
         ?.sort((a, b) => a.position - b.position)
@@ -94,12 +99,20 @@ function mapEventRow(row: SessionEventRow): SessionEvent {
   };
 }
 
+function createQuizSnapshot(quiz: QuizRow): Quiz {
+  return mapQuizRow({
+    ...quiz,
+    questions: [...(quiz.questions || [])],
+  });
+}
+
 function mapSessionRow(row: SessionRow): QuizSession {
   return {
     id: row.id,
     quizId: row.quiz_id,
     studentName: row.student_name,
     studentId: row.student_id,
+    quizSnapshot: row.quiz_snapshot ?? undefined,
     startedAt: new Date(row.started_at),
     completedAt: row.completed_at ? new Date(row.completed_at) : undefined,
     currentQuestion: row.current_question,
@@ -154,7 +167,14 @@ export async function joinQuizService(
     throw new Error("Quiz code not found or quiz not published");
   }
 
-  const studentId = `student-${Date.now()}`;
+  const quiz = mapQuizRow(quizData);
+
+  if (quiz.joinLocked) {
+    throw new Error("This quiz is no longer accepting new participants.");
+  }
+
+  const quizSnapshot = createQuizSnapshot(quizData);
+  const studentId = crypto.randomUUID();
 
   const { data: sessionData, error: sessionError } = await supabase
     .from("sessions")
@@ -168,6 +188,7 @@ export async function joinQuizService(
       status: "in-progress",
       approval_status: "pending",
       report_visibility: "locked",
+      quiz_snapshot: quizSnapshot,
     })
     .select("*")
     .single();
@@ -190,7 +211,7 @@ export async function joinQuizService(
 
   return {
     session,
-    quiz: mapQuizRow(quizData),
+    quiz,
   };
 }
 
