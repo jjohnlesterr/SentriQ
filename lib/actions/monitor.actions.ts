@@ -3,6 +3,7 @@
 import { supabase } from "@/lib/supabase/client";
 import { getSessionByIdService } from "@/lib/services/session.service";
 import type {
+  Quiz,
   QuizSession,
   ReportVisibility,
   SessionEvent,
@@ -30,6 +31,7 @@ type SessionRow = {
   approval_status: QuizSession["approvalStatus"];
   report_visibility: ReportVisibility;
   score: number | null;
+  quiz_snapshot?: Quiz | null;
   session_events?: SessionEventRow[];
 };
 
@@ -48,6 +50,7 @@ function mapSessionRow(row: SessionRow): QuizSession {
     quizId: row.quiz_id,
     studentName: row.student_name,
     studentId: row.student_id,
+    quizSnapshot: row.quiz_snapshot ?? undefined,
     startedAt: new Date(row.started_at),
     completedAt: row.completed_at ? new Date(row.completed_at) : undefined,
     currentQuestion: row.current_question,
@@ -57,7 +60,7 @@ function mapSessionRow(row: SessionRow): QuizSession {
       row.session_events
         ?.sort(
           (a, b) =>
-            new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+            new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
         )
         .map(mapSessionEvent) || [],
     status: row.status,
@@ -71,9 +74,7 @@ function countEvents(events: SessionEvent[], type: SessionEventType) {
   return events.filter((event) => event.type === type).length;
 }
 
-export async function getQuizSessions(
-  quizId: string
-): Promise<QuizSession[]> {
+export async function getQuizSessions(quizId: string): Promise<QuizSession[]> {
   const { data, error } = await supabase
     .from("sessions")
     .select(
@@ -91,13 +92,14 @@ export async function getQuizSessions(
       approval_status,
       report_visibility,
       score,
+      quiz_snapshot,
       session_events (
         type,
         timestamp,
         description,
         duration_seconds
       )
-    `
+    `,
     )
     .eq("quiz_id", quizId)
     .order("started_at", { ascending: false });
@@ -109,9 +111,7 @@ export async function getQuizSessions(
   return ((data || []) as SessionRow[]).map(mapSessionRow);
 }
 
-export async function approveSession(
-  sessionId: string
-): Promise<QuizSession> {
+export async function approveSession(sessionId: string): Promise<QuizSession> {
   const { error } = await supabase
     .from("sessions")
     .update({ approval_status: "approved" })
@@ -140,9 +140,7 @@ export async function approveSession(
   return session;
 }
 
-export async function rejectSession(
-  sessionId: string
-): Promise<QuizSession> {
+export async function rejectSession(sessionId: string): Promise<QuizSession> {
   const { error } = await supabase
     .from("sessions")
     .update({ approval_status: "rejected" })
@@ -190,4 +188,4 @@ export async function getSessionViolations(sessionId: string) {
     pasteAttempt,
     total: tabLeft + fullscreenExit + copyAttempt + pasteAttempt,
   };
-} 
+}

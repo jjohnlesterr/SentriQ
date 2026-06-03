@@ -12,9 +12,10 @@ import SessionCard from "@/components/teacher/monitor/SessionCard";
 import { useExpandableList } from "@/hooks/shared/useExpandableList";
 import { useSearchableList } from "@/hooks/shared/useSearchableList";
 
-import type { QuizSession } from "@/lib/shared/types";
+import type { Quiz, QuizSession } from "@/lib/shared/types";
 
 type Props = {
+  quiz: Quiz | null;
   sessions: QuizSession[];
   pendingRequests: QuizSession[];
   inProgress: QuizSession[];
@@ -28,6 +29,7 @@ type Props = {
 const VISIBLE_LIMIT = 5;
 
 function SessionList({
+  quiz,
   items,
   emptyTitle,
   onViewSession,
@@ -35,6 +37,7 @@ function SessionList({
   onRejectSession,
   formatTime,
 }: {
+  quiz: Quiz | null;
   items: QuizSession[];
   emptyTitle: string;
   onViewSession: (id: string) => void;
@@ -107,6 +110,7 @@ function SessionList({
             {visibleItems.map((session) => (
               <SessionCard
                 key={session.id}
+                quiz={quiz}
                 session={session}
                 onView={onViewSession}
                 onApprove={onApproveSession}
@@ -139,6 +143,7 @@ function SessionList({
 }
 
 export default function SessionTabs({
+  quiz,
   sessions,
   pendingRequests,
   inProgress,
@@ -182,6 +187,7 @@ export default function SessionTabs({
 
       <TabsContent value="pending">
         <SessionList
+          quiz={quiz}
           items={pendingRequests}
           emptyTitle="No pending join requests."
           onViewSession={onViewSession}
@@ -193,6 +199,7 @@ export default function SessionTabs({
 
       <TabsContent value="all">
         <SessionList
+          quiz={quiz}
           items={sessions}
           emptyTitle="No students have joined this quiz yet."
           onViewSession={onViewSession}
@@ -204,6 +211,7 @@ export default function SessionTabs({
 
       <TabsContent value="progress">
         <SessionList
+          quiz={quiz}
           items={inProgress}
           emptyTitle="No active sessions."
           onViewSession={onViewSession}
@@ -215,6 +223,7 @@ export default function SessionTabs({
 
       <TabsContent value="suspicious">
         <SessionList
+          quiz={quiz}
           items={suspicious}
           emptyTitle="No suspicious activity detected."
           onViewSession={onViewSession}

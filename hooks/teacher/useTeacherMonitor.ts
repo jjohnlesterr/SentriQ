@@ -9,6 +9,7 @@ import {
   getQuizSessions,
   getTeacherQuizzes,
   rejectSession,
+  updateQuizJoinLocked,
   updateSessionReportVisibility,
 } from "@/lib/actions";
 import {
@@ -24,6 +25,19 @@ const VIOLATION_TYPES = [
   "copy-attempt",
   "paste-attempt",
 ];
+
+function isKicked(session: QuizSession) {
+  return session.approvalStatus === "rejected";
+}
+
+function sortKickedLast(items: QuizSession[]) {
+  return [...items].sort((a, b) => {
+    if (isKicked(a) && !isKicked(b)) return 1;
+    if (!isKicked(a) && isKicked(b)) return -1;
+
+    return new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime();
+  });
+}
 
 export function useTeacherMonitor() {
   const router = useRouter();
@@ -85,13 +99,13 @@ export function useTeacherMonitor() {
     }
   }, [quizId]);
 
-useEffect(() => {
-  const id = requestAnimationFrame(() => {
-    void loadInitialData();
-  });
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      void loadInitialData();
+    });
 
-  return () => cancelAnimationFrame(id);
-}, [loadInitialData]);
+    return () => cancelAnimationFrame(id);
+  }, [loadInitialData]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -139,10 +153,13 @@ useEffect(() => {
   const sessions = useMemo(
     () =>
       rawSessions.map((session) => {
+        if (isKicked(session)) return session;
         if (!quiz?.timeLimitMinutes) return session;
+
         if (session.status === "completed" || session.status === "timed-out") {
           return session;
         }
+
         if (!session.startedAt) return session;
 
         const startedAtMs = new Date(session.startedAt).getTime();
@@ -196,6 +213,30 @@ useEffect(() => {
     return new Date(value).toLocaleTimeString();
   }
 
+async function handleToggleJoining() {
+  if (!quiz) return;
+
+  try {
+    const updatedQuiz = await updateQuizJoinLocked(
+      quiz.id,
+      !quiz.joinLocked,
+    );
+
+    if (!updatedQuiz) {
+      console.error("Joining update returned no quiz.");
+      return;
+    }
+
+    setQuiz(updatedQuiz);
+
+    setQuizzes((prev) =>
+      prev.map((item) => (item.id === updatedQuiz.id ? updatedQuiz : item)),
+    );
+  } catch (error) {
+    console.error("Failed to toggle joining:", error);
+  }
+}
+
   async function handleApproveSession(sessionId: string) {
     const updatedSession = await approveSession(sessionId);
 
@@ -242,36 +283,48 @@ useEffect(() => {
     [sessions],
   );
 
-  const approvedSessions = useMemo(
+  const approvedOnly = useMemo(
     () => sessions.filter((session) => session.approvalStatus === "approved"),
     [sessions],
   );
 
+  const kickedSessions = useMemo(
+    () => sessions.filter((session) => session.approvalStatus === "rejected"),
+    [sessions],
+  );
+
+  const approvedSessions = useMemo(
+    () => sortKickedLast([...approvedOnly, ...kickedSessions]),
+    [approvedOnly, kickedSessions],
+  );
+
   const inProgress = useMemo(
     () =>
-      approvedSessions.filter(
+      approvedOnly.filter(
         (session) => session.status === "in-progress" && !session.completedAt,
       ),
-    [approvedSessions],
+    [approvedOnly],
   );
 
   const completed = useMemo(
     () =>
-      approvedSessions.filter(
+      approvedOnly.filter(
         (session) =>
           session.status === "completed" ||
           session.status === "timed-out" ||
           !!session.completedAt,
       ),
-    [approvedSessions],
+    [approvedOnly],
   );
 
   const suspicious = useMemo(
     () =>
-      approvedSessions.filter((session) =>
-        session.events.some((event) => VIOLATION_TYPES.includes(event.type)),
+      sortKickedLast(
+        [...approvedOnly, ...kickedSessions].filter((session) =>
+          session.events.some((event) => VIOLATION_TYPES.includes(event.type)),
+        ),
       ),
-    [approvedSessions],
+    [approvedOnly, kickedSessions],
   );
 
   const selectedSession = useMemo(
@@ -280,30 +333,26 @@ useEffect(() => {
   );
 
   const reportVisibilityState: ReportVisibility | "mixed" = useMemo(() => {
-    if (approvedSessions.length === 0) return "locked";
+    if (approvedOnly.length === 0) return "locked";
 
     if (
-      approvedSessions.every((session) => session.reportVisibility === "locked")
+      approvedOnly.every((session) => session.reportVisibility === "locked")
     ) {
       return "locked";
     }
 
     if (
-      approvedSessions.every(
-        (session) => session.reportVisibility === "summary",
-      )
+      approvedOnly.every((session) => session.reportVisibility === "summary")
     ) {
       return "summary";
     }
 
-    if (
-      approvedSessions.every((session) => session.reportVisibility === "full")
-    ) {
+    if (approvedOnly.every((session) => session.reportVisibility === "full")) {
       return "full";
     }
 
     return "mixed";
-  }, [approvedSessions]);
+  }, [approvedOnly]);
 
   return {
     quiz,
@@ -315,6 +364,7 @@ useEffect(() => {
     inProgress,
     completed,
     suspicious,
+    kickedSessions,
 
     selectedSession,
     reportVisibilityState,
@@ -341,6 +391,7 @@ useEffect(() => {
     toggleAutoRefresh,
     formatTime,
 
+    handleToggleJoining,
     handleApproveSession,
     handleRejectSession,
     handleBulkUpdateReportVisibility,
