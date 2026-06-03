@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import PageShell from "@/components/layout/PageShell";
 import TeacherAppSidebar from "@/components/layout/sidebar/TeacherAppSidebar";
@@ -19,6 +19,7 @@ type TeacherPageLayoutProps = {
   onCloseSidebar?: () => void;
   onLogout: () => void;
   onNewQuiz?: () => void;
+  onNavigateRequest?: (path: string) => void;
 };
 
 export default function TeacherPageLayout({
@@ -31,22 +32,20 @@ export default function TeacherPageLayout({
   onCloseSidebar,
   onLogout,
   onNewQuiz,
+  onNavigateRequest,
 }: TeacherPageLayoutProps) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
 
-  useEffect(() => {
-    const id = requestAnimationFrame(() => {
-      const saved = localStorage.getItem("teacher-sidebar-collapsed");
-      setSidebarCollapsed(saved === "true");
-    });
-
-    return () => cancelAnimationFrame(id);
-  }, []);
+    return localStorage.getItem("teacher-sidebar-collapsed") === "true";
+  });
 
   function toggleSidebarCollapsed() {
     setSidebarCollapsed((prev) => {
       const next = !prev;
+
       localStorage.setItem("teacher-sidebar-collapsed", String(next));
+
       return next;
     });
   }
@@ -64,6 +63,7 @@ export default function TeacherPageLayout({
         onClose={onCloseSidebar}
         onLogout={onLogout}
         onNewQuiz={onNewQuiz}
+        onNavigateRequest={onNavigateRequest}
       />
 
       <main

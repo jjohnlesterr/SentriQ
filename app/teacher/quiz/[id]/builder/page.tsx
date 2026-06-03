@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import PageShell from "@/components/layout/PageShell";
-import TeacherAppSidebar from "@/components/layout/sidebar/TeacherAppSidebar";
+import TeacherPageLayout from "@/components/layout/TeacherPageLayout";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import PageLoader from "@/components/shared/PageLoader";
 import BuilderHeader from "@/components/teacher/builder/BuilderHeader";
@@ -190,20 +190,18 @@ export default function QuizBuilderPage() {
   );
 
   return (
-    <PageShell>
-      <TeacherAppSidebar
-        teacherName={teacherName}
-        quizzes={builder.quizzes}
-        activeQuizId={builder.quiz?.id}
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        onLogout={handleLogout}
-        onNewQuiz={openNewQuiz}
-        onNavigateRequest={handleNavigateRequest}
-        activePage="quiz-builder"
-      />
-
-      <div className="min-h-screen px-4 py-4 sm:px-6 md:px-8 lg:pl-[304px] lg:pr-8 xl:pr-10">
+    <TeacherPageLayout
+      teacherName={teacherName}
+      quizzes={builder.quizzes}
+      activeQuizId={builder.quiz?.id}
+      activePage="quiz-builder"
+      sidebarOpen={sidebarOpen}
+      onCloseSidebar={() => setSidebarOpen(false)}
+      onLogout={handleLogout}
+      onNewQuiz={openNewQuiz}
+      onNavigateRequest={handleNavigateRequest}
+    >
+      <div className="min-h-screen px-4 py-4 sm:px-6 md:px-8 lg:px-8 xl:pr-10">
         <div className="mx-auto w-full max-w-7xl">
           <BuilderHeader
             questionCount={builder.questions.length}
@@ -274,6 +272,6 @@ export default function QuizBuilderPage() {
         onDiscard={handleDiscardAndLeave}
         onConfirm={handleSaveAndLeave}
       />
-    </PageShell>
+    </TeacherPageLayout>
   );
 }
