@@ -52,6 +52,22 @@ function isFinished(session: QuizSession) {
   return isCompleted(session) || isTimedOut(session) || isKicked(session);
 }
 
+function getAccentClass(session: QuizSession) {
+  if (isKicked(session)) {
+    return "border-red-500/20 bg-red-950/10 before:bg-red-500";
+  }
+
+  if (isCompleted(session) || isTimedOut(session)) {
+    return "before:bg-emerald-400";
+  }
+
+  if (isInProgress(session)) {
+    return "before:bg-cyan-400";
+  }
+
+  return "";
+}
+
 function getRiskLevel(session: QuizSession) {
   const tabLeft = countEvents(session, "tab-left");
   const fullscreenExit = countEvents(session, "fullscreen-exit");
@@ -235,9 +251,9 @@ export default function SessionCard({
 
   return (
     <GlassCard
-      className={`overflow-hidden p-0 transition ${
-        kicked ? "border-white/5 bg-white/[0.025] opacity-60 grayscale" : ""
-      }`}
+      className={`relative overflow-hidden p-0 transition before:absolute before:bottom-6 before:left-0 before:top-6 before:w-1 before:rounded-r-full ${getAccentClass(
+        session,
+      )}`}
     >
       <button
         type="button"
@@ -294,7 +310,9 @@ export default function SessionCard({
               className={
                 isFinished(session) && !kicked
                   ? "text-xl font-black text-emerald-300 md:text-2xl"
-                  : "text-xl font-black text-slate-500 md:text-2xl"
+                  : kicked
+                    ? "text-xl font-black text-red-300 md:text-2xl"
+                    : "text-xl font-black text-slate-500 md:text-2xl"
               }
             >
               {isFinished(session) && session.score !== undefined
