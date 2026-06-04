@@ -1,15 +1,20 @@
 import {
+  AlertTriangle,
   CheckCircle2,
   ClipboardList,
   Clock3,
   PartyPopper,
+  TimerOff,
   XCircle,
 } from "lucide-react";
+
+import type { QuizSession } from "@/lib/shared/types";
 
 type ResultSummaryCardProps = {
   quizTitle: string;
   quizDescription?: string;
   studentName: string;
+  status: QuizSession["status"];
   score: number;
   incorrect: number;
   totalQuestions: number;
@@ -27,15 +32,54 @@ function formatDuration(seconds?: number) {
   return `${minutes}m ${remainingSeconds}s`;
 }
 
+function getResultCopy(status: QuizSession["status"], studentName: string) {
+  if (status === "timed-out") {
+    return {
+      title: "Time Expired",
+      description:
+        "Your quiz was automatically submitted because the time limit was reached.",
+      icon: TimerOff,
+      iconClassName: "border-yellow-400/20 bg-yellow-500/10 text-yellow-300",
+      scoreClassName: "border-yellow-400/20 bg-yellow-500/10 text-yellow-100",
+      nameClassName: "text-yellow-300",
+    };
+  }
+
+  if (status === "abandoned") {
+    return {
+      title: "Session Abandoned",
+      description:
+        "Your session was closed because no activity was detected for more than 5 minutes.",
+      icon: AlertTriangle,
+      iconClassName: "border-orange-400/20 bg-orange-500/10 text-orange-300",
+      scoreClassName: "border-orange-400/20 bg-orange-500/10 text-orange-100",
+      nameClassName: "text-orange-300",
+    };
+  }
+
+  return {
+    title: "Quiz Complete!",
+    description: `Great job, ${studentName}!`,
+    icon: PartyPopper,
+    iconClassName: "border-violet-400/20 bg-violet-500/10 text-violet-300",
+    scoreClassName: "border-violet-400/20 bg-violet-500/10 text-violet-100",
+    nameClassName: "text-violet-300",
+  };
+}
+
 export default function ResultSummaryCard({
   quizTitle,
   quizDescription,
   studentName,
+  status,
   score,
   incorrect,
   totalQuestions,
   timeSpentSeconds,
 }: ResultSummaryCardProps) {
+  const resultCopy = getResultCopy(status, studentName);
+  const Icon = resultCopy.icon;
+
   return (
     <section className="relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-5 shadow-[0_16px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:p-6">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.14),transparent_34%),radial-gradient(circle_at_top_right,rgba(34,211,238,0.1),transparent_34%)]" />
@@ -44,21 +88,31 @@ export default function ResultSummaryCard({
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-violet-400/20 bg-violet-500/10 text-violet-300">
-                <PartyPopper className="h-5 w-5" />
+              <div
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border ${resultCopy.iconClassName}`}
+              >
+                <Icon className="h-5 w-5" />
               </div>
 
               <div className="min-w-0">
                 <h1 className="text-2xl font-black text-white sm:text-3xl">
-                  Quiz Complete!
+                  {resultCopy.title}
                 </h1>
 
                 <p className="mt-1 text-sm text-slate-400">
-                  Great job,{" "}
-                  <span className="font-semibold text-violet-300">
-                    {studentName}
-                  </span>
-                  !
+                  {status === "completed" ? (
+                    <>
+                      Great job,{" "}
+                      <span
+                        className={`font-semibold ${resultCopy.nameClassName}`}
+                      >
+                        {studentName}
+                      </span>
+                      !
+                    </>
+                  ) : (
+                    resultCopy.description
+                  )}
                 </p>
               </div>
             </div>
@@ -82,8 +136,10 @@ export default function ResultSummaryCard({
             </div>
           </div>
 
-          <div className="rounded-2xl border border-violet-400/20 bg-violet-500/10 px-5 py-4 text-center lg:min-w-[160px]">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-violet-200/80">
+          <div
+            className={`rounded-2xl border px-5 py-4 text-center lg:min-w-[160px] ${resultCopy.scoreClassName}`}
+          >
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-current/80">
               Score
             </p>
 

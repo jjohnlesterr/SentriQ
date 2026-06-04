@@ -91,6 +91,7 @@ export default function StudentResultsContent({
             quizTitle={results.quiz.title}
             quizDescription={results.quiz.description}
             studentName={results.session.studentName}
+            status={results.session.status}
             score={results.score}
             incorrect={incorrect}
             totalQuestions={results.totalQuestions}
