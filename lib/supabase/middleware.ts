@@ -65,12 +65,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (isTeacherProtectedRoute && role === "admin") {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/admin/dashboard";
-    return NextResponse.redirect(redirectUrl);
-  }
-
   if (isTeacherAuthRoute) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname =

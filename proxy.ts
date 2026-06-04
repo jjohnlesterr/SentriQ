@@ -1,5 +1,6 @@
-import { middleware } from "@/lib/supabase/middleware";
 import type { NextRequest } from "next/server";
+
+import { middleware } from "@/lib/supabase/middleware";
 
 export function proxy(request: NextRequest) {
   return middleware(request);

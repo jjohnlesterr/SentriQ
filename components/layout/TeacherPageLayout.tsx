@@ -12,6 +12,7 @@ type ActivePage = "dashboard" | "quiz-builder" | "drafts" | "monitor";
 type TeacherPageLayoutProps = {
   children: ReactNode;
   teacherName: string;
+  isAdmin?: boolean;
   quizzes?: Quiz[];
   activePage?: ActivePage;
   activeQuizId?: string;
@@ -25,6 +26,7 @@ type TeacherPageLayoutProps = {
 export default function TeacherPageLayout({
   children,
   teacherName,
+  isAdmin = false,
   quizzes = [],
   activePage = "dashboard",
   activeQuizId,
@@ -54,6 +56,7 @@ export default function TeacherPageLayout({
     <PageShell>
       <TeacherAppSidebar
         teacherName={teacherName}
+        isAdmin={isAdmin}
         quizzes={quizzes}
         activePage={activePage}
         activeQuizId={activeQuizId}

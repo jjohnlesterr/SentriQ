@@ -10,6 +10,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   ShieldCheck,
+  UserCog,
   Users,
   X,
 } from "lucide-react";
@@ -18,6 +19,7 @@ import { usePathname, useRouter } from "next/navigation";
 import AppLogo from "@/components/shared/AppLogo";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import SidebarButton from "@/components/layout/sidebar/SidebarButton";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/shared/utils";
 
@@ -30,8 +32,11 @@ type Props = {
   onLogout: () => void;
 };
 
-const navItems = [
+const mainNavItems = [
   { title: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+];
+
+const controlCenterItems = [
   { title: "Users", href: "/admin/users", icon: Users },
   { title: "Quizzes", href: "/admin/quizzes", icon: BookOpen },
   { title: "Sessions", href: "/admin/sessions", icon: Activity },
@@ -111,7 +116,6 @@ export default function AdminAppSidebar({
                 className="object-contain transition group-hover:opacity-0"
                 priority
               />
-
               <PanelLeftOpen className="absolute h-4 w-4 text-slate-200 opacity-0 transition group-hover:opacity-100" />
             </button>
           ) : (
@@ -128,12 +132,7 @@ export default function AdminAppSidebar({
                   />
                 </div>
 
-                <div>
-                  <AppLogo className="text-xl" />
-                  <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
-                    Admin
-                  </p>
-                </div>
+                <AppLogo className="text-xl" />
               </div>
 
               {open ? (
@@ -162,7 +161,29 @@ export default function AdminAppSidebar({
 
         <ScrollArea className="min-h-0 flex-1 pr-2">
           <nav className="space-y-2 pb-4">
-            {navItems.map((item) => (
+            {mainNavItems.map((item) => (
+              <SidebarButton
+                key={item.href}
+                icon={item.icon}
+                active={pathname === item.href}
+                onClick={() => navigate(item.href)}
+                collapsed={isCollapsed}
+                title={item.title}
+              >
+                {item.title}
+              </SidebarButton>
+            ))}
+
+            {!isCollapsed && (
+              <div className="flex items-center gap-3 px-2 pb-2 pt-5">
+                <p className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Control Center
+                </p>
+                <div className="h-px flex-1 bg-white/10" />
+              </div>
+            )}
+
+            {controlCenterItems.map((item) => (
               <SidebarButton
                 key={item.href}
                 icon={item.icon}
@@ -178,6 +199,21 @@ export default function AdminAppSidebar({
         </ScrollArea>
 
         <div className="mt-4 shrink-0 space-y-3">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => navigate("/teacher/dashboard")}
+            title="Teacher View"
+            aria-label="Teacher View"
+            className={cn(
+              "w-full cursor-pointer rounded-xl text-sm font-semibold",
+              isCollapsed ? "h-10 px-0" : "h-11 px-5",
+            )}
+          >
+            <UserCog className="h-4 w-4" />
+            {!isCollapsed && "Teacher View"}
+          </Button>
+
           {!isCollapsed && (
             <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
               <div className="flex items-center gap-3">
@@ -186,7 +222,7 @@ export default function AdminAppSidebar({
                 </div>
 
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-white">
+                  <p className="truncate text-sm font-semibold text-white">
                     Administrator
                   </p>
                   <p className="truncate text-xs text-slate-500">

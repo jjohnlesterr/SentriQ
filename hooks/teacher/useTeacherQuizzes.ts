@@ -14,6 +14,7 @@ import {
   clearTeacherSession,
   getTeacherSession,
 } from "@/lib/auth/teacher-session";
+import { supabaseBrowser } from "@/lib/supabase/browser";
 import type { Quiz } from "@/lib/shared/types";
 
 export type DashboardQuiz = Quiz & {
@@ -38,6 +39,7 @@ export function useTeacherQuizzes() {
 
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [teacherName, setTeacherName] = useState("Teacher");
+  const [isAdmin, setIsAdmin] = useState(false);
   const [quizzes, setQuizzes] = useState<DashboardQuiz[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -106,6 +108,14 @@ export function useTeacherQuizzes() {
         setTeacherId(session.user.id);
         setTeacherName(session.user.email ?? "Teacher");
 
+        const { data: profile } = await supabaseBrowser
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .maybeSingle();
+
+        setIsAdmin(profile?.role === "admin");
+
         await loadQuizzes(session.user.id);
       } catch {
         toast.error("Failed to load teacher session.");
@@ -158,6 +168,7 @@ export function useTeacherQuizzes() {
   return {
     teacherId,
     teacherName,
+    isAdmin,
     quizzes,
     publishedQuizzes,
     draftQuizzes,

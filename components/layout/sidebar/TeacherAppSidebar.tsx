@@ -11,6 +11,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   PencilLine,
+  ShieldCheck,
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -27,6 +28,7 @@ type ActivePage = "dashboard" | "quiz-builder" | "drafts" | "monitor";
 
 type Props = {
   teacherName?: string;
+  isAdmin?: boolean;
   quizzes?: Quiz[];
   activePage?: ActivePage;
   activeQuizId?: string;
@@ -41,6 +43,7 @@ type Props = {
 
 export default function TeacherAppSidebar({
   teacherName,
+  isAdmin = false,
   quizzes = [],
   activePage = "dashboard",
   activeQuizId,
@@ -134,14 +137,14 @@ export default function TeacherAppSidebar({
             ? "z-50 w-[88%] max-w-sm bg-slate-950/95 px-5 shadow-2xl backdrop-blur-2xl lg:hidden"
             : cn(
                 "z-40 hidden bg-slate-950/60 backdrop-blur-xl lg:flex",
-                isCollapsed ? "w-20 px-3" : "w-64 px-4"
-              )
+                isCollapsed ? "w-20 px-3" : "w-64 px-4",
+              ),
         )}
       >
         <div
           className={cn(
             "mb-6 flex shrink-0 items-center",
-            isCollapsed ? "justify-center" : "justify-between"
+            isCollapsed ? "justify-center" : "justify-between",
           )}
         >
           {isCollapsed ? (
@@ -323,18 +326,32 @@ export default function TeacherAppSidebar({
         </ScrollArea>
 
         <div className="mt-4 shrink-0 space-y-3">
+          {isAdmin && (
+            <SidebarButton
+              icon={ShieldCheck}
+              onClick={() => navigate("/admin/dashboard")}
+              collapsed={isCollapsed}
+              title="Switch to Admin View"
+              className="border border-violet-400/20 bg-violet-500/10 text-violet-100 hover:bg-violet-500/20"
+            >
+              Switch to Admin View
+            </SidebarButton>
+          )}
+
           {!isCollapsed && (
             <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
               <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-violet-500 text-sm font-bold text-white">
-                  {teacherName?.charAt(0)?.toUpperCase() || "T"}
+                  T
                 </div>
 
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-white">
-                    {teacherName || "Teacher"}
+                  <p className="truncate text-sm font-semibold text-white">
+                    Teacher
                   </p>
-                  <p className="text-xs text-slate-500">Teacher Account</p>
+                  <p className="truncate text-xs text-slate-500">
+                    {teacherName || "teacher@email.com"}
+                  </p>
                 </div>
               </div>
             </div>

@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 
 import AdminAppSidebar from "@/components/admin/AdminAppSidebar";
 import GradientBackground from "@/components/layout/GradientBackground";
-import { Button } from "@/components/ui/button";
+import AppLogo from "@/components/shared/AppLogo";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { cn } from "@/lib/shared/utils";
 
@@ -46,19 +46,22 @@ export default function AdminLayoutClient({ children, adminEmail }: Props) {
           collapsed ? "lg:pl-20" : "lg:pl-64",
         )}
       >
-        <div className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/70 px-4 py-3 backdrop-blur-xl lg:hidden">
-          <Button
+        <div className="mb-4 flex items-center justify-between px-4 pt-4 lg:hidden">
+          <button
             type="button"
-            variant="secondary"
-            size="sm"
             onClick={() => setSidebarOpen(true)}
+            aria-label="Open sidebar"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-200 transition hover:bg-white/10"
           >
-            <Menu className="h-4 w-4" />
-            Menu
-          </Button>
+            <Menu className="h-5 w-5" />
+          </button>
+
+          <AppLogo className="text-2xl" />
+
+          <div className="h-10 w-10" />
         </div>
 
-        <main className="px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+        <main className="px-4 pb-6 sm:px-6 lg:px-8 lg:py-6">{children}</main>
       </div>
     </div>
   );
