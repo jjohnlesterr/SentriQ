@@ -33,6 +33,7 @@ function getEventLabel(type: SessionEventType) {
     "answered-question": "Answered Question",
     completed: "Completed",
     "time-expired": "Time Expired",
+    abandoned: "Session Abandoned",
   };
 
   return labels[type];
@@ -46,10 +47,17 @@ function getEventMeta(type: SessionEventType) {
     };
   }
 
+  if (type === "abandoned") {
+    return {
+      icon: AlertTriangle,
+      className: "border-orange-300/20 bg-orange-500/20 text-orange-200",
+    };
+  }
+
   if (type === "time-expired") {
     return {
       icon: TimerOff,
-      className: "border-orange-300/20 bg-orange-500/20 text-orange-200",
+      className: "border-yellow-300/20 bg-yellow-500/20 text-yellow-200",
     };
   }
 

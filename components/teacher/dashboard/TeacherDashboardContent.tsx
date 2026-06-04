@@ -39,6 +39,7 @@ export default function TeacherDashboardContent() {
   return (
     <TeacherPageLayout
       teacherName={teacher.teacherName}
+      isAdmin={teacher.isAdmin}
       quizzes={teacher.quizzes}
       activePage="dashboard"
       sidebarOpen={sidebarOpen}

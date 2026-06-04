@@ -40,6 +40,10 @@ function isTimedOut(session: QuizSession) {
   return session.status === "timed-out";
 }
 
+function isAbandoned(session: QuizSession) {
+  return session.status === "abandoned";
+}
+
 function isCompleted(session: QuizSession) {
   return session.status === "completed" || !!session.completedAt;
 }
@@ -49,7 +53,12 @@ function isInProgress(session: QuizSession) {
 }
 
 function isFinished(session: QuizSession) {
-  return isCompleted(session) || isTimedOut(session) || isKicked(session);
+  return (
+    isCompleted(session) ||
+    isTimedOut(session) ||
+    isAbandoned(session) ||
+    isKicked(session)
+  );
 }
 
 function getAccentClass(session: QuizSession) {
@@ -57,8 +66,16 @@ function getAccentClass(session: QuizSession) {
     return "border-red-500/20 bg-red-950/10 before:bg-red-500";
   }
 
-  if (isCompleted(session) || isTimedOut(session)) {
+  if (isAbandoned(session)) {
+    return "border-orange-500/20 bg-orange-950/10 before:bg-orange-400";
+  }
+
+  if (isCompleted(session)) {
     return "before:bg-emerald-400";
+  }
+
+  if (isTimedOut(session)) {
+    return "before:bg-yellow-400";
   }
 
   if (isInProgress(session)) {
@@ -106,6 +123,7 @@ function getReportLabel(reportVisibility: QuizSession["reportVisibility"]) {
 function getStatusLabel(session: QuizSession) {
   if (session.approvalStatus === "pending") return "Pending";
   if (isKicked(session)) return "Kicked";
+  if (isAbandoned(session)) return "Abandoned";
   if (isTimedOut(session)) return "Timed Out";
   if (isCompleted(session)) return "Completed";
 
@@ -121,8 +139,12 @@ function getStatusBadgeClass(session: QuizSession) {
     return "border-red-400/20 bg-red-500/10 text-red-200";
   }
 
-  if (isTimedOut(session)) {
+  if (isAbandoned(session)) {
     return "border-orange-400/20 bg-orange-500/10 text-orange-200";
+  }
+
+  if (isTimedOut(session)) {
+    return "border-yellow-400/20 bg-yellow-500/10 text-yellow-200";
   }
 
   if (isCompleted(session)) {
@@ -166,6 +188,18 @@ function ViolationPill({
       </div>
     </span>
   );
+}
+
+function StatusIcon({ session }: { session: QuizSession }) {
+  if (isKicked(session)) {
+    return <UserX className="mr-1 h-3.5 w-3.5" />;
+  }
+
+  if (isAbandoned(session)) {
+    return <AlertTriangle className="mr-1 h-3.5 w-3.5" />;
+  }
+
+  return <CheckCircle2 className="mr-1 h-3.5 w-3.5" />;
 }
 
 export default function SessionCard({
@@ -272,11 +306,7 @@ export default function SessionCard({
                   session,
                 )}`}
               >
-                {kicked ? (
-                  <UserX className="mr-1 h-3.5 w-3.5" />
-                ) : (
-                  <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
-                )}
+                <StatusIcon session={session} />
                 {getStatusLabel(session)}
               </Badge>
 
@@ -309,7 +339,9 @@ export default function SessionCard({
             <p
               className={
                 isFinished(session) && !kicked
-                  ? "text-xl font-black text-emerald-300 md:text-2xl"
+                  ? isAbandoned(session) || isTimedOut(session)
+                    ? "text-xl font-black text-orange-300 md:text-2xl"
+                    : "text-xl font-black text-emerald-300 md:text-2xl"
                   : kicked
                     ? "text-xl font-black text-red-300 md:text-2xl"
                     : "text-xl font-black text-slate-500 md:text-2xl"
