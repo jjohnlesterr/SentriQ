@@ -19,6 +19,35 @@ type Session = {
   tab_switches: number | null;
 };
 
+function formatStatus(status: string | null) {
+  if (status === "in-progress") return "In Progress";
+  if (status === "completed") return "Completed";
+  if (status === "timed-out") return "Timed Out";
+  if (status === "abandoned") return "Abandoned";
+
+  return status || "Unknown";
+}
+
+function getStatusClass(status: string | null) {
+  if (status === "completed") {
+    return "border-emerald-400/20 bg-emerald-500/10 text-emerald-200";
+  }
+
+  if (status === "timed-out") {
+    return "border-yellow-400/20 bg-yellow-500/10 text-yellow-200";
+  }
+
+  if (status === "abandoned") {
+    return "border-orange-400/20 bg-orange-500/10 text-orange-200";
+  }
+
+  if (status === "in-progress") {
+    return "border-cyan-400/20 bg-cyan-400/10 text-cyan-200";
+  }
+
+  return "border-white/10 bg-white/5 text-slate-300";
+}
+
 export default function AdminSessionsTable({
   sessions,
 }: {
@@ -31,10 +60,13 @@ export default function AdminSessionsTable({
     const query = search.trim().toLowerCase();
 
     return sessions.filter((session) => {
+      const formattedStatus = formatStatus(session.status).toLowerCase();
+
       const matchesSearch =
         (session.student_name ?? "").toLowerCase().includes(query) ||
         (session.student_id ?? "").toLowerCase().includes(query) ||
         (session.status ?? "").toLowerCase().includes(query) ||
+        formattedStatus.includes(query) ||
         (session.approval_status ?? "").toLowerCase().includes(query);
 
       const matchesStatus =
@@ -70,7 +102,7 @@ export default function AdminSessionsTable({
           <option value="all">All statuses</option>
           {statuses.map((status) => (
             <option key={status} value={status ?? ""}>
-              {status}
+              {formatStatus(status)}
             </option>
           ))}
         </select>
@@ -106,9 +138,13 @@ export default function AdminSessionsTable({
                 </td>
 
                 <td className="px-5 py-4">
-                  <span className="inline-flex max-w-[120px] items-center rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs text-cyan-200">
+                  <span
+                    className={`inline-flex max-w-[130px] items-center rounded-full border px-3 py-1 text-xs font-medium ${getStatusClass(
+                      session.status,
+                    )}`}
+                  >
                     <span className="truncate">
-                      {session.status || "unknown"}
+                      {formatStatus(session.status)}
                     </span>
                   </span>
                 </td>

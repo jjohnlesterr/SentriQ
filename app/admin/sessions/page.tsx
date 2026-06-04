@@ -3,9 +3,12 @@ import { Activity, ShieldCheck } from "lucide-react";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminSessionsTable from "@/components/admin/AdminSessionsTable";
 import { GlassCard } from "@/components/shared/GlassCard";
+import { cleanupInactiveSessions } from "@/lib/actions";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function AdminSessionsPage() {
+  await cleanupInactiveSessions();
+
   const supabase = await createSupabaseServerClient();
 
   const { data: sessions } = await supabase
