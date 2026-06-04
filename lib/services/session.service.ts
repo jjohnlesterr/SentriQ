@@ -60,6 +60,12 @@ type SessionRow = {
   session_events?: SessionEventRow[];
 };
 
+function isClosedSession(status: QuizSession["status"]) {
+  return (
+    status === "completed" || status === "timed-out" || status === "abandoned"
+  );
+}
+
 function mapQuestionRow(row: QuestionRow): Question {
   return {
     id: row.id,
@@ -189,6 +195,7 @@ export async function joinQuizService(
       approval_status: "pending",
       report_visibility: "locked",
       quiz_snapshot: quizSnapshot,
+      last_seen_at: new Date().toISOString(),
     })
     .select("*")
     .single();
@@ -281,6 +288,10 @@ export async function recordSessionEventService(
     return session;
   }
 
+  if (isClosedSession(session.status)) {
+    return session;
+  }
+
   const { error: eventError } = await supabase.from("session_events").insert({
     session_id: sessionId,
     type: event.type,
@@ -298,7 +309,8 @@ export async function recordSessionEventService(
       .update({
         tab_switches: session.tabSwitches + 1,
       })
-      .eq("id", sessionId);
+      .eq("id", sessionId)
+      .eq("status", "in-progress");
 
     if (updateError) {
       throw new Error(updateError.message);
@@ -335,6 +347,10 @@ export async function updateSessionAnswerService(
     throw new Error("Session is not approved yet");
   }
 
+  if (isClosedSession(session.status)) {
+    return session;
+  }
+
   const updatedAnswers = {
     ...session.answers,
     [questionIndex]: answer,
@@ -346,7 +362,8 @@ export async function updateSessionAnswerService(
       answers: updatedAnswers,
       current_question: questionIndex,
     })
-    .eq("id", sessionId);
+    .eq("id", sessionId)
+    .eq("status", "in-progress");
 
   if (error) {
     throw new Error(error.message);
@@ -397,6 +414,10 @@ export async function completeSessionService(
     throw new Error("Session is not approved yet");
   }
 
+  if (isClosedSession(session.status)) {
+    return session;
+  }
+
   const { error: sessionError } = await supabase
     .from("sessions")
     .update({
@@ -404,7 +425,8 @@ export async function completeSessionService(
       completed_at: new Date().toISOString(),
       score: submittedScore ?? 0,
     })
-    .eq("id", sessionId);
+    .eq("id", sessionId)
+    .eq("status", "in-progress");
 
   if (sessionError) {
     throw new Error(sessionError.message);
@@ -437,7 +459,7 @@ export async function expireSessionService(
     throw new Error("Session is not approved yet");
   }
 
-  if (session.status === "completed" || session.status === "timed-out") {
+  if (isClosedSession(session.status)) {
     return session;
   }
 
@@ -451,7 +473,8 @@ export async function expireSessionService(
       timed_out_at: now,
       score: submittedScore ?? 0,
     })
-    .eq("id", sessionId);
+    .eq("id", sessionId)
+    .eq("status", "in-progress");
 
   if (sessionError) {
     throw new Error(sessionError.message);
@@ -468,4 +491,69 @@ export async function expireSessionService(
   }
 
   return getSessionWithEvents(sessionId);
+}
+
+export async function updateSessionHeartbeatService(
+  sessionId: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from("sessions")
+    .update({
+      last_seen_at: new Date().toISOString(),
+    })
+    .eq("id", sessionId)
+    .eq("status", "in-progress");
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function cleanupInactiveSessionsService() {
+  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+
+  const now = new Date().toISOString();
+
+  const { data: inactiveSessions, error: selectError } = await supabase
+    .from("sessions")
+    .select("id")
+    .eq("status", "in-progress")
+    .lt("last_seen_at", fiveMinutesAgo);
+
+  if (selectError) {
+    throw new Error(selectError.message);
+  }
+
+  if (!inactiveSessions?.length) {
+    return;
+  }
+
+  const sessionIds = inactiveSessions.map((session) => session.id);
+
+  const { error: sessionError } = await supabase
+    .from("sessions")
+    .update({
+      status: "abandoned",
+      completed_at: now,
+      timed_out_at: now,
+    })
+    .in("id", sessionIds)
+    .eq("status", "in-progress");
+
+  if (sessionError) {
+    throw new Error(sessionError.message);
+  }
+
+  const { error: eventError } = await supabase.from("session_events").insert(
+    sessionIds.map((sessionId) => ({
+      session_id: sessionId,
+      type: "abandoned",
+      description:
+        "Student was marked abandoned after being inactive for more than 5 minutes.",
+    })),
+  );
+
+  if (eventError) {
+    throw new Error(eventError.message);
+  }
 }

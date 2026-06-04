@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 
 import {
   approveSession,
+  cleanupInactiveSessions,
   getQuizById,
   getQuizSessions,
   getTeacherQuizzes,
@@ -73,11 +74,13 @@ export function useTeacherMonitor() {
       setTeacherId(teacherSession.user.id);
       setTeacherName(teacherSession.user.email ?? "Teacher");
 
-      const [quizData, sessionData, teacherQuizzes] = await Promise.all([
-        getQuizById(quizId),
-        getQuizSessions(quizId),
-        getTeacherQuizzes(teacherSession.user.id),
-      ]);
+await cleanupInactiveSessions();
+
+const [quizData, sessionData, teacherQuizzes] = await Promise.all([
+  getQuizById(quizId),
+  getQuizSessions(quizId),
+  getTeacherQuizzes(teacherSession.user.id),
+]);
 
       setQuiz(quizData);
       setRawSessions(sessionData);
@@ -91,17 +94,19 @@ export function useTeacherMonitor() {
     }
   }, [quizId, router]);
 
-  const loadSessionsOnly = useCallback(async () => {
-    try {
-      const sessionData = await getQuizSessions(quizId);
+const loadSessionsOnly = useCallback(async () => {
+  try {
+    await cleanupInactiveSessions();
 
-      setRawSessions(sessionData);
-      setLastUpdated(new Date());
-      setNow(Date.now());
-    } catch (error) {
-      console.error("Teacher monitor sessions load error:", error);
-    }
-  }, [quizId]);
+    const sessionData = await getQuizSessions(quizId);
+
+    setRawSessions(sessionData);
+    setLastUpdated(new Date());
+    setNow(Date.now());
+  } catch (error) {
+    console.error("Teacher monitor sessions load error:", error);
+  }
+}, [quizId]);
 
   useEffect(() => {
     const id = requestAnimationFrame(() => {

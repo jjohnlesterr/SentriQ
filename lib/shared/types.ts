@@ -22,7 +22,7 @@ export type Quiz = {
   status: "draft" | "published";
   timeLimitMinutes?: number | null;
 
-  joinLocked?: boolean; 
+  joinLocked?: boolean;
 };
 
 export type SessionEventType =
@@ -37,7 +37,8 @@ export type SessionEventType =
   | "paste-attempt"
   | "answered-question"
   | "completed"
-  | "time-expired";
+  | "time-expired"
+  | "abandoned";
 
 export type SessionEvent = {
   type: SessionEventType;
@@ -62,7 +63,7 @@ export type QuizSession = {
   tabSwitches: number;
   events: SessionEvent[];
   score?: number;
-  status: "in-progress" | "completed" | "timed-out";
+  status: "in-progress" | "completed" | "timed-out" | "abandoned";
   approvalStatus: "pending" | "approved" | "rejected";
   reportVisibility: ReportVisibility;
 };
@@ -73,4 +74,3 @@ export type TeacherAccount = {
   email: string;
   password: string;
 };
-

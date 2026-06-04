@@ -9,14 +9,21 @@ import {
   getQuizById,
   getSessionById,
   updateSessionAnswer,
+  updateSessionHeartbeat,
 } from "@/lib/actions";
 import { calculateQuizScore } from "@/lib/quiz/scoring";
 import type { Quiz, QuizSession } from "@/lib/shared/types";
 
-import { useQuizMonitoring } from "@/hooks/student/useQuizMonitoring";
 import { useFullscreenGuard } from "@/hooks/student/useFullscreenGuard";
 import { useQuizAnswers } from "@/hooks/student/useQuizAnswers";
+import { useQuizMonitoring } from "@/hooks/student/useQuizMonitoring";
 import { useStudentQuizSession } from "@/hooks/student/useStudentQuizSession";
+
+function isSessionClosed(status: QuizSession["status"] | undefined) {
+  return (
+    status === "completed" || status === "timed-out" || status === "abandoned"
+  );
+}
 
 export function useStudentQuiz() {
   const router = useRouter();
@@ -63,10 +70,7 @@ export function useStudentQuiz() {
         return;
       }
 
-      if (
-        sessionData.status === "completed" ||
-        sessionData.status === "timed-out"
-      ) {
+      if (isSessionClosed(sessionData.status)) {
         router.replace(`/student/results/${sessionId}`);
         return;
       }
@@ -79,7 +83,6 @@ export function useStudentQuiz() {
       }
 
       setQuiz(quizData);
-
       answersState.setAnswers(sessionData.answers || {});
       setCurrentIndex(sessionData.currentQuestion || 0);
 
@@ -106,6 +109,14 @@ export function useStudentQuiz() {
   });
 
   useEffect(() => {
+    if (!session) return;
+
+    if (isSessionClosed(session.status)) {
+      router.replace(`/student/results/${sessionId}`);
+    }
+  }, [session, sessionId, router]);
+
+  useEffect(() => {
     if (session?.approvalStatus !== "approved") return;
 
     fullscreen.requestFullscreen(async () => {
@@ -120,18 +131,39 @@ export function useStudentQuiz() {
   useEffect(() => {
     if (session?.approvalStatus !== "approved") return;
 
+    if (isSessionClosed(session.status)) return;
+
     return monitoring.initializeMonitoring({
       onFullscreenChange: fullscreen.setFullscreenActive,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.approvalStatus]);
+  }, [session?.approvalStatus, session?.status]);
+
+  useEffect(() => {
+    if (
+      !session ||
+      session.approvalStatus !== "approved" ||
+      session.status !== "in-progress"
+    ) {
+      return;
+    }
+
+    void updateSessionHeartbeat(session.id);
+
+    const heartbeat = window.setInterval(() => {
+      void updateSessionHeartbeat(session.id);
+    }, 30000);
+
+    return () => {
+      window.clearInterval(heartbeat);
+    };
+  }, [session]);
 
   async function persistAnswer(answer?: number | string) {
     if (
       answer === undefined ||
       answer === "" ||
-      session?.status === "completed" ||
-      session?.status === "timed-out"
+      isSessionClosed(session?.status)
     ) {
       return;
     }
@@ -147,6 +179,7 @@ export function useStudentQuiz() {
 
   async function handleTimeout() {
     if (!quiz || !session || timeoutHandledRef.current) return;
+    if (isSessionClosed(session.status)) return;
 
     timeoutHandledRef.current = true;
     setIsSubmitting(true);
@@ -181,18 +214,17 @@ export function useStudentQuiz() {
   }
 
   useEffect(() => {
-if (!quiz?.timeLimitMinutes || !session?.startedAt) {
-  const id = requestAnimationFrame(() => {
-    setRemainingSeconds(null);
-  });
+    if (!quiz?.timeLimitMinutes || !session?.startedAt) {
+      const id = requestAnimationFrame(() => {
+        setRemainingSeconds(null);
+      });
 
-  return () => cancelAnimationFrame(id);
-}
+      return () => cancelAnimationFrame(id);
+    }
 
     if (
       session.approvalStatus !== "approved" ||
-      session.status === "completed" ||
-      session.status === "timed-out"
+      isSessionClosed(session.status)
     ) {
       return;
     }
@@ -202,6 +234,7 @@ if (!quiz?.timeLimitMinutes || !session?.startedAt) {
 
       const startedAtMs = new Date(session.startedAt).getTime();
       const expiresAtMs = startedAtMs + quiz.timeLimitMinutes * 60 * 1000;
+
       const diffSeconds = Math.max(
         0,
         Math.ceil((expiresAtMs - Date.now()) / 1000),
@@ -232,11 +265,7 @@ if (!quiz?.timeLimitMinutes || !session?.startedAt) {
   ]);
 
   function handleAnswer(answer: number | string) {
-    if (
-      !fullscreen.isFullscreenActive ||
-      session?.status === "completed" ||
-      session?.status === "timed-out"
-    ) {
+    if (!fullscreen.isFullscreenActive || isSessionClosed(session?.status)) {
       return;
     }
 
@@ -250,6 +279,7 @@ if (!quiz?.timeLimitMinutes || !session?.startedAt) {
 
   async function goNext() {
     if (!quiz || !fullscreen.isFullscreenActive) return;
+    if (isSessionClosed(session?.status)) return;
 
     await persistAnswer(answersState.answers[currentIndex]);
 
@@ -260,6 +290,7 @@ if (!quiz?.timeLimitMinutes || !session?.startedAt) {
 
   async function goPrevious() {
     if (!fullscreen.isFullscreenActive) return;
+    if (isSessionClosed(session?.status)) return;
 
     await persistAnswer(answersState.answers[currentIndex]);
 
@@ -268,48 +299,43 @@ if (!quiz?.timeLimitMinutes || !session?.startedAt) {
     }
   }
 
-async function handleSubmit() {
-  if (!quiz || !session) {
-    return;
+  async function handleSubmit() {
+    if (!quiz || !session) return;
+    if (isSessionClosed(session.status)) return;
+
+    setIsSubmitting(true);
+
+    try {
+      await persistAnswer(answersState.answers[currentIndex]);
+
+      const finalAnswers = {
+        ...answersState.answers,
+        ...(answersState.answers[currentIndex] !== undefined &&
+        answersState.answers[currentIndex] !== ""
+          ? { [currentIndex]: answersState.answers[currentIndex] }
+          : {}),
+      };
+
+      const score = calculateQuizScore(quiz, finalAnswers);
+      const completedSession = await completeSession(sessionId, score);
+
+      setSession(completedSession);
+
+      sessionStorage.setItem(
+        "lastResult",
+        JSON.stringify({
+          session: completedSession,
+          quiz,
+        }),
+      );
+
+      router.replace(`/student/results/${sessionId}`);
+    } catch (error) {
+      console.error("Submit failed:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
-
-  setIsSubmitting(true);
-
-  try {
-    await persistAnswer(answersState.answers[currentIndex]);
-
-    const finalAnswers = {
-      ...answersState.answers,
-      ...(answersState.answers[currentIndex] !== undefined &&
-      answersState.answers[currentIndex] !== ""
-        ? { [currentIndex]: answersState.answers[currentIndex] }
-        : {}),
-    };
-
-    const score = calculateQuizScore(quiz, finalAnswers);
-
-    const completedSession = await completeSession(
-      sessionId,
-      score,
-    );
-
-    setSession(completedSession);
-
-    sessionStorage.setItem(
-      "lastResult",
-      JSON.stringify({
-        session: completedSession,
-        quiz,
-      }),
-    );
-
-    router.replace(`/student/results/${sessionId}`);
-  } catch (error) {
-    console.error("Submit failed:", error);
-  } finally {
-    setIsSubmitting(false);
-  }
-}                                                                                               
 
   const currentQuestion = quiz?.questions[currentIndex];
   const selectedAnswer = answersState.answers[currentIndex];

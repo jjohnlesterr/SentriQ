@@ -3,12 +3,14 @@
 import { supabase } from "@/lib/supabase/client";
 import {
   cancelJoinRequestService,
+  cleanupInactiveSessionsService,
   completeSessionService,
   expireSessionService,
   getSessionByIdService,
   joinQuizService,
   recordSessionEventService,
   updateSessionAnswerService,
+  updateSessionHeartbeatService,
 } from "@/lib/services/session.service";
 import type {
   Quiz,
@@ -272,4 +274,14 @@ export async function getSessionViolations(sessionId: string) {
     pasteAttempt,
     total: tabLeft + fullscreenExit + copyAttempt + pasteAttempt,
   };
+}
+
+export async function updateSessionHeartbeat(
+  sessionId: string,
+) {
+  return updateSessionHeartbeatService(sessionId);
+}
+
+export async function cleanupInactiveSessions() {
+  return cleanupInactiveSessionsService();
 }
