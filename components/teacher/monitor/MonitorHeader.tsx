@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   ArrowLeft,
   ChevronDown,
+  Clock3,
   Lock,
   ShieldCheck,
   Unlock,
@@ -22,6 +23,25 @@ type Props = {
   onBulkUpdateReportVisibility: (visibility: ReportVisibility) => void;
   onToggleJoining: () => void;
 };
+
+function formatTimeLimit(minutes?: number | null) {
+  if (!minutes) return "No time limit";
+
+  if (minutes < 60) {
+    return `${minutes} min${minutes === 1 ? "" : "s"}`;
+  }
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+
+  if (remainingMinutes === 0) {
+    return `${hours} hr${hours === 1 ? "" : "s"}`;
+  }
+
+  return `${hours} hr${hours === 1 ? "" : "s"} ${remainingMinutes} min${
+    remainingMinutes === 1 ? "" : "s"
+  }`;
+}
 
 export default function MonitorHeader({
   quiz,
@@ -80,27 +100,60 @@ export default function MonitorHeader({
                 descriptionClassName="mt-1 text-sm text-slate-300 md:mt-2 md:text-base"
               />
 
-              {quiz?.published && (
-                <p className="mt-2 inline-flex rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 font-mono text-xs text-cyan-200 md:mt-3 md:text-sm">
-                  Join Code: {quiz.code}
+              <div className="mt-2 flex flex-wrap gap-2 md:mt-3">
+                {quiz?.published && (
+                  <p className="inline-flex rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 font-mono text-xs text-cyan-200 md:text-sm">
+                    Join Code: {quiz.code}
+                  </p>
+                )}
+
+                <p className="inline-flex items-center gap-1.5 rounded-full border border-violet-400/20 bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-200 md:text-sm">
+                  <Clock3 className="h-3.5 w-3.5" />
+                  Time Limit: {formatTimeLimit(quiz?.timeLimitMinutes)}
                 </p>
-              )}
+              </div>
             </div>
           </div>
 
           <div className="flex flex-col gap-3 lg:items-end">
-            <div className="flex items-center gap-3 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3">
-              <div className="relative flex h-3 w-3">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-400" />
+            <div
+              className={`flex items-center gap-3 rounded-2xl border px-4 py-3 ${
+                joiningClosed
+                  ? "border-red-400/20 bg-red-500/10"
+                  : "border-emerald-400/20 bg-emerald-500/10"
+              }`}
+            >
+              <div
+                className={`relative flex h-3 w-3 ${
+                  joiningClosed ? "text-red-400" : "text-emerald-400"
+                }`}
+              >
+                <span
+                  className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${
+                    joiningClosed ? "bg-red-400" : "bg-emerald-400"
+                  }`}
+                />
+                <span
+                  className={`relative inline-flex h-3 w-3 rounded-full ${
+                    joiningClosed ? "bg-red-400" : "bg-emerald-400"
+                  }`}
+                />
               </div>
 
               <div className="flex flex-col">
-                <span className="text-sm font-semibold text-emerald-200">
-                  Live
+                <span
+                  className={`text-sm font-semibold ${
+                    joiningClosed ? "text-red-200" : "text-emerald-200"
+                  }`}
+                >
+                  {joiningClosed ? "Joining Closed" : "Joining Open"}
                 </span>
 
-                <span className="text-xs text-emerald-300/80">
+                <span
+                  className={`text-xs ${
+                    joiningClosed ? "text-red-300/80" : "text-emerald-300/80"
+                  }`}
+                >
                   Last Sync {lastUpdated.toLocaleTimeString()}
                 </span>
               </div>
@@ -108,7 +161,7 @@ export default function MonitorHeader({
 
             <Button
               type="button"
-              variant={joiningClosed ? "secondary" : "dangerSoft"}
+              variant={joiningClosed ? "primary" : "dangerSoft"}
               onClick={onToggleJoining}
               className="hidden h-12 min-w-[180px] rounded-2xl font-semibold lg:inline-flex"
             >
@@ -120,7 +173,7 @@ export default function MonitorHeader({
               ) : (
                 <>
                   <Lock className="h-4 w-4" />
-                  Close Joining
+                  Lock Joining
                 </>
               )}
             </Button>
@@ -141,7 +194,7 @@ export default function MonitorHeader({
           ) : (
             <>
               <Lock className="h-4 w-4" />
-              Close Joining
+              Lock Joining
             </>
           )}
         </Button>
