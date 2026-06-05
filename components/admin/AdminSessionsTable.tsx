@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import {
   Activity,
   AlertTriangle,
-  BookOpen,
   Clock,
   Copy,
   Eye,

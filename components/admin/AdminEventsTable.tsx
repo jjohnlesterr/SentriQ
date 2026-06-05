@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -125,25 +125,21 @@ export default function AdminEventsTable({
     new Set(events.map((event) => event.type).filter(Boolean)),
   );
 
-  const filteredEvents = useMemo(() => {
-    const query = search.trim().toLowerCase();
+const query = search.trim().toLowerCase();
 
-    return events.filter((event) => {
-      const matchesSearch =
-        (event.type ?? "").toLowerCase().includes(query) ||
-        (event.session_id ?? "").toLowerCase().includes(query) ||
-        (event.description ?? "").toLowerCase().includes(query) ||
-        (event.student_name ?? "").toLowerCase().includes(query) ||
-        (event.student_id ?? "").toLowerCase().includes(query) ||
-        (event.quiz_title ?? "").toLowerCase().includes(query) ||
-        (event.quiz_code ?? "").toLowerCase().includes(query);
+const filteredEvents = events.filter((event) => {
+  const matchesSearch =
+    (event.type ?? "").toLowerCase().includes(query) ||
+    (event.session_id ?? "").toLowerCase().includes(query) ||
+    (event.description ?? "").toLowerCase().includes(query);
 
-      const matchesEventType =
-        eventTypeFilter === "all" ? true : event.type === eventTypeFilter;
+  const matchesEventType =
+    eventTypeFilter === "all"
+      ? true
+      : event.type === eventTypeFilter;
 
-      return matchesSearch && matchesEventType;
-    });
-  }, [events, search, eventTypeFilter]);
+  return matchesSearch && matchesEventType;
+});
 
   return (
     <>
