@@ -1,7 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { Activity, ArrowRight, RefreshCcw, Users } from "lucide-react";
+import {
+  Activity,
+  ArrowRight,
+  CheckCircle2,
+  Clipboard,
+  ClipboardPaste,
+  Maximize,
+  RefreshCcw,
+  ShieldAlert,
+  TimerOff,
+  Users,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useExpandableList } from "@/hooks/shared/useExpandableList";
@@ -12,6 +23,14 @@ type RecentEvent = {
   type: string | null;
   timestamp: string | null;
   description: string | null;
+  sessions:
+    | {
+        student_name: string | null;
+      }
+    | {
+        student_name: string | null;
+      }[]
+    | null;
 };
 
 type Props = {
@@ -43,37 +62,109 @@ function formatEventLabel(type: string | null, description: string | null) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+function getStudentName(event: RecentEvent) {
+  const session = Array.isArray(event.sessions)
+    ? event.sessions[0]
+    : event.sessions;
+
+  return session?.student_name || null;
+}
+
 function getEventIcon(type: string | null) {
+  if (type === "approved" || type === "completed") return CheckCircle2;
+  if (type === "rejected") return ShieldAlert;
+  if (type === "time-expired") return TimerOff;
+  if (type === "fullscreen-exit") return Maximize;
+  if (type === "copy-attempt") return Clipboard;
+  if (type === "paste-attempt") return ClipboardPaste;
   if (type?.includes("return")) return RefreshCcw;
   if (type?.includes("tab")) return Users;
 
   return Activity;
 }
 
-function getIconClass(type: string | null) {
-  if (type === "abandoned") return "bg-orange-500/10 text-orange-300";
-  if (type === "completed") return "bg-emerald-500/10 text-emerald-300";
-  if (type === "time-expired") return "bg-yellow-500/10 text-yellow-300";
-  if (type === "tab-returned") return "bg-amber-500/10 text-amber-300";
-  if (type === "copy-attempt" || type === "paste-attempt") {
-    return "bg-red-500/10 text-red-300";
+function getEventClass(type: string | null) {
+  if (!type) {
+    return {
+      icon: "bg-white/10 text-slate-300",
+      badge: "border-white/10 bg-white/10 text-slate-300",
+    };
   }
 
-  return "bg-cyan-500/10 text-cyan-300";
-}
-
-function getBadgeClass(type: string | null) {
-  if (!type) return "bg-white/10 text-slate-300";
-  if (type === "abandoned") return "bg-orange-500/10 text-orange-300";
-  if (type === "completed") return "bg-emerald-500/10 text-emerald-300";
-  if (type === "time-expired") return "bg-yellow-500/10 text-yellow-300";
-  if (type === "tab-left") return "bg-sky-500/10 text-sky-300";
-  if (type === "tab-returned") return "bg-amber-500/10 text-amber-300";
-  if (type === "copy-attempt" || type === "paste-attempt") {
-    return "bg-red-500/10 text-red-300";
+  if (type === "approved" || type === "completed") {
+    return {
+      icon: "bg-emerald-500/10 text-emerald-300",
+      badge: "border-emerald-400/20 bg-emerald-500/10 text-emerald-300",
+    };
   }
 
-  return "bg-cyan-500/10 text-cyan-300";
+  if (type === "abandoned") {
+    return {
+      icon: "bg-orange-500/10 text-orange-300",
+      badge: "border-orange-400/20 bg-orange-500/10 text-orange-300",
+    };
+  }
+
+  if (type === "time-expired") {
+    return {
+      icon: "bg-yellow-500/10 text-yellow-300",
+      badge: "border-yellow-400/20 bg-yellow-500/10 text-yellow-300",
+    };
+  }
+
+  if (type === "rejected") {
+    return {
+      icon: "bg-red-500/10 text-red-300",
+      badge: "border-red-400/20 bg-red-500/10 text-red-300",
+    };
+  }
+
+  if (type === "tab-left") {
+    return {
+      icon: "bg-amber-500/10 text-amber-300",
+      badge: "border-amber-400/20 bg-amber-500/10 text-amber-300",
+    };
+  }
+
+  if (type === "tab-returned") {
+    return {
+      icon: "bg-cyan-500/10 text-cyan-300",
+      badge: "border-cyan-400/20 bg-cyan-500/10 text-cyan-300",
+    };
+  }
+
+  if (type === "fullscreen-exit") {
+    return {
+      icon: "bg-orange-500/10 text-orange-300",
+      badge: "border-orange-400/20 bg-orange-500/10 text-orange-300",
+    };
+  }
+
+  if (type === "copy-attempt") {
+    return {
+      icon: "bg-purple-500/10 text-purple-300",
+      badge: "border-purple-400/20 bg-purple-500/10 text-purple-300",
+    };
+  }
+
+  if (type === "paste-attempt") {
+    return {
+      icon: "bg-pink-500/10 text-pink-300",
+      badge: "border-pink-400/20 bg-pink-500/10 text-pink-300",
+    };
+  }
+
+  if (type === "answered-question") {
+    return {
+      icon: "bg-blue-500/10 text-blue-300",
+      badge: "border-blue-400/20 bg-blue-500/10 text-blue-300",
+    };
+  }
+
+  return {
+    icon: "bg-cyan-500/10 text-cyan-300",
+    badge: "border-cyan-400/20 bg-cyan-500/10 text-cyan-300",
+  };
 }
 
 export default function AdminRecentActivity({ events }: Props) {
@@ -117,6 +208,8 @@ export default function AdminRecentActivity({ events }: Props) {
       <div className="divide-y divide-white/10">
         {visibleItems.map((event) => {
           const Icon = getEventIcon(event.type);
+          const eventClass = getEventClass(event.type);
+          const studentName = getStudentName(event);
 
           return (
             <div
@@ -125,9 +218,7 @@ export default function AdminRecentActivity({ events }: Props) {
             >
               <div className="flex min-w-0 items-center gap-3">
                 <div
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${getIconClass(
-                    event.type,
-                  )}`}
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${eventClass.icon}`}
                 >
                   <Icon className="h-5 w-5" />
                 </div>
@@ -137,19 +228,23 @@ export default function AdminRecentActivity({ events }: Props) {
                     {formatEventLabel(event.type, event.description)}
                   </p>
 
-                  <p className="mt-1 truncate text-xs text-slate-500">
-                    {event.session_id
-                      ? `Session ID: ${event.session_id}`
-                      : "System event"}
-                  </p>
+                  <div className="mt-1 space-y-0.5 text-xs text-slate-500">
+                    <p className="truncate">
+                      {studentName ? studentName : "Unknown student"}
+                    </p>
+
+                    <p className="truncate">
+                      {event.session_id
+                        ? `Session ID: ${event.session_id}`
+                        : "System event"}
+                    </p>
+                  </div>
                 </div>
               </div>
 
               <div>
                 <span
-                  className={`inline-flex rounded-lg px-3 py-1 text-xs font-semibold ${getBadgeClass(
-                    event.type,
-                  )}`}
+                  className={`inline-flex rounded-lg border px-3 py-1 text-xs font-semibold ${eventClass.badge}`}
                 >
                   {event.type || "activity"}
                 </span>

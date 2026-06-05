@@ -146,7 +146,9 @@ export default async function AdminDashboardPage() {
 
   const { data: recentEvents } = await supabase
     .from("session_events")
-    .select("id, session_id, type, timestamp, description")
+    .select(
+      "id, session_id, type, timestamp, description, sessions(student_name)",
+    )
     .order("timestamp", { ascending: false })
     .range(0, Math.max(activityLogsCount - 1, 0));
 
