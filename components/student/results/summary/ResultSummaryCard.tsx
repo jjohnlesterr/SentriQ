@@ -32,7 +32,7 @@ function formatDuration(seconds?: number) {
   return `${minutes}m ${remainingSeconds}s`;
 }
 
-function getResultCopy(status: QuizSession["status"], studentName: string) {
+function getResultCopy(status: QuizSession["status"]) {
   if (status === "timed-out") {
     return {
       title: "Time Expired",
@@ -48,8 +48,7 @@ function getResultCopy(status: QuizSession["status"], studentName: string) {
   if (status === "abandoned") {
     return {
       title: "Session Abandoned",
-      description:
-        "Your session was closed because no activity was detected for more than 5 minutes.",
+      description: "Your session was marked inactive for more than 5 minutes.",
       icon: AlertTriangle,
       iconClassName: "border-orange-400/20 bg-orange-500/10 text-orange-300",
       scoreClassName: "border-orange-400/20 bg-orange-500/10 text-orange-100",
@@ -59,7 +58,7 @@ function getResultCopy(status: QuizSession["status"], studentName: string) {
 
   return {
     title: "Quiz Complete!",
-    description: `Great job, ${studentName}!`,
+    description: "Great job on completing the quiz!",
     icon: PartyPopper,
     iconClassName: "border-violet-400/20 bg-violet-500/10 text-violet-300",
     scoreClassName: "border-violet-400/20 bg-violet-500/10 text-violet-100",
@@ -77,7 +76,7 @@ export default function ResultSummaryCard({
   totalQuestions,
   timeSpentSeconds,
 }: ResultSummaryCardProps) {
-  const resultCopy = getResultCopy(status, studentName);
+  const resultCopy = getResultCopy(status);
   const Icon = resultCopy.icon;
 
   return (
@@ -100,19 +99,11 @@ export default function ResultSummaryCard({
                 </h1>
 
                 <p className="mt-1 text-sm text-slate-400">
-                  {status === "completed" ? (
-                    <>
-                      Great job,{" "}
-                      <span
-                        className={`font-semibold ${resultCopy.nameClassName}`}
-                      >
-                        {studentName}
-                      </span>
-                      !
-                    </>
-                  ) : (
-                    resultCopy.description
-                  )}
+                  <span className={`font-semibold ${resultCopy.nameClassName}`}>
+                    {studentName}
+                  </span>
+                  {" • "}
+                  {resultCopy.description}
                 </p>
               </div>
             </div>
