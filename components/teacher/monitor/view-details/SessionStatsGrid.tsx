@@ -60,6 +60,48 @@ function getScore(session: QuizSession, quiz: Quiz | null) {
   };
 }
 
+function formatTimeSpent(session: QuizSession) {
+  if (!session.startedAt) return "—";
+
+  const startedAtMs = new Date(session.startedAt).getTime();
+
+  if (Number.isNaN(startedAtMs)) return "—";
+
+  const endedAt =
+    session.completedAt || session.timedOutAt || new Date().toISOString();
+
+  const endedAtMs = new Date(endedAt).getTime();
+
+  if (Number.isNaN(endedAtMs)) return "—";
+
+  const totalSeconds = Math.max(
+    0,
+    Math.floor((endedAtMs - startedAtMs) / 1000),
+  );
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+
+  if (minutes > 0) {
+    return `${minutes}m ${seconds}s`;
+  }
+
+  return `${seconds}s`;
+}
+
+function getStatusTone(status: QuizSession["status"]) {
+  if (status === "completed") return "success";
+  if (status === "timed-out") return "warning";
+  if (status === "abandoned") return "danger";
+  if (status === "in-progress") return "info";
+
+  return "default";
+}
+
 function StatCard({
   label,
   value,
@@ -72,8 +114,8 @@ function StatCard({
   const toneClass = {
     default: "text-white",
     success: "text-emerald-300",
-    warning: "text-orange-300",
-    danger: "text-red-300",
+    warning: "text-yellow-300",
+    danger: "text-red-400",
     info: "text-cyan-300",
   }[tone];
 
@@ -94,13 +136,14 @@ export default function SessionStatsGrid({ session, quiz }: Props) {
   const copyAttempt = countEvents(session, "copy-attempt");
   const pasteAttempt = countEvents(session, "paste-attempt");
   const score = getScore(session, quiz);
+  const timeSpent = formatTimeSpent(session);
 
   return (
     <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-8">
       <StatCard
         label="Status"
         value={session.status}
-        tone={session.status === "completed" ? "success" : "info"}
+        tone={getStatusTone(session.status)}
       />
 
       <StatCard
@@ -111,11 +154,7 @@ export default function SessionStatsGrid({ session, quiz }: Props) {
         tone={score.total > 0 ? "success" : "default"}
       />
 
-      <StatCard
-        label="Tab Switches"
-        value={session.tabSwitches}
-        tone={session.tabSwitches > 0 ? "danger" : "success"}
-      />
+      <StatCard label="Time Spent" value={timeSpent} tone="info" />
 
       <StatCard
         label="Tab Left"
