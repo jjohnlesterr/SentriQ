@@ -66,16 +66,16 @@ function getAccentClass(session: QuizSession) {
     return "border-red-500/20 bg-red-950/10 before:bg-red-500";
   }
 
-  if (isAbandoned(session)) {
-    return "border-orange-500/20 bg-orange-950/10 before:bg-orange-400";
+if (isAbandoned(session)) {
+  return "border-red-500/20 bg-orange-950/10 before:bg-red-500";
+}
+
+  if (isTimedOut(session)) {
+    return "before:bg-yellow-400";
   }
 
   if (isCompleted(session)) {
     return "before:bg-emerald-400";
-  }
-
-  if (isTimedOut(session)) {
-    return "before:bg-yellow-400";
   }
 
   if (isInProgress(session)) {
@@ -339,9 +339,11 @@ export default function SessionCard({
             <p
               className={
                 isFinished(session) && !kicked
-                  ? isAbandoned(session) || isTimedOut(session)
-                    ? "text-xl font-black text-orange-300 md:text-2xl"
-                    : "text-xl font-black text-emerald-300 md:text-2xl"
+                  ? isAbandoned(session)
+                    ? "text-xl font-black text-red-500 md:text-2xl"
+                    : isTimedOut(session)
+                      ? "text-xl font-black text-yellow-300 md:text-2xl"
+                      : "text-xl font-black text-emerald-300 md:text-2xl"
                   : kicked
                     ? "text-xl font-black text-red-300 md:text-2xl"
                     : "text-xl font-black text-slate-500 md:text-2xl"

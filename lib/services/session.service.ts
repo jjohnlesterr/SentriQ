@@ -49,6 +49,7 @@ type SessionRow = {
   student_id: string;
   started_at: string;
   completed_at: string | null;
+  timed_out_at: string | null;
   current_question: number;
   answers: Record<string, number | string>;
   tab_switches: number;
@@ -121,6 +122,7 @@ function mapSessionRow(row: SessionRow): QuizSession {
     quizSnapshot: row.quiz_snapshot ?? undefined,
     startedAt: new Date(row.started_at),
     completedAt: row.completed_at ? new Date(row.completed_at) : undefined,
+    timedOutAt: row.timed_out_at ? new Date(row.timed_out_at) : undefined,
     currentQuestion: row.current_question,
     answers: row.answers || {},
     tabSwitches: row.tab_switches,
@@ -535,7 +537,7 @@ export async function cleanupInactiveSessionsService() {
     .update({
       status: "abandoned",
       completed_at: now,
-      timed_out_at: now,
+      timed_out_at: null,
     })
     .in("id", sessionIds)
     .eq("status", "in-progress");

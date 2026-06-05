@@ -35,6 +35,14 @@ function isKicked(session: QuizSession) {
   return session.approvalStatus === "rejected" && wasApprovedBefore(session);
 }
 
+function isClosedSession(session: QuizSession) {
+  return (
+    session.status === "completed" ||
+    session.status === "timed-out" ||
+    session.status === "abandoned"
+  );
+}
+
 function sortKickedLast(items: QuizSession[]) {
   return [...items].sort((a, b) => {
     if (isKicked(a) && !isKicked(b)) return 1;
@@ -74,13 +82,13 @@ export function useTeacherMonitor() {
       setTeacherId(teacherSession.user.id);
       setTeacherName(teacherSession.user.email ?? "Teacher");
 
-await cleanupInactiveSessions();
+      await cleanupInactiveSessions();
 
-const [quizData, sessionData, teacherQuizzes] = await Promise.all([
-  getQuizById(quizId),
-  getQuizSessions(quizId),
-  getTeacherQuizzes(teacherSession.user.id),
-]);
+      const [quizData, sessionData, teacherQuizzes] = await Promise.all([
+        getQuizById(quizId),
+        getQuizSessions(quizId),
+        getTeacherQuizzes(teacherSession.user.id),
+      ]);
 
       setQuiz(quizData);
       setRawSessions(sessionData);
@@ -94,19 +102,19 @@ const [quizData, sessionData, teacherQuizzes] = await Promise.all([
     }
   }, [quizId, router]);
 
-const loadSessionsOnly = useCallback(async () => {
-  try {
-    await cleanupInactiveSessions();
+  const loadSessionsOnly = useCallback(async () => {
+    try {
+      await cleanupInactiveSessions();
 
-    const sessionData = await getQuizSessions(quizId);
+      const sessionData = await getQuizSessions(quizId);
 
-    setRawSessions(sessionData);
-    setLastUpdated(new Date());
-    setNow(Date.now());
-  } catch (error) {
-    console.error("Teacher monitor sessions load error:", error);
-  }
-}, [quizId]);
+      setRawSessions(sessionData);
+      setLastUpdated(new Date());
+      setNow(Date.now());
+    } catch (error) {
+      console.error("Teacher monitor sessions load error:", error);
+    }
+  }, [quizId]);
 
   useEffect(() => {
     const id = requestAnimationFrame(() => {
@@ -163,12 +171,8 @@ const loadSessionsOnly = useCallback(async () => {
     () =>
       rawSessions.map((session) => {
         if (isKicked(session)) return session;
+        if (isClosedSession(session)) return session;
         if (!quiz?.timeLimitMinutes) return session;
-
-        if (session.status === "completed" || session.status === "timed-out") {
-          return session;
-        }
-
         if (!session.startedAt) return session;
 
         const startedAtMs = new Date(session.startedAt).getTime();
@@ -318,7 +322,7 @@ const loadSessionsOnly = useCallback(async () => {
         (session) =>
           session.status === "completed" ||
           session.status === "timed-out" ||
-          !!session.completedAt,
+          session.status === "abandoned",
       ),
     [approvedOnly],
   );
