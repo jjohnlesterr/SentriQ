@@ -103,11 +103,13 @@ export default async function AdminQuizzesPage() {
             </p>
           </div>
 
-          <AdminQuizzesTable
-            initialQuizzes={firstPage.quizzes}
-            initialHasMore={firstPage.hasMore}
-            pageSize={PAGE_SIZE}
-          />
+          <div className="px-5 pb-5">
+            <AdminQuizzesTable
+              initialQuizzes={firstPage.quizzes}
+              initialHasMore={firstPage.hasMore}
+              pageSize={PAGE_SIZE}
+            />
+          </div>
         </GlassCard>
       </div>
     </AdminShell>

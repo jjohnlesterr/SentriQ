@@ -70,9 +70,21 @@ export default async function AdminUsersPage() {
 
         <div className="-mx-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:-mx-6 sm:px-6 md:mx-0 md:overflow-visible md:px-0 md:pb-0">
           <div className="flex w-max gap-3 pr-4 md:grid md:w-full md:grid-cols-4 md:gap-4 md:pr-0">
-            <StatCard title="Total Users" value={stats.totalUsers} icon={Users} />
-            <StatCard title="Admins" value={stats.adminCount} icon={ShieldCheck} />
-            <StatCard title="Teachers" value={stats.teacherCount} icon={UserCog} />
+            <StatCard
+              title="Total Users"
+              value={stats.totalUsers}
+              icon={Users}
+            />
+            <StatCard
+              title="Admins"
+              value={stats.adminCount}
+              icon={ShieldCheck}
+            />
+            <StatCard
+              title="Teachers"
+              value={stats.teacherCount}
+              icon={UserCog}
+            />
             <StatCard
               title="Active This Week"
               value={stats.activeUsersCount}
@@ -101,13 +113,15 @@ export default async function AdminUsersPage() {
             )}
           </div>
 
-          <AdminUsersTable
-            initialUsers={firstPage.users}
-            initialHasMore={firstPage.hasMore}
-            pageSize={PAGE_SIZE}
-            currentUserId={currentUser?.id ?? null}
-            adminCount={stats.adminCount}
-          />
+          <div className="px-5 pb-5">
+            <AdminUsersTable
+              initialUsers={firstPage.users}
+              initialHasMore={firstPage.hasMore}
+              pageSize={PAGE_SIZE}
+              currentUserId={currentUser?.id ?? null}
+              adminCount={stats.adminCount}
+            />
+          </div>
         </GlassCard>
       </div>
     </AdminShell>
