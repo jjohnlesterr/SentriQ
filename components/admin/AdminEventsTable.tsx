@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -8,6 +8,7 @@ import {
   Clipboard,
   ClipboardPaste,
   Eye,
+  Loader2,
   Maximize,
   RefreshCcw,
   Search,
@@ -25,6 +26,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { getAdminEventsPageAction } from "@/lib/actions/admin.actions";
 
 type SessionEvent = {
   id: string;
@@ -113,33 +115,100 @@ function getEventClass(type: string | null) {
 }
 
 export default function AdminEventsTable({
-  events,
+  initialEvents,
+  initialHasMore,
+  pageSize,
 }: {
-  events: SessionEvent[];
+  initialEvents: SessionEvent[];
+  initialHasMore: boolean;
+  pageSize: number;
 }) {
+  const [events, setEvents] = useState<SessionEvent[]>(initialEvents);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(initialHasMore);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [eventTypeFilter, setEventTypeFilter] = useState("all");
   const [selectedEvent, setSelectedEvent] = useState<SessionEvent | null>(null);
+  const [isLoadingMore, startLoadingMore] = useTransition();
+  const [isRefreshing, startRefreshing] = useTransition();
+  const loaderRef = useRef<HTMLDivElement | null>(null);
 
-  const eventTypes = Array.from(
-    new Set(events.map((event) => event.type).filter(Boolean)),
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedSearch(search.trim());
+    }, 350);
+
+    return () => window.clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    startRefreshing(async () => {
+      const result = await getAdminEventsPageAction({
+        page: 0,
+        pageSize,
+        search: debouncedSearch,
+        eventType: eventTypeFilter,
+      });
+
+      setEvents(result.events);
+      setHasMore(result.hasMore);
+      setPage(0);
+    });
+  }, [debouncedSearch, eventTypeFilter, pageSize]);
+
+  useEffect(() => {
+    const node = loaderRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const firstEntry = entries[0];
+
+        if (!firstEntry?.isIntersecting || !hasMore || isLoadingMore) return;
+
+        startLoadingMore(async () => {
+          const nextPage = page + 1;
+
+          const result = await getAdminEventsPageAction({
+            page: nextPage,
+            pageSize,
+            search: debouncedSearch,
+            eventType: eventTypeFilter,
+          });
+
+          setEvents((current) => {
+            const existingIds = new Set(current.map((event) => event.id));
+            const nextEvents = result.events.filter(
+              (event) => !existingIds.has(event.id),
+            );
+
+            return [...current, ...nextEvents];
+          });
+
+          setHasMore(result.hasMore);
+          setPage(nextPage);
+        });
+      },
+      { rootMargin: "300px" },
+    );
+
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, [
+    hasMore,
+    isLoadingMore,
+    page,
+    pageSize,
+    debouncedSearch,
+    eventTypeFilter,
+  ]);
+
+  const eventTypes = useMemo(
+    () => Array.from(new Set(events.map((event) => event.type).filter(Boolean))),
+    [events],
   );
-
-const query = search.trim().toLowerCase();
-
-const filteredEvents = events.filter((event) => {
-  const matchesSearch =
-    (event.type ?? "").toLowerCase().includes(query) ||
-    (event.session_id ?? "").toLowerCase().includes(query) ||
-    (event.description ?? "").toLowerCase().includes(query);
-
-  const matchesEventType =
-    eventTypeFilter === "all"
-      ? true
-      : event.type === eventTypeFilter;
-
-  return matchesSearch && matchesEventType;
-});
 
   return (
     <>
@@ -149,15 +218,15 @@ const filteredEvents = events.filter((event) => {
 
           <Input
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search event, student, quiz, or description..."
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search event, session, or description..."
             className="h-11 pl-11"
           />
         </div>
 
         <select
           value={eventTypeFilter}
-          onChange={(e) => setEventTypeFilter(e.target.value)}
+          onChange={(event) => setEventTypeFilter(event.target.value)}
           className="h-11 rounded-xl border border-white/10 bg-black/20 px-4 pr-10 text-sm text-white outline-none"
         >
           <option value="all">All events</option>
@@ -168,6 +237,13 @@ const filteredEvents = events.filter((event) => {
           ))}
         </select>
       </div>
+
+      {isRefreshing && (
+        <div className="flex items-center gap-2 border-b border-white/10 px-5 py-3 text-sm text-slate-400">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Refreshing activity logs...
+        </div>
+      )}
 
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[1180px] table-auto text-left text-sm">
@@ -183,7 +259,7 @@ const filteredEvents = events.filter((event) => {
           </thead>
 
           <tbody>
-            {filteredEvents.map((event) => {
+            {events.map((event) => {
               const Icon = getEventIcon(event.type);
 
               return (
@@ -285,7 +361,7 @@ const filteredEvents = events.filter((event) => {
               );
             })}
 
-            {!filteredEvents.length && (
+            {!events.length && !isRefreshing && (
               <tr>
                 <td
                   colSpan={6}
@@ -300,7 +376,7 @@ const filteredEvents = events.filter((event) => {
       </div>
 
       <div className="divide-y divide-white/10 md:hidden">
-        {filteredEvents.map((event) => {
+        {events.map((event) => {
           const Icon = getEventIcon(event.type);
 
           return (
@@ -371,11 +447,24 @@ const filteredEvents = events.filter((event) => {
           );
         })}
 
-        {!filteredEvents.length && (
+        {!events.length && !isRefreshing && (
           <div className="px-5 py-10 text-center text-slate-400">
             No activity logs found.
           </div>
         )}
+      </div>
+
+      <div ref={loaderRef} className="px-5 py-5 text-center text-sm text-slate-400">
+        {isLoadingMore ? (
+          <span className="inline-flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Loading more activity logs...
+          </span>
+        ) : hasMore ? (
+          "Scroll to load more activity logs"
+        ) : events.length > 0 ? (
+          "No more activity logs to load."
+        ) : null}
       </div>
 
       <Dialog
