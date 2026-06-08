@@ -1,14 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import {
   BookOpen,
-  Clock,
+  Calendar,
   Eye,
   FileQuestion,
-  Lock,
+  Loader2,
   Search,
-  Unlock,
+  User,
 } from "lucide-react";
 
 import DeleteQuizButton from "@/components/admin/DeleteQuizButton";
@@ -21,197 +21,182 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-
-type Question = {
-  id: string;
-  quiz_id: string | null;
-  type: string | null;
-  text: string | null;
-  options: string[] | null;
-  correct_answer: number | null;
-  correct_text?: string | null;
-  correct_text_answer?: string | null;
-  position: number | null;
-  created_at: string | null;
-};
+import { getAdminQuizzesPageAction } from "@/lib/actions/admin.actions";
 
 type Quiz = {
   id: string;
   title: string | null;
   description: string | null;
   code: string | null;
-  created_by: string | null;
-  creator_email: string | null;
-  published: boolean | null;
-  status: string | null;
   created_at: string | null;
-  time_limit_minutes: number | null;
-  join_locked: boolean | null;
-  questions: Question[];
+  creator_email: string | null;
   question_count: number;
   session_count: number;
-};
-
-type AdminQuizzesTableProps = {
-  quizzes: Quiz[];
+  status?: string | null;
 };
 
 function formatDate(dateValue: string | null) {
   if (!dateValue) return "—";
-  return new Date(dateValue).toLocaleDateString();
+
+  return new Date(dateValue).toLocaleString();
 }
 
-function formatStatus(quiz: Quiz) {
-  if (quiz.published === true || quiz.status === "published") {
-    return "Published";
-  }
-
-  if (quiz.status === "draft") return "Draft";
-
-  return quiz.status || "Unknown";
-}
-
-function getStatusClass(quiz: Quiz) {
-  if (quiz.published === true || quiz.status === "published") {
-    return "border-emerald-400/20 bg-emerald-500/10 text-emerald-200";
-  }
-
-  if (quiz.status === "draft" || quiz.published === false) {
-    return "border-yellow-400/20 bg-yellow-500/10 text-yellow-200";
-  }
-
-  return "border-white/10 bg-white/5 text-slate-300";
-}
-
-function formatQuestionType(type: string | null) {
-  if (type === "multiple_choice") return "Multiple Choice";
-  if (type === "true_false") return "True / False";
-  if (type === "identification") return "Identification";
-
-  return type || "Question";
-}
-
-function getCorrectAnswer(question: Question) {
-  const textAnswer = question.correct_text ?? question.correct_text_answer;
-
-  if (textAnswer) return textAnswer;
-
-  if (
-    Array.isArray(question.options) &&
-    question.correct_answer !== null &&
-    question.options[question.correct_answer]
-  ) {
-    return question.options[question.correct_answer];
-  }
-
-  return "—";
-}
-
-export default function AdminQuizzesTable({ quizzes }: AdminQuizzesTableProps) {
+export default function AdminQuizzesTable({
+  initialQuizzes,
+  initialHasMore,
+  pageSize,
+}: {
+  initialQuizzes: Quiz[];
+  initialHasMore: boolean;
+  pageSize: number;
+}) {
+  const [quizzes, setQuizzes] = useState<Quiz[]>(initialQuizzes);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(initialHasMore);
   const [search, setSearch] = useState("");
-  const [publishedFilter, setPublishedFilter] = useState("all");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
 
-  const filteredQuizzes = useMemo(() => {
-    const query = search.trim().toLowerCase();
+  const [isLoadingMore, startLoadingMore] = useTransition();
+  const [isRefreshing, startRefreshing] = useTransition();
 
-    return quizzes.filter((quiz) => {
-      const matchesSearch =
-        (quiz.title ?? "").toLowerCase().includes(query) ||
-        (quiz.description ?? "").toLowerCase().includes(query) ||
-        (quiz.code ?? "").toLowerCase().includes(query) ||
-        (quiz.creator_email ?? "").toLowerCase().includes(query);
+  const loaderRef = useRef<HTMLDivElement | null>(null);
 
-      const isPublished =
-        quiz.published === true || quiz.status === "published";
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedSearch(search.trim());
+    }, 350);
 
-      const matchesPublished =
-        publishedFilter === "all"
-          ? true
-          : publishedFilter === "published"
-            ? isPublished
-            : !isPublished;
+    return () => window.clearTimeout(timer);
+  }, [search]);
 
-      return matchesSearch && matchesPublished;
+  useEffect(() => {
+    startRefreshing(async () => {
+      const result = await getAdminQuizzesPageAction({
+        page: 0,
+        pageSize,
+        search: debouncedSearch,
+        status: "all",
+      });
+
+      setQuizzes(result.quizzes);
+      setHasMore(result.hasMore);
+      setPage(0);
     });
-  }, [quizzes, search, publishedFilter]);
+  }, [debouncedSearch, pageSize]);
+
+  useEffect(() => {
+    const node = loaderRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const firstEntry = entries[0];
+
+        if (!firstEntry?.isIntersecting || !hasMore || isLoadingMore) return;
+
+        startLoadingMore(async () => {
+          const nextPage = page + 1;
+
+          const result = await getAdminQuizzesPageAction({
+            page: nextPage,
+            pageSize,
+            search: debouncedSearch,
+            status: "all",
+          });
+
+          setQuizzes((current) => {
+            const existingIds = new Set(current.map((quiz) => quiz.id));
+
+            const nextRows = result.quizzes.filter(
+              (quiz) => !existingIds.has(quiz.id),
+            );
+
+            return [...current, ...nextRows];
+          });
+
+          setHasMore(result.hasMore);
+          setPage(nextPage);
+        });
+      },
+      {
+        rootMargin: "300px",
+      },
+    );
+
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, [hasMore, isLoadingMore, page, pageSize, debouncedSearch]);
 
   return (
     <>
-      <div className="grid gap-3 border-b border-white/10 px-5 py-4 md:grid-cols-[1fr_220px]">
+      <div className="border-b border-white/10 px-5 py-4">
         <div className="relative">
           <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
 
           <Input
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search quiz title, code, description, or creator..."
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search quizzes..."
             className="h-11 pl-11"
           />
         </div>
-
-        <select
-          value={publishedFilter}
-          onChange={(e) => setPublishedFilter(e.target.value)}
-          className="h-11 rounded-xl border border-white/10 bg-black/20 px-4 text-sm text-white outline-none"
-        >
-          <option value="all">All quizzes</option>
-          <option value="published">Published only</option>
-          <option value="draft">Draft/unpublished</option>
-        </select>
       </div>
 
+      {isRefreshing && (
+        <div className="flex items-center gap-2 border-b border-white/10 px-5 py-3 text-sm text-slate-400">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Refreshing quizzes...
+        </div>
+      )}
+
       <div className="hidden overflow-x-auto md:block">
-        <table className="w-full min-w-[1200px] table-auto text-left text-sm">
+        <table className="w-full min-w-[1100px] table-fixed text-left text-sm">
           <thead className="border-b border-white/10 text-slate-400">
             <tr>
-              <th className="w-[320px] px-5 py-3 font-medium">Quiz</th>
-              <th className="w-[240px] px-5 py-3 font-medium">Creator</th>
-              <th className="w-[130px] px-5 py-3 font-medium">Questions</th>
-              <th className="w-[130px] px-5 py-3 font-medium">Sessions</th>
-              <th className="w-[140px] px-5 py-3 font-medium">Status</th>
-              <th className="w-[140px] px-5 py-3 font-medium">Created</th>
-              <th className="w-[230px] px-5 py-3 font-medium">Actions</th>
+              <th className="w-[360px] px-5 py-3 font-medium">Quiz</th>
+              <th className="w-[230px] px-5 py-3 font-medium">Creator</th>
+              <th className="w-[120px] px-5 py-3 font-medium">Questions</th>
+              <th className="w-[120px] px-5 py-3 font-medium">Attempts</th>
+              <th className="w-[190px] px-5 py-3 font-medium">Created</th>
+              <th className="w-[180px] px-5 py-3 font-medium">Actions</th>
             </tr>
           </thead>
 
           <tbody>
-            {filteredQuizzes.map((quiz) => (
+            {quizzes.map((quiz) => (
               <tr key={quiz.id} className="border-b border-white/5">
                 <td className="px-5 py-4">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
-                      <BookOpen className="h-5 w-5" />
-                    </div>
+                  <div className="min-w-0">
+                    <p
+                      className="max-w-[300px] truncate font-medium text-white"
+                      title={quiz.title || "Untitled Quiz"}
+                    >
+                      {quiz.title || "Untitled Quiz"}
+                    </p>
 
-                    <div className="min-w-0">
+                    {quiz.description && (
                       <p
-                        title={quiz.title || "Untitled quiz"}
-                        className="max-w-[260px] truncate font-semibold text-white"
+                        className="mt-1 max-w-[320px] truncate text-xs text-slate-500"
+                        title={quiz.description}
                       >
-                        {quiz.title || "Untitled quiz"}
+                        {quiz.description}
                       </p>
+                    )}
 
-                      <p
-                        title={quiz.description || "No description"}
-                        className="mt-1 max-w-[280px] truncate text-xs text-slate-500"
-                      >
-                        {quiz.description || "No description"}
-                      </p>
-
-                      <p className="mt-1 text-xs text-cyan-300">
-                        Code: {quiz.code || "—"}
-                      </p>
-                    </div>
+                    <p className="mt-1 max-w-[160px] truncate text-xs text-cyan-300">
+                      Code: {quiz.code || "—"}
+                    </p>
                   </div>
                 </td>
 
-                <td className="px-5 py-4 text-slate-400">
+                <td className="px-5 py-4 text-slate-300">
                   <span
-                    title={quiz.creator_email || "—"}
-                    className="block max-w-[220px] truncate"
+                    className="block max-w-[190px] truncate"
+                    title={quiz.creator_email || "Unknown"}
                   >
-                    {quiz.creator_email || "—"}
+                    {quiz.creator_email || "Unknown"}
                   </span>
                 </td>
 
@@ -223,18 +208,13 @@ export default function AdminQuizzesTable({ quizzes }: AdminQuizzesTableProps) {
                   {quiz.session_count}
                 </td>
 
-                <td className="px-5 py-4">
-                  <span
-                    className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getStatusClass(
-                      quiz,
-                    )}`}
-                  >
-                    {formatStatus(quiz)}
-                  </span>
-                </td>
-
                 <td className="px-5 py-4 text-slate-400">
-                  {formatDate(quiz.created_at)}
+                  <span
+                    className="block max-w-[160px] truncate"
+                    title={formatDate(quiz.created_at)}
+                  >
+                    {formatDate(quiz.created_at)}
+                  </span>
                 </td>
 
                 <td className="px-5 py-4">
@@ -244,22 +224,25 @@ export default function AdminQuizzesTable({ quizzes }: AdminQuizzesTableProps) {
                       variant="ghost"
                       size="sm"
                       onClick={() => setSelectedQuiz(quiz)}
-                      className="h-10 w-[95px]"
+                      className="h-10 w-[85px]"
                     >
                       <Eye className="h-4 w-4" />
                       View
                     </Button>
 
-                    <DeleteQuizButton quizId={quiz.id} />
+                    <DeleteQuizButton
+                      quizId={quiz.id}
+                      quizTitle={quiz.title || "this quiz"}
+                    />
                   </div>
                 </td>
               </tr>
             ))}
 
-            {!filteredQuizzes.length && (
+            {!quizzes.length && !isRefreshing && (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={6}
                   className="px-5 py-10 text-center text-slate-400"
                 >
                   No quizzes found.
@@ -271,63 +254,60 @@ export default function AdminQuizzesTable({ quizzes }: AdminQuizzesTableProps) {
       </div>
 
       <div className="divide-y divide-white/10 md:hidden">
-        {filteredQuizzes.map((quiz) => (
+        {quizzes.map((quiz) => (
           <div key={quiz.id} className="space-y-4 px-5 py-5">
-            <div className="flex min-w-0 items-start gap-3">
+            <div className="flex items-start gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
                 <BookOpen className="h-5 w-5" />
               </div>
 
               <div className="min-w-0 flex-1">
                 <p
-                  title={quiz.title || "Untitled quiz"}
                   className="truncate text-sm font-semibold text-white"
+                  title={quiz.title || "Untitled Quiz"}
                 >
-                  {quiz.title || "Untitled quiz"}
+                  {quiz.title || "Untitled Quiz"}
+                </p>
+
+                {quiz.description && (
+                  <p
+                    className="mt-1 line-clamp-2 text-xs text-slate-500"
+                    title={quiz.description}
+                  >
+                    {quiz.description}
+                  </p>
+                )}
+
+                <p className="mt-1 truncate text-xs text-cyan-300">
+                  Code: {quiz.code || "—"}
                 </p>
 
                 <p
-                  title={quiz.description || "No description"}
                   className="mt-1 truncate text-xs text-slate-500"
+                  title={quiz.creator_email || "Unknown"}
                 >
-                  {quiz.description || "No description"}
+                  {quiz.creator_email || "Unknown"}
                 </p>
-
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <span
-                    className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getStatusClass(
-                      quiz,
-                    )}`}
-                  >
-                    {formatStatus(quiz)}
-                  </span>
-
-                  <span className="inline-flex rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-medium text-cyan-200">
-                    {quiz.question_count} Questions
-                  </span>
-                </div>
               </div>
             </div>
 
             <div className="grid gap-3 rounded-2xl border border-white/10 bg-white/[0.02] p-4 text-sm">
               <div className="flex justify-between gap-3">
-                <span className="text-slate-500">Creator</span>
-                <span
-                  title={quiz.creator_email || "—"}
-                  className="max-w-[190px] truncate text-right text-slate-300"
-                >
-                  {quiz.creator_email || "—"}
-                </span>
+                <span className="text-slate-500">Questions</span>
+                <span className="text-slate-300">{quiz.question_count}</span>
               </div>
 
               <div className="flex justify-between gap-3">
-                <span className="text-slate-500">Sessions</span>
+                <span className="text-slate-500">Attempts</span>
                 <span className="text-slate-300">{quiz.session_count}</span>
               </div>
 
               <div className="flex justify-between gap-3">
                 <span className="text-slate-500">Created</span>
-                <span className="text-slate-300">
+                <span
+                  className="max-w-[180px] truncate text-right text-slate-300"
+                  title={formatDate(quiz.created_at)}
+                >
                   {formatDate(quiz.created_at)}
                 </span>
               </div>
@@ -335,7 +315,6 @@ export default function AdminQuizzesTable({ quizzes }: AdminQuizzesTableProps) {
 
             <div className="grid gap-2">
               <Button
-                type="button"
                 variant="ghost"
                 onClick={() => setSelectedQuiz(quiz)}
                 className="h-11 w-full"
@@ -344,155 +323,118 @@ export default function AdminQuizzesTable({ quizzes }: AdminQuizzesTableProps) {
                 View Details
               </Button>
 
-              <DeleteQuizButton quizId={quiz.id} />
+              <DeleteQuizButton
+                quizId={quiz.id}
+                quizTitle={quiz.title || "this quiz"}
+              />
             </div>
           </div>
         ))}
 
-        {!filteredQuizzes.length && (
+        {!quizzes.length && !isRefreshing && (
           <div className="px-5 py-10 text-center text-slate-400">
             No quizzes found.
           </div>
         )}
       </div>
 
+      <div
+        ref={loaderRef}
+        className="px-5 py-5 text-center text-sm text-slate-400"
+      >
+        {isLoadingMore ? (
+          <span className="inline-flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Loading more quizzes...
+          </span>
+        ) : hasMore ? (
+          "Scroll to load more quizzes"
+        ) : quizzes.length > 0 ? (
+          "No more quizzes."
+        ) : null}
+      </div>
+
       <Dialog
         open={selectedQuiz !== null}
         onOpenChange={() => setSelectedQuiz(null)}
       >
-        <DialogContent className="max-h-[85vh] w-[calc(100vw-2rem)] max-w-4xl overflow-y-auto border-cyan-400/20 bg-slate-950 p-5 sm:p-6">
+        <DialogContent className="max-h-[85vh] w-[calc(100vw-2rem)] max-w-3xl overflow-y-auto border-cyan-400/20 bg-slate-950">
           {selectedQuiz && (
             <>
               <DialogHeader>
-                <DialogTitle className="break-words text-2xl">
-                  {selectedQuiz.title || "Untitled quiz"}
+                <DialogTitle
+                  className="break-words"
+                  title={selectedQuiz.title || "Untitled Quiz"}
+                >
+                  {selectedQuiz.title || "Untitled Quiz"}
                 </DialogTitle>
 
-                <DialogDescription className="break-words">
-                  {selectedQuiz.description ||
-                    "Review quiz metadata, questions, options, and correct answers."}
+                <DialogDescription>
+                  Quiz information and usage statistics.
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="mt-5 grid gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm md:grid-cols-2">
-                <div>
-                  <p className="text-slate-500">Code</p>
-                  <p className="mt-1 font-semibold text-cyan-300">
-                    {selectedQuiz.code || "—"}
-                  </p>
-                </div>
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                <div className="min-w-0 rounded-2xl border border-white/10 p-4">
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <User className="h-4 w-4 text-cyan-300" />
+                    Creator
+                  </div>
 
-                <div>
-                  <p className="text-slate-500">Creator</p>
-                  <p className="mt-1 truncate text-white">
-                    {selectedQuiz.creator_email || "—"}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-slate-500">Status</p>
-                  <span
-                    className={`mt-1 inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getStatusClass(
-                      selectedQuiz,
-                    )}`}
+                  <p
+                    className="mt-2 truncate text-sm text-white"
+                    title={selectedQuiz.creator_email || "Unknown"}
                   >
-                    {formatStatus(selectedQuiz)}
-                  </span>
+                    {selectedQuiz.creator_email || "Unknown"}
+                  </p>
                 </div>
 
-                <div>
-                  <p className="text-slate-500">Created</p>
-                  <p className="mt-1 text-white">
+                <div className="min-w-0 rounded-2xl border border-white/10 p-4">
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <Calendar className="h-4 w-4 text-cyan-300" />
+                    Created
+                  </div>
+
+                  <p
+                    className="mt-2 truncate text-sm text-white"
+                    title={formatDate(selectedQuiz.created_at)}
+                  >
                     {formatDate(selectedQuiz.created_at)}
                   </p>
                 </div>
 
-                <div>
-                  <p className="text-slate-500">Time Limit</p>
-                  <p className="mt-1 flex items-center gap-2 text-white">
-                    <Clock className="h-4 w-4 text-slate-500" />
-                    {selectedQuiz.time_limit_minutes
-                      ? `${selectedQuiz.time_limit_minutes} minutes`
-                      : "No time limit"}
+                <div className="rounded-2xl border border-white/10 p-4">
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <FileQuestion className="h-4 w-4 text-cyan-300" />
+                    Questions
+                  </div>
+
+                  <p className="mt-2 text-sm text-white">
+                    {selectedQuiz.question_count}
                   </p>
                 </div>
 
-                <div>
-                  <p className="text-slate-500">Join Lock</p>
-                  <p className="mt-1 flex items-center gap-2 text-white">
-                    {selectedQuiz.join_locked ? (
-                      <Lock className="h-4 w-4 text-red-300" />
-                    ) : (
-                      <Unlock className="h-4 w-4 text-emerald-300" />
-                    )}
-                    {selectedQuiz.join_locked ? "Locked" : "Open"}
+                <div className="rounded-2xl border border-white/10 p-4">
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <BookOpen className="h-4 w-4 text-cyan-300" />
+                    Attempts
+                  </div>
+
+                  <p className="mt-2 text-sm text-white">
+                    {selectedQuiz.session_count}
                   </p>
                 </div>
               </div>
 
-              <div className="mt-5">
-                <h3 className="flex items-center gap-2 text-lg font-semibold text-white">
-                  <FileQuestion className="h-5 w-5 text-cyan-300" />
-                  Questions ({selectedQuiz.question_count})
-                </h3>
+              {selectedQuiz.description && (
+                <div className="mt-4 rounded-2xl border border-white/10 p-4">
+                  <p className="text-sm text-slate-400">Description</p>
 
-                <div className="mt-4 space-y-4">
-                  {selectedQuiz.questions.map((question, index) => (
-                    <div
-                      key={question.id}
-                      className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
-                    >
-                      <p className="text-xs font-semibold uppercase tracking-wide text-cyan-300">
-                        Question {index + 1} ·{" "}
-                        {formatQuestionType(question.type)}
-                      </p>
-
-                      <p className="mt-2 break-words font-medium text-white">
-                        {question.text || "Untitled question"}
-                      </p>
-
-                      {Array.isArray(question.options) &&
-                        question.options.length > 0 && (
-                          <div className="mt-4 grid gap-2">
-                            {question.options.map((option, optionIndex) => {
-                              const isCorrect =
-                                question.correct_answer === optionIndex;
-
-                              return (
-                                <div
-                                  key={`${question.id}-${optionIndex}`}
-                                  className={`break-words rounded-xl border px-3 py-2 text-sm ${
-                                    isCorrect
-                                      ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-200"
-                                      : "border-white/10 bg-white/[0.02] text-slate-300"
-                                  }`}
-                                >
-                                  <span className="mr-2 font-semibold">
-                                    {String.fromCharCode(65 + optionIndex)}.
-                                  </span>
-                                  {option}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-
-                      <div className="mt-4 break-words rounded-xl border border-cyan-400/20 bg-cyan-400/10 px-3 py-2 text-sm text-cyan-100">
-                        Correct Answer:{" "}
-                        <span className="font-semibold">
-                          {getCorrectAnswer(question)}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-
-                  {!selectedQuiz.questions.length && (
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-8 text-center text-slate-400">
-                      No questions found for this quiz.
-                    </div>
-                  )}
+                  <p className="mt-2 whitespace-pre-wrap break-words text-sm text-white">
+                    {selectedQuiz.description}
+                  </p>
                 </div>
-              </div>
+              )}
             </>
           )}
         </DialogContent>

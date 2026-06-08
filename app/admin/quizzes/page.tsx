@@ -1,4 +1,3 @@
-import { createClient } from "@supabase/supabase-js";
 import {
   BookOpen,
   CheckCircle2,
@@ -7,24 +6,15 @@ import {
   Users,
 } from "lucide-react";
 
-import AdminShell from "@/components/admin/AdminShell";
 import AdminQuizzesTable from "@/components/admin/AdminQuizzesTable";
+import AdminShell from "@/components/admin/AdminShell";
 import { GlassCard } from "@/components/shared/GlassCard";
+import {
+  getAdminQuizzesPageAction,
+  getQuizStatsAction,
+} from "@/lib/actions/admin.actions";
 
-function createSupabaseAdminClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl) throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL");
-  if (!serviceRoleKey) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
-
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
-}
+const PAGE_SIZE = 50;
 
 function StatCard({
   title,
@@ -50,76 +40,15 @@ function StatCard({
 }
 
 export default async function AdminQuizzesPage() {
-  const supabase = createSupabaseAdminClient();
-
-  const { data: quizzes } = await supabase
-    .from("quizzes")
-    .select(
-      "id, title, description, code, created_by, published, status, created_at, time_limit_minutes, join_locked",
-    )
-    .order("created_at", { ascending: false });
-
-const { data: questions, error: questionsError } = await supabase
-  .from("questions")
-  .select("*")
-  .order("position", { ascending: true });
-
-if (questionsError) {
-  console.error("Questions query failed:", questionsError.message);
-}
-
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("id, email");
-
-  const { data: sessions } = await supabase.from("sessions").select("quiz_id");
-
-  const profilesById = new Map(
-    (profiles ?? []).map((profile) => [profile.id, profile.email]),
-  );
-
-  const questionsByQuizId = new Map<string, NonNullable<typeof questions>>();
-
-  for (const question of questions ?? []) {
-    if (!question.quiz_id) continue;
-
-    const existing = questionsByQuizId.get(question.quiz_id) ?? [];
-    existing.push(question);
-    questionsByQuizId.set(question.quiz_id, existing);
-  }
-
-  const sessionsByQuizId = new Map<string, number>();
-
-  for (const session of sessions ?? []) {
-    if (!session.quiz_id) continue;
-
-    sessionsByQuizId.set(
-      session.quiz_id,
-      (sessionsByQuizId.get(session.quiz_id) ?? 0) + 1,
-    );
-  }
-
-  const enrichedQuizzes =
-    quizzes?.map((quiz) => {
-      const quizQuestions = questionsByQuizId.get(quiz.id) ?? [];
-
-      return {
-        ...quiz,
-        creator_email: quiz.created_by
-          ? (profilesById.get(quiz.created_by) ?? quiz.created_by)
-          : null,
-        questions: quizQuestions,
-        question_count: quizQuestions.length,
-        session_count: sessionsByQuizId.get(quiz.id) ?? 0,
-      };
-    }) ?? [];
-
-  const totalQuizzes = enrichedQuizzes.length;
-  const publishedCount = enrichedQuizzes.filter(
-    (quiz) => quiz.published === true || quiz.status === "published",
-  ).length;
-  const draftCount = totalQuizzes - publishedCount;
-  const totalQuestions = questions?.length ?? 0;
+  const [stats, firstPage] = await Promise.all([
+    getQuizStatsAction(),
+    getAdminQuizzesPageAction({
+      page: 0,
+      pageSize: PAGE_SIZE,
+      search: "",
+      status: "all",
+    }),
+  ]);
 
   return (
     <AdminShell>
@@ -141,16 +70,24 @@ if (questionsError) {
           <div className="flex w-max gap-3 pr-4 md:grid md:w-full md:grid-cols-4 md:gap-4 md:pr-0">
             <StatCard
               title="Total Quizzes"
-              value={totalQuizzes}
+              value={stats.totalQuizzes}
               icon={BookOpen}
             />
             <StatCard
               title="Published"
-              value={publishedCount}
+              value={stats.publishedCount}
               icon={CheckCircle2}
             />
-            <StatCard title="Drafts" value={draftCount} icon={FileQuestion} />
-            <StatCard title="Questions" value={totalQuestions} icon={Users} />
+            <StatCard
+              title="Drafts"
+              value={stats.draftCount}
+              icon={FileQuestion}
+            />
+            <StatCard
+              title="Questions"
+              value={stats.totalQuestions}
+              icon={Users}
+            />
           </div>
         </div>
 
@@ -166,7 +103,11 @@ if (questionsError) {
             </p>
           </div>
 
-          <AdminQuizzesTable quizzes={enrichedQuizzes} />
+          <AdminQuizzesTable
+            initialQuizzes={firstPage.quizzes}
+            initialHasMore={firstPage.hasMore}
+            pageSize={PAGE_SIZE}
+          />
         </GlassCard>
       </div>
     </AdminShell>

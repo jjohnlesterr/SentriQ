@@ -9,9 +9,13 @@ import { deleteQuizAction } from "@/lib/actions/admin.actions";
 
 type DeleteQuizButtonProps = {
   quizId: string;
+  quizTitle?: string;
 };
 
-export default function DeleteQuizButton({ quizId }: DeleteQuizButtonProps) {
+export default function DeleteQuizButton({
+  quizId,
+  quizTitle = "this quiz",
+}: DeleteQuizButtonProps) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -38,7 +42,7 @@ export default function DeleteQuizButton({ quizId }: DeleteQuizButtonProps) {
       <ConfirmDialog
         open={open}
         title="Delete quiz?"
-        description="This quiz will be permanently deleted. This action cannot be undone."
+        description={`This will permanently delete "${quizTitle}". This action cannot be undone.`}
         confirmText="Delete Quiz"
         loadingText="Deleting..."
         confirmVariant="destructive"
