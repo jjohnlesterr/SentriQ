@@ -1,25 +1,15 @@
-import { createClient } from "@supabase/supabase-js";
 import { ShieldCheck, UserCheck, UserCog, Users } from "lucide-react";
 
 import AdminShell from "@/components/admin/AdminShell";
 import AdminUsersTable from "@/components/admin/AdminUsersTable";
 import { GlassCard } from "@/components/shared/GlassCard";
+import {
+  getAdminUsersPageAction,
+  getUserStatsAction,
+} from "@/lib/actions/admin.actions";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-function createSupabaseAdminClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl) throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL");
-  if (!serviceRoleKey) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
-
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
-}
+const PAGE_SIZE = 50;
 
 function StatCard({
   title,
@@ -44,56 +34,23 @@ function StatCard({
   );
 }
 
-function isActiveThisWeek(lastSignInAt: string | null) {
-  if (!lastSignInAt) return false;
-
-  const diffMs = Date.now() - new Date(lastSignInAt).getTime();
-  const diffDays = diffMs / 86400000;
-
-  return diffDays <= 7;
-}
-
 export default async function AdminUsersPage() {
   const supabase = await createSupabaseServerClient();
-  const supabaseAdmin = createSupabaseAdminClient();
 
   const {
     data: { user: currentUser },
   } = await supabase.auth.getUser();
 
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("id, email, role, created_at, is_owner")
-    .order("created_at", { ascending: false });
-
-  const {
-    data: { users: authUsers },
-  } = await supabaseAdmin.auth.admin.listUsers({
-    page: 1,
-    perPage: 1000,
-  });
-
-  const users =
-    profiles?.map((profile) => {
-      const authUser = authUsers.find((item) => item.id === profile.id);
-
-      return {
-        id: profile.id,
-        email: profile.email,
-        role: profile.role,
-        is_owner: profile.is_owner ?? false,
-        created_at: authUser?.created_at ?? profile.created_at,
-        last_sign_in_at: authUser?.last_sign_in_at ?? null,
-      };
-    }) ?? [];
-
-  const totalUsers = users.length;
-  const adminCount = users.filter((user) => user.role === "admin").length;
-  const teacherCount = users.filter((user) => user.role === "teacher").length;
-  const ownerCount = users.filter((user) => user.is_owner).length;
-  const activeUsersCount = users.filter((user) =>
-    isActiveThisWeek(user.last_sign_in_at),
-  ).length;
+  const [stats, firstPage] = await Promise.all([
+    getUserStatsAction(),
+    getAdminUsersPageAction({
+      page: 0,
+      pageSize: PAGE_SIZE,
+      search: "",
+      role: "all",
+      status: "all",
+    }),
+  ]);
 
   return (
     <AdminShell>
@@ -113,12 +70,12 @@ export default async function AdminUsersPage() {
 
         <div className="-mx-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:-mx-6 sm:px-6 md:mx-0 md:overflow-visible md:px-0 md:pb-0">
           <div className="flex w-max gap-3 pr-4 md:grid md:w-full md:grid-cols-4 md:gap-4 md:pr-0">
-            <StatCard title="Total Users" value={totalUsers} icon={Users} />
-            <StatCard title="Admins" value={adminCount} icon={ShieldCheck} />
-            <StatCard title="Teachers" value={teacherCount} icon={UserCog} />
+            <StatCard title="Total Users" value={stats.totalUsers} icon={Users} />
+            <StatCard title="Admins" value={stats.adminCount} icon={ShieldCheck} />
+            <StatCard title="Teachers" value={stats.teacherCount} icon={UserCog} />
             <StatCard
               title="Active This Week"
-              value={activeUsersCount}
+              value={stats.activeUsersCount}
               icon={UserCheck}
             />
           </div>
@@ -137,7 +94,7 @@ export default async function AdminUsersPage() {
               </p>
             </div>
 
-            {ownerCount === 0 && (
+            {stats.ownerCount === 0 && (
               <div className="rounded-2xl border border-yellow-400/20 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-200">
                 No owner account is configured.
               </div>
@@ -145,9 +102,11 @@ export default async function AdminUsersPage() {
           </div>
 
           <AdminUsersTable
-            users={users}
+            initialUsers={firstPage.users}
+            initialHasMore={firstPage.hasMore}
+            pageSize={PAGE_SIZE}
             currentUserId={currentUser?.id ?? null}
-            adminCount={adminCount}
+            adminCount={stats.adminCount}
           />
         </GlassCard>
       </div>

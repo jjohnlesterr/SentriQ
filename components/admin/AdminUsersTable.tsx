@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import {
   Clock,
+  Loader2,
   Search,
   ShieldCheck,
   Trash2,
@@ -15,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   deleteUserAction,
+  getAdminUsersPageAction,
   updateUserRoleAction,
 } from "@/lib/actions/admin.actions";
 
@@ -35,7 +37,9 @@ type PendingAction =
   | null;
 
 type AdminUsersTableProps = {
-  users: AdminUser[];
+  initialUsers: AdminUser[];
+  initialHasMore: boolean;
+  pageSize: number;
   currentUserId: string | null;
   adminCount: number;
 };
@@ -105,38 +109,106 @@ function getRoleClass(role: string) {
 }
 
 export default function AdminUsersTable({
-  users,
+  initialUsers,
+  initialHasMore,
+  pageSize,
   currentUserId,
   adminCount,
 }: AdminUsersTableProps) {
+  const [users, setUsers] = useState<AdminUser[]>(initialUsers);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
   const [pendingUserId, setPendingUserId] = useState<string | null>(null);
+
   const [isPending, startTransition] = useTransition();
+  const [isRefreshing, startRefreshing] = useTransition();
+  const [isLoadingMore, startLoadingMore] = useTransition();
 
-  const filteredUsers = useMemo(() => {
-    const query = search.trim().toLowerCase();
+  const loaderRef = useRef<HTMLDivElement | null>(null);
 
-    return users.filter((user) => {
-      const status = getUserStatus(user.last_sign_in_at);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedSearch(search.trim());
+    }, 350);
 
-      const matchesSearch = user.email.toLowerCase().includes(query);
+    return () => window.clearTimeout(timer);
+  }, [search]);
 
-      const matchesRole =
-        roleFilter === "all"
-          ? true
-          : roleFilter === "owner"
-            ? user.is_owner
-            : user.role === roleFilter;
+  useEffect(() => {
+    startRefreshing(async () => {
+      const result = await getAdminUsersPageAction({
+        page: 0,
+        pageSize,
+        search: debouncedSearch,
+        role: roleFilter,
+        status: statusFilter,
+      });
 
-      const matchesStatus =
-        statusFilter === "all" ? true : status === statusFilter;
-
-      return matchesSearch && matchesRole && matchesStatus;
+      setUsers(result.users);
+      setHasMore(result.hasMore);
+      setPage(0);
     });
-  }, [users, search, roleFilter, statusFilter]);
+  }, [debouncedSearch, roleFilter, statusFilter, pageSize]);
+
+  useEffect(() => {
+    const node = loaderRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const firstEntry = entries[0];
+
+        if (!firstEntry?.isIntersecting || !hasMore || isLoadingMore) return;
+
+        startLoadingMore(async () => {
+          const nextPage = page + 1;
+
+          const result = await getAdminUsersPageAction({
+            page: nextPage,
+            pageSize,
+            search: debouncedSearch,
+            role: roleFilter,
+            status: statusFilter,
+          });
+
+          setUsers((current) => {
+            const existingIds = new Set(current.map((user) => user.id));
+
+            const nextUsers = result.users.filter(
+              (user) => !existingIds.has(user.id),
+            );
+
+            return [...current, ...nextUsers];
+          });
+
+          setHasMore(result.hasMore);
+          setPage(nextPage);
+        });
+      },
+      {
+        rootMargin: "300px",
+      },
+    );
+
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, [
+    hasMore,
+    isLoadingMore,
+    page,
+    pageSize,
+    debouncedSearch,
+    roleFilter,
+    statusFilter,
+  ]);
 
   function confirmAction() {
     if (!pendingAction) return;
@@ -152,6 +224,16 @@ export default function AdminUsersTable({
           await deleteUserAction(action.user.id);
         }
 
+        setUsers((current) =>
+          action.type === "delete"
+            ? current.filter((user) => user.id !== action.user.id)
+            : current.map((user) =>
+                user.id === action.user.id
+                  ? { ...user, role: action.nextRole }
+                  : user,
+              ),
+        );
+
         setPendingAction(null);
       } finally {
         setPendingUserId(null);
@@ -164,9 +246,10 @@ export default function AdminUsersTable({
       <div className="grid gap-3 border-b border-white/10 px-5 py-4 lg:grid-cols-[1fr_180px_180px]">
         <div className="relative">
           <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+
           <Input
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(event) => setSearch(event.target.value)}
             placeholder="Search user email..."
             className="h-11 pl-11"
           />
@@ -174,7 +257,7 @@ export default function AdminUsersTable({
 
         <select
           value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
+          onChange={(event) => setRoleFilter(event.target.value)}
           className="h-11 rounded-xl border border-white/10 bg-black/20 px-4 pr-10 text-sm text-white outline-none"
         >
           <option value="all">All roles</option>
@@ -185,7 +268,7 @@ export default function AdminUsersTable({
 
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onChange={(event) => setStatusFilter(event.target.value)}
           className="h-11 rounded-xl border border-white/10 bg-black/20 px-4 pr-10 text-sm text-white outline-none"
         >
           <option value="all">All statuses</option>
@@ -196,8 +279,15 @@ export default function AdminUsersTable({
         </select>
       </div>
 
+      {isRefreshing && (
+        <div className="flex items-center gap-2 border-b border-white/10 px-5 py-3 text-sm text-slate-400">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Refreshing users...
+        </div>
+      )}
+
       <div className="hidden overflow-x-auto md:block">
-        <table className="w-full min-w-[1180px] table-auto text-left text-sm">
+        <table className="w-full min-w-[1180px] table-fixed text-left text-sm">
           <thead className="border-b border-white/10 text-slate-400">
             <tr>
               <th className="w-[340px] px-5 py-3 font-medium">User</th>
@@ -210,7 +300,7 @@ export default function AdminUsersTable({
           </thead>
 
           <tbody>
-            {filteredUsers.map((user) => {
+            {users.map((user) => {
               const isCurrentUser = currentUserId === user.id;
               const isLastAdmin = user.role === "admin" && adminCount <= 1;
               const isProtected = user.is_owner || isCurrentUser || isLastAdmin;
@@ -231,10 +321,17 @@ export default function AdminUsersTable({
                       </div>
 
                       <div className="min-w-0">
-                        <p className="truncate font-semibold text-white">
+                        <p
+                          className="max-w-[260px] truncate font-semibold text-white"
+                          title={user.email}
+                        >
                           {user.email}
                         </p>
-                        <p className="mt-1 truncate text-xs text-slate-500">
+
+                        <p
+                          className="mt-1 max-w-[260px] truncate text-xs text-slate-500"
+                          title={user.id}
+                        >
                           User ID: {user.id}
                         </p>
                       </div>
@@ -261,8 +358,10 @@ export default function AdminUsersTable({
 
                   <td className="px-5 py-4 text-slate-400">
                     <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-slate-600" />
-                      {formatRelativeTime(user.last_sign_in_at)}
+                      <Clock className="h-4 w-4 shrink-0 text-slate-600" />
+                      <span className="truncate">
+                        {formatRelativeTime(user.last_sign_in_at)}
+                      </span>
                     </div>
                   </td>
 
@@ -337,7 +436,7 @@ export default function AdminUsersTable({
               );
             })}
 
-            {!filteredUsers.length && (
+            {!users.length && !isRefreshing && (
               <tr>
                 <td
                   colSpan={6}
@@ -352,7 +451,7 @@ export default function AdminUsersTable({
       </div>
 
       <div className="divide-y divide-white/10 md:hidden">
-        {filteredUsers.map((user) => {
+        {users.map((user) => {
           const isCurrentUser = currentUserId === user.id;
           const isLastAdmin = user.role === "admin" && adminCount <= 1;
           const isProtected = user.is_owner || isCurrentUser || isLastAdmin;
@@ -374,6 +473,10 @@ export default function AdminUsersTable({
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-white">
                     {user.email}
+                  </p>
+
+                  <p className="mt-1 truncate text-xs text-slate-500">
+                    {user.id}
                   </p>
 
                   <div className="mt-2 flex flex-wrap gap-2">
@@ -467,11 +570,27 @@ export default function AdminUsersTable({
           );
         })}
 
-        {!filteredUsers.length && (
+        {!users.length && !isRefreshing && (
           <div className="px-5 py-10 text-center text-slate-400">
             No users found.
           </div>
         )}
+      </div>
+
+      <div
+        ref={loaderRef}
+        className="px-5 py-5 text-center text-sm text-slate-400"
+      >
+        {isLoadingMore ? (
+          <span className="inline-flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Loading more users...
+          </span>
+        ) : hasMore ? (
+          "Scroll to load more users"
+        ) : users.length > 0 ? (
+          "No more users."
+        ) : null}
       </div>
 
       <ConfirmDialog
