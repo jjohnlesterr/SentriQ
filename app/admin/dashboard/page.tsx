@@ -150,7 +150,7 @@ export default async function AdminDashboardPage() {
       "id, session_id, type, timestamp, description, sessions(student_name)",
     )
     .order("timestamp", { ascending: false })
-    .range(0, Math.max(activityLogsCount - 1, 0));
+    .limit(50);
 
   return (
     <AdminShell>
