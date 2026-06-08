@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -8,6 +8,7 @@ import {
   Copy,
   Eye,
   FileQuestion,
+  Loader2,
   Maximize,
   Search,
   ShieldAlert,
@@ -24,6 +25,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import {
+  getAdminSessionsPageAction,
+  getSessionDetailsAction,
+} from "@/lib/actions/admin.actions";
 
 type SessionEvent = {
   id: string;
@@ -59,6 +64,8 @@ type Session = {
   report_visibility?: string | null;
   score: number | null;
   tab_switches: number | null;
+  event_count: number;
+  suspicious_event_count: number;
   events: SessionEvent[];
   questions: Question[];
 };
@@ -156,22 +163,9 @@ function truncateMiddle(value: string | null, start = 8, end = 5) {
   return `${value.slice(0, start)}...${value.slice(-end)}`;
 }
 
-function getSuspiciousEventCount(events: SessionEvent[]) {
-  return events.filter((event) => {
-    const type = event.type ?? "";
-
-    return (
-      type.includes("copy") ||
-      type.includes("paste") ||
-      type.includes("fullscreen") ||
-      type.includes("tab")
-    );
-  }).length;
-}
-
 function getRiskLevel(session: Session): RiskLevel {
   const tabSwitches = session.tab_switches ?? 0;
-  const suspiciousEvents = getSuspiciousEventCount(session.events);
+  const suspiciousEvents = session.suspicious_event_count ?? 0;
 
   if (tabSwitches >= 4 || suspiciousEvents >= 4) return "high";
   if (tabSwitches >= 1 || suspiciousEvents >= 1) return "medium";
@@ -238,39 +232,126 @@ function formatAnswerValue(value: unknown) {
 }
 
 export default function AdminSessionsTable({
-  sessions,
+  initialSessions,
+  initialHasMore,
+  pageSize,
 }: {
-  sessions: Session[];
+  initialSessions: Session[];
+  initialHasMore: boolean;
+  pageSize: number;
 }) {
+  const [sessions, setSessions] = useState<Session[]>(initialSessions);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(initialHasMore);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
+  const [loadingDetailsId, setLoadingDetailsId] = useState<string | null>(null);
+  const [isLoadingMore, startLoadingMore] = useTransition();
+  const [isRefreshing, startRefreshing] = useTransition();
+  const loaderRef = useRef<HTMLDivElement | null>(null);
 
-  const filteredSessions = useMemo(() => {
-    const query = search.trim().toLowerCase();
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedSearch(search.trim());
+    }, 350);
 
-    return sessions.filter((session) => {
-      const formattedStatus = formatStatus(session.status).toLowerCase();
+    return () => window.clearTimeout(timer);
+  }, [search]);
 
-      const matchesSearch =
-        (session.student_name ?? "").toLowerCase().includes(query) ||
-        (session.student_id ?? "").toLowerCase().includes(query) ||
-        (session.quiz_title ?? "").toLowerCase().includes(query) ||
-        (session.quiz_code ?? "").toLowerCase().includes(query) ||
-        (session.status ?? "").toLowerCase().includes(query) ||
-        formattedStatus.includes(query) ||
-        (session.approval_status ?? "").toLowerCase().includes(query);
+  useEffect(() => {
+    startRefreshing(async () => {
+      const result = await getAdminSessionsPageAction({
+        page: 0,
+        pageSize,
+        search: debouncedSearch,
+        status: statusFilter,
+      });
 
-      const matchesStatus =
-        statusFilter === "all" ? true : session.status === statusFilter;
-
-      return matchesSearch && matchesStatus;
+      setSessions(result.sessions);
+      setHasMore(result.hasMore);
+      setPage(0);
     });
-  }, [sessions, search, statusFilter]);
+  }, [debouncedSearch, statusFilter, pageSize]);
 
-  const statuses = Array.from(
-    new Set(sessions.map((session) => session.status).filter(Boolean)),
+  useEffect(() => {
+    const node = loaderRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const firstEntry = entries[0];
+
+        if (!firstEntry?.isIntersecting || !hasMore || isLoadingMore) return;
+
+        startLoadingMore(async () => {
+          const nextPage = page + 1;
+
+          const result = await getAdminSessionsPageAction({
+            page: nextPage,
+            pageSize,
+            search: debouncedSearch,
+            status: statusFilter,
+          });
+
+          setSessions((current) => {
+            const existingIds = new Set(current.map((session) => session.id));
+            const nextSessions = result.sessions.filter(
+              (session) => !existingIds.has(session.id),
+            );
+
+            return [...current, ...nextSessions];
+          });
+
+          setHasMore(result.hasMore);
+          setPage(nextPage);
+        });
+      },
+      { rootMargin: "300px" },
+    );
+
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, [hasMore, isLoadingMore, page, pageSize, debouncedSearch, statusFilter]);
+
+  const statuses = useMemo(
+    () => Array.from(new Set(sessions.map((session) => session.status).filter(Boolean))),
+    [sessions],
   );
+
+  async function openSessionDetails(session: Session) {
+    setSelectedSession(session);
+    setLoadingDetailsId(session.id);
+
+    try {
+      const details = await getSessionDetailsAction(session.id);
+
+      setSelectedSession({
+        ...session,
+        answers: details.answers,
+        events: details.events,
+        questions: details.questions,
+        event_count: details.events.length,
+        suspicious_event_count: details.suspiciousEventCount,
+      });
+
+      setSessions((current) =>
+        current.map((item) =>
+          item.id === session.id
+            ? {
+                ...item,
+                event_count: details.events.length,
+                suspicious_event_count: details.suspiciousEventCount,
+              }
+            : item,
+        ),
+      );
+    } finally {
+      setLoadingDetailsId(null);
+    }
+  }
 
   return (
     <>
@@ -280,7 +361,7 @@ export default function AdminSessionsTable({
 
           <Input
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(event) => setSearch(event.target.value)}
             placeholder="Search student, quiz, ID, or status..."
             className="h-11 pl-11"
           />
@@ -288,17 +369,34 @@ export default function AdminSessionsTable({
 
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onChange={(event) => setStatusFilter(event.target.value)}
           className="h-11 rounded-xl border border-white/10 bg-black/20 px-4 text-sm text-white outline-none"
         >
           <option value="all">All statuses</option>
-          {statuses.map((status) => (
-            <option key={status} value={status ?? ""}>
-              {formatStatus(status)}
-            </option>
-          ))}
+          <option value="in-progress">In Progress</option>
+          <option value="completed">Completed</option>
+          <option value="timed-out">Timed Out</option>
+          <option value="abandoned">Abandoned</option>
+
+          {statuses.map((status) =>
+            status &&
+            !["in-progress", "completed", "timed-out", "abandoned"].includes(
+              status,
+            ) ? (
+              <option key={status} value={status}>
+                {formatStatus(status)}
+              </option>
+            ) : null,
+          )}
         </select>
       </div>
+
+      {isRefreshing && (
+        <div className="flex items-center gap-2 border-b border-white/10 px-5 py-3 text-sm text-slate-400">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Refreshing sessions...
+        </div>
+      )}
 
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[1320px] table-auto text-left text-sm">
@@ -317,7 +415,7 @@ export default function AdminSessionsTable({
           </thead>
 
           <tbody>
-            {filteredSessions.map((session) => {
+            {sessions.map((session) => {
               const risk = getRiskLevel(session);
 
               return (
@@ -388,7 +486,7 @@ export default function AdminSessionsTable({
                   </td>
 
                   <td className="px-5 py-4 text-slate-300">
-                    {session.events.length} logs
+                    {session.event_count} logs
                   </td>
 
                   <td className="px-5 py-4 text-slate-400">
@@ -401,7 +499,7 @@ export default function AdminSessionsTable({
                         type="button"
                         variant="ghost"
                         size="sm"
-                        onClick={() => setSelectedSession(session)}
+                        onClick={() => openSessionDetails(session)}
                         className="h-10 w-[95px]"
                       >
                         <Eye className="h-4 w-4" />
@@ -418,7 +516,7 @@ export default function AdminSessionsTable({
               );
             })}
 
-            {!filteredSessions.length && (
+            {!sessions.length && !isRefreshing && (
               <tr>
                 <td
                   colSpan={9}
@@ -433,7 +531,7 @@ export default function AdminSessionsTable({
       </div>
 
       <div className="divide-y divide-white/10 md:hidden">
-        {filteredSessions.map((session) => {
+        {sessions.map((session) => {
           const risk = getRiskLevel(session);
 
           return (
@@ -495,7 +593,7 @@ export default function AdminSessionsTable({
                 <div className="flex justify-between gap-3">
                   <span className="text-slate-500">Logs</span>
                   <span className="text-slate-300">
-                    {session.events.length}
+                    {session.event_count}
                   </span>
                 </div>
               </div>
@@ -504,7 +602,7 @@ export default function AdminSessionsTable({
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={() => setSelectedSession(session)}
+                  onClick={() => openSessionDetails(session)}
                   className="h-11 w-full"
                 >
                   <Eye className="h-4 w-4" />
@@ -520,11 +618,24 @@ export default function AdminSessionsTable({
           );
         })}
 
-        {!filteredSessions.length && (
+        {!sessions.length && !isRefreshing && (
           <div className="px-5 py-10 text-center text-slate-400">
             No sessions found.
           </div>
         )}
+      </div>
+
+      <div ref={loaderRef} className="px-5 py-5 text-center text-sm text-slate-400">
+        {isLoadingMore ? (
+          <span className="inline-flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Loading more sessions...
+          </span>
+        ) : hasMore ? (
+          "Scroll to load more sessions"
+        ) : sessions.length > 0 ? (
+          "No more sessions to load."
+        ) : null}
       </div>
 
       <Dialog
@@ -650,6 +761,13 @@ export default function AdminSessionsTable({
                 </div>
               </div>
 
+              {loadingDetailsId === selectedSession.id && (
+                <div className="mt-5 flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4 text-sm text-slate-400">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading session details...
+                </div>
+              )}
+
               <div className="mt-5 grid gap-5 lg:grid-cols-2">
                 <div>
                   <h3 className="flex items-center gap-2 text-lg font-semibold text-white">
@@ -681,7 +799,9 @@ export default function AdminSessionsTable({
                       )
                     ) : (
                       <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-8 text-center text-slate-400">
-                        No submitted answers found.
+                        {loadingDetailsId === selectedSession.id
+                          ? "Loading answers..."
+                          : "No submitted answers found."}
                       </div>
                     )}
                   </div>
@@ -735,7 +855,9 @@ export default function AdminSessionsTable({
 
                     {!selectedSession.events.length && (
                       <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-8 text-center text-slate-400">
-                        No activity logs found for this session.
+                        {loadingDetailsId === selectedSession.id
+                          ? "Loading activity logs..."
+                          : "No activity logs found for this session."}
                       </div>
                     )}
                   </div>
