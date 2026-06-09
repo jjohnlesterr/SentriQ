@@ -17,8 +17,7 @@ type SiteHeaderProps = {
 const navLinks = [
   { label: "Features", href: "#features" },
   { label: "How It Works", href: "#how-it-works" },
-  { label: "Roles", href: "#features" },
-  { label: "About", href: "#about" },
+  { label: "Roles", href: "#roles" },
 ];
 
 export default function SiteHeader({ className }: SiteHeaderProps) {
@@ -62,13 +61,18 @@ export default function SiteHeader({ className }: SiteHeaderProps) {
 
           <div className="hidden items-center gap-3 lg:flex">
             <Link href="/teacher/login">
-              <Button variant="ghost" size="sm">
+              <Button
+                variant="ghost"
+                className="h-10 rounded-xl px-5 text-sm font-medium"
+              >
                 Login
               </Button>
             </Link>
 
             <Link href="/teacher/register">
-              <Button size="sm">Sign Up</Button>
+              <Button className="h-10 rounded-xl px-5 text-sm font-medium">
+                Sign Up
+              </Button>
             </Link>
           </div>
 
