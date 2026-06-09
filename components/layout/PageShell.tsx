@@ -6,9 +6,8 @@ type Props = {
 
 export default function PageShell({ children }: Props) {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#060816] text-white">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#060816] text-white">
       <GradientBackground />
-
       <div className="relative z-10">{children}</div>
     </div>
   );

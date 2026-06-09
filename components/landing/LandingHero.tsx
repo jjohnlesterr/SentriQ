@@ -56,12 +56,12 @@ export default function LandingHero() {
         <div className="absolute h-[360px] w-[360px] rounded-full bg-violet-500/10 blur-3xl" />
 
         <Image
-          src="/sentriq-mascot.png"
+          src="/hero.png"
           alt="SentriQ mascot"
           width={540}
           height={540}
           priority
-          className="relative z-10 h-auto w-[430px] xl:w-[470px] drop-shadow-[0_35px_90px_rgba(34,211,238,0.2)]"
+          className="relative z-10 h-auto w-[430px] xl:w-[470px]"
         />
       </div>
     </section>
