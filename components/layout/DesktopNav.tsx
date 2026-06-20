@@ -1,15 +1,20 @@
-import Link from "next/link";
+import { Menu, X } from "lucide-react";
 
-import { navLinks } from "@/constants/navigation";
+type BurgerButtonProps = {
+  open: boolean;
+  onClick: () => void;
+};
 
-export default function DesktopNav() {
+export default function BurgerButton({ open, onClick }: BurgerButtonProps) {
   return (
-    <div className="hidden items-center gap-8 text-sm font-medium text-slate-300 md:flex">
-      {navLinks.map((link) => (
-        <Link key={link.href} href={link.href} className="transition hover:text-white">
-          {link.label}
-        </Link>
-      ))}
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={open ? "Close menu" : "Open menu"}
+      aria-expanded={open}
+      className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white transition hover:bg-white/10 lg:hidden"
+    >
+      {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+    </button>
   );
 }

@@ -33,13 +33,13 @@ export default function SiteHeader({ className }: SiteHeaderProps) {
       <nav className="relative rounded-3xl border border-white/10 bg-white/[0.03] px-4 py-3 shadow-[0_20px_80px_rgba(0,0,0,0.25)] backdrop-blur-xl md:px-6">
         <div className="flex items-center justify-between gap-6">
           <Link href="/" className="flex items-center gap-3">
-            <div className="relative h-10 w-10 overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-1.5">
+            <div className="relative h-10 w-10 overflow-hidden">
               <Image
-                src="/logo.png"
+                src="/logoo.png"
                 alt="SentriQ Logo"
                 fill
                 sizes="40px"
-                className="object-contain p-1"
+                className="object-contain"
                 priority
               />
             </div>

@@ -21,36 +21,57 @@ const stats = [
 export default function LandingStats() {
   return (
     <section className="relative mx-auto w-full max-w-7xl px-4 pt-10 sm:px-6 md:px-10 lg:px-16">
-      <div className="relative overflow-hidden rounded-3xl border border-cyan-400/20 bg-white/[0.02] px-6 py-8 backdrop-blur-xl">
-        <div className="relative grid gap-6 md:grid-cols-3">
+
+      <div className="relative overflow-hidden rounded-3xl border border-cyan-400/20 bg-white/[0.02] backdrop-blur-xl">
+
+        {/* SCROLL + GRID SYSTEM */}
+        <div className="
+          flex gap-3 overflow-x-auto px-3 py-4
+          md:grid md:grid-cols-3 md:gap-0 md:divide-x md:divide-white/10
+        ">
+
           {stats.map((item, index) => {
             const Icon = item.icon;
 
             return (
               <div
                 key={item.label}
-                className="relative flex items-center gap-4 md:justify-center"
+                className="
+                  relative
+                  flex-shrink-0
+                  min-w-[240px]
+                  md:min-w-0
+
+                  flex items-center justify-center gap-2
+                  px-3 py-3
+                "
               >
-                {index > 0 && (
-                  <div className="absolute left-0 hidden h-16 w-px bg-white/10 md:block" />
+
+                {/* ================= MOBILE DIVIDER ================= */}
+                {index < stats.length - 1 && (
+                  <div className="absolute right-0 top-1/2 h-10 w-px -translate-y-1/2 bg-white/10 md:hidden" />
                 )}
 
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-cyan-300">
-                  <Icon className="h-6 w-6" />
+                {/* ICON */}
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] text-cyan-300 md:h-10 md:w-10">
+                  <Icon className="h-4 w-4 md:h-5 md:w-5" />
                 </div>
 
-                <div>
-                  <div className="text-3xl font-extrabold leading-none text-white sm:text-4xl">
+                {/* TEXT */}
+                <div className="leading-tight">
+                  <div className="text-xl md:text-2xl font-extrabold text-white">
                     {item.value}
                   </div>
 
-                  <p className="mt-1 text-sm font-medium text-slate-400">
+                  <p className="text-xs md:text-sm text-slate-400">
                     {item.label}
                   </p>
                 </div>
+
               </div>
             );
           })}
+
         </div>
       </div>
     </section>

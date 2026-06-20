@@ -19,6 +19,12 @@ export const metadata: Metadata = {
   title: "SentriQ - Quiz Monitoring",
   description:
     "A smart quiz and monitoring platform designed to ensure integrity and fairness during digital assessments.",
+
+  icons: {
+    icon: "/logoo.png",
+    shortcut: "/logoo.png",
+    apple: "/logoo.png",
+  },
 };
 
 export const viewport: Viewport = {
@@ -44,3 +50,4 @@ export default function RootLayout({
     </html>
   );
 }
+

@@ -63,7 +63,28 @@ export default function FeaturesSection() {
       id="features"
       className="relative flex min-h-screen items-center overflow-hidden py-8"
     >
+      {/* ================= MOBILE + TABLET ROBOT (ONLY) ================= */}
+      <Image
+        src="/monitoring-mascot.png"
+        alt="SentriQ mascot background mobile"
+        width={600}
+        height={600}
+        aria-hidden="true"
+          className="
+            pointer-events-none
+            absolute
+            right-[-40px]
+            bottom-[-70px]
+            w-[340px]
+            opacity-40
+            select-none
+            lg:hidden
+          "
+      />
+
       <div className="relative grid w-full items-center gap-8 lg:grid-cols-[0.82fr_1.18fr]">
+
+        {/* ================= DESKTOP ROBOT (UNCHANGED) ================= */}
         <div className="relative hidden justify-center lg:flex">
           <Image
             src="/monitoring-mascot.png"
@@ -74,6 +95,7 @@ export default function FeaturesSection() {
           />
         </div>
 
+        {/* CONTENT */}
         <div>
           <h2 className="max-w-3xl text-4xl font-extrabold leading-[1.05] tracking-tight text-white md:text-5xl">
             Built for modern digital assessments

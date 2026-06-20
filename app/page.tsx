@@ -12,6 +12,7 @@ export default function LandingPage() {
   return (
     <PageShell>
       <div className="min-h-screen">
+
         <section className="flex h-screen flex-col overflow-hidden">
           <SiteHeader />
 
@@ -27,14 +28,20 @@ export default function LandingPage() {
 
         <LandingStats />
 
-        <main className="relative mx-auto w-full max-w-7xl space-y-24 px-4 py-24 sm:px-6 md:px-10 lg:px-16">
-          <FeaturesSection />
-          <HowItWorksSection />
-          <RolesSection />
-          
+        <main className="relative mx-auto w-full max-w-7xl px-4 py-14 sm:px-6 md:px-10 lg:px-16">
+
+          <div className="space-y-12 md:space-y-14 lg:space-y-16">
+
+            <FeaturesSection />
+            <HowItWorksSection />
+            <RolesSection />
+
+          </div>
+
         </main>
 
         <SiteFooter />
+
       </div>
     </PageShell>
   );
