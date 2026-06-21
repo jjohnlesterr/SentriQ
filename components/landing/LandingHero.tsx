@@ -7,9 +7,20 @@ import { ArrowRight, Play, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function LandingHero() {
+  function openQuizModal() {
+    window.dispatchEvent(
+      new CustomEvent("open-auth-modal", {
+        detail: "quiz",
+      })
+    );
+  }
+
   return (
     <section className="relative grid min-h-[calc(100vh-104px)] items-center gap-8 overflow-hidden lg:grid-cols-[0.9fr_1fr]">
+      
+      {/* TEXT */}
       <div className="relative z-10 pb-4">
+        
         <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-sm font-medium text-cyan-200">
           <ShieldCheck className="h-4 w-4" />
           Secure Quiz Monitoring Platform
@@ -30,7 +41,10 @@ export default function LandingHero() {
           protect academic integrity through one secure platform.
         </p>
 
+        {/* BUTTONS */}
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          
+          {/* TEACHER */}
           <Link href="/teacher/register" className="w-full sm:w-auto">
             <Button
               size="lg"
@@ -40,26 +54,29 @@ export default function LandingHero() {
             </Button>
           </Link>
 
-          <a href="#how-it-works" className="w-full sm:w-auto">
-            <Button
-              variant="ghost"
-              size="lg"
-              className="
-                h-13 w-full sm:w-auto
-                border border-white/10
-                px-8 text-base font-semibold
-                justify-center
-              "
-            >
-              <Play className="h-5 w-5" />
-              How It Works
-              <ArrowRight className="h-5 w-5" />
-            </Button>
-          </a>
+          {/* STUDENT ENTER QUIZ */}
+          <Button
+            onClick={openQuizModal}
+            variant="ghost"
+            size="lg"
+            className="
+              h-13 w-full sm:w-auto
+              border border-white/10
+              px-8 text-base font-semibold
+              justify-center
+            "
+          >
+            <Play className="h-5 w-5" />
+            Enter Quiz Code
+            <ArrowRight className="h-5 w-5" />
+          </Button>
+
         </div>
       </div>
 
+      {/* IMAGE */}
       <div className="relative flex items-center justify-center">
+        
         <Image
           src="/hero.png"
           alt="SentriQ mascot background"
