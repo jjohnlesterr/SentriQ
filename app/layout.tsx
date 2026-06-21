@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { AppToaster } from "@/components/ui/toaster";
+import { AuthModalProvider } from "@/store/useAuthModal";
+import AuthModalManager from "@/components/modals/AuthModalManager";
 
 import "./globals.css";
 
@@ -44,10 +46,17 @@ export default function RootLayout({
       <body
         className={`${geist.variable} ${geistMono.variable} font-sans antialiased`}
       >
-        {children}
+        {/* 🔥 AUTH MODAL SYSTEM WRAPPER */}
+        <AuthModalProvider>
+          {children}
+
+          {/* 🔥 GLOBAL MODAL RENDERER */}
+          <AuthModalManager />
+        </AuthModalProvider>
+
+        {/* TOASTER */}
         <AppToaster />
       </body>
     </html>
   );
 }
-

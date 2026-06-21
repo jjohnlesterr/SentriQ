@@ -140,3 +140,13 @@ body {
     @apply font-sans;
   }
 }
+
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
+
+input::-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+  display: none !important;
+}
