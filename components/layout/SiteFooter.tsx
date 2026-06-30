@@ -1,3 +1,5 @@
+"use client";
+
 import type { ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -9,30 +11,33 @@ type SiteFooterProps = {
   className?: string;
 };
 
+type ModalAction = "login" | "signup" | "quiz";
+
 const navigationLinks = [
   { label: "Features", href: "#features" },
   { label: "How It Works", href: "#how-it-works" },
   { label: "Roles", href: "#roles" },
 ];
 
-const accountLinks = [
-  { label: "Teacher Login", href: "/teacher/login" },
-  { label: "Student Login", href: "/student/login" },
-  { label: "Register", href: "/teacher/register" },
+const accountLinks: {
+  label: string;
+  action: ModalAction;
+}[] = [
+  { label: "Teacher Login", action: "login" },
+  { label: "Teacher Sign Up", action: "signup" },
+  { label: "Enter Quiz Code", action: "quiz" },
 ];
 
 const legalLinks = [
   { label: "Privacy Policy", href: "/privacy-policy" },
-  { label: "Terms of Service", href: "#" },
+  { label: "Terms of Service", href: "/terms-of-service" },
 ];
 
 export default function SiteFooter({ className }: SiteFooterProps) {
   return (
     <footer className={cn("border-t border-white/10", className)}>
       <div className="mx-auto w-full max-w-7xl px-4 py-14 sm:px-6 md:px-10 lg:px-16">
-        {/* TOP */}
         <div className="grid gap-12 lg:grid-cols-[1fr_2.2fr]">
-          {/* BRAND */}
           <div>
             <Link href="/" className="inline-flex items-center gap-4">
               <div className="relative h-14 w-14 overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-2">
@@ -53,18 +58,15 @@ export default function SiteFooter({ className }: SiteFooterProps) {
             </p>
           </div>
 
-          {/* LINKS */}
           <div className="grid grid-cols-2 gap-10 sm:grid-cols-3">
-            <FooterGroup title="Navigation" links={navigationLinks} />
-            <FooterGroup title="Account" links={accountLinks} />
-            <FooterGroup title="Legal" links={legalLinks} />
+            <FooterLinkGroup title="Navigation" links={navigationLinks} />
+            <FooterActionGroup title="Account" links={accountLinks} />
+            <FooterLinkGroup title="Legal" links={legalLinks} />
           </div>
         </div>
 
-        {/* DIVIDER */}
         <div className="my-10 h-px w-full bg-white/10" />
 
-        {/* BOTTOM */}
         <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
           <div className="flex items-center gap-3">
             <SocialIcon href="https://github.com/jjohnlesterr" label="GitHub">
@@ -88,7 +90,7 @@ export default function SiteFooter({ className }: SiteFooterProps) {
   );
 }
 
-type FooterGroupProps = {
+type FooterLinkGroupProps = {
   title: string;
   links: {
     label: string;
@@ -96,7 +98,7 @@ type FooterGroupProps = {
   }[];
 };
 
-function FooterGroup({ title, links }: FooterGroupProps) {
+function FooterLinkGroup({ title, links }: FooterLinkGroupProps) {
   return (
     <div>
       <h3 className="text-lg font-bold text-violet-300">{title}</h3>
@@ -110,6 +112,43 @@ function FooterGroup({ title, links }: FooterGroupProps) {
           >
             {link.label}
           </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+type FooterActionGroupProps = {
+  title: string;
+  links: {
+    label: string;
+    action: ModalAction;
+  }[];
+};
+
+function FooterActionGroup({ title, links }: FooterActionGroupProps) {
+  function openModal(action: ModalAction) {
+    window.dispatchEvent(
+      new CustomEvent("open-auth-modal", {
+        detail: action,
+      })
+    );
+  }
+
+  return (
+    <div>
+      <h3 className="text-lg font-bold text-violet-300">{title}</h3>
+
+      <div className="mt-6 space-y-4">
+        {links.map((link) => (
+          <button
+            key={link.label}
+            type="button"
+            onClick={() => openModal(link.action)}
+            className="block text-left text-sm text-slate-400 transition hover:text-white"
+          >
+            {link.label}
+          </button>
         ))}
       </div>
     </div>
