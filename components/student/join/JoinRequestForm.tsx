@@ -1,6 +1,8 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { Loader2, ShieldCheck } from "lucide-react";
+
+import SectionHeading from "@/components/shared/SectionHeading";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { VALIDATION_LIMITS } from "@/lib/validations/constants";
@@ -30,19 +32,18 @@ export default function JoinRequestForm({
 }: Props) {
   return (
     <form onSubmit={onSubmit} className="space-y-5">
+      <SectionHeading
+        icon={ShieldCheck}
+        badge="Student Access Portal"
+        title="Join Quiz"
+        description="Enter your name and quiz code to securely join your assessment."
+        variant="page"
+        className="mb-6 md:mb-8"
+        badgeClassName="mb-4 border-cyan-400/20 bg-cyan-400/10 px-3 py-1.5 text-xs text-cyan-200 md:mb-4"
+        titleClassName="text-3xl md:text-4xl"
+        descriptionClassName="mt-2 text-sm leading-6 text-slate-300 md:mt-3"
+      />
 
-      {/* HEADER (MATCH DESIGN EXACTLY) */}
-      <div className="space-y-2">
-        <h2 className="text-3xl md:text-4xl font-bold text-white">
-          Join Quiz
-        </h2>
-
-        <p className="text-sm text-slate-300 leading-6">
-          Enter your name and quiz code to request access.
-        </p>
-      </div>
-
-      {/* STUDENT NAME */}
       <div className="space-y-2">
         <label className="text-sm text-slate-200">Student Name</label>
 
@@ -64,7 +65,6 @@ export default function JoinRequestForm({
         </div>
       </div>
 
-      {/* QUIZ CODE */}
       <div className="space-y-2">
         <label className="text-sm text-slate-200">Quiz Code</label>
 
@@ -82,14 +82,12 @@ export default function JoinRequestForm({
         />
       </div>
 
-      {/* ERROR */}
       {error && (
         <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
           {error}
         </div>
       )}
 
-      {/* BUTTON */}
       <Button
         type="submit"
         className="h-11 w-full"
