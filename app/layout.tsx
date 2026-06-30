@@ -46,15 +46,11 @@ export default function RootLayout({
       <body
         className={`${geist.variable} ${geistMono.variable} font-sans antialiased`}
       >
-        {/* 🔥 AUTH MODAL SYSTEM WRAPPER */}
         <AuthModalProvider>
           {children}
-
-          {/* 🔥 GLOBAL MODAL RENDERER */}
           <AuthModalManager />
         </AuthModalProvider>
 
-        {/* TOASTER */}
         <AppToaster />
       </body>
     </html>
