@@ -27,10 +27,7 @@ const learnerItems = [
 
 export default function RolesSection() {
   return (
-    <section
-      id="roles"
-      className="relative overflow-hidden py-14 md:py-16"
-    >
+    <section id="roles" className="relative overflow-hidden py-14 md:py-16">
       <div className="w-full">
         <div className="relative z-10 mx-auto max-w-3xl text-center">
           <h2 className="text-4xl font-extrabold leading-tight tracking-tight text-white md:text-6xl">
@@ -43,10 +40,8 @@ export default function RolesSection() {
           </p>
         </div>
 
-        <div className="mt-12 grid grid-cols-2 gap-4 lg:gap-6">
-          {/* TEACHERS */}
-          <article className="relative overflow-hidden rounded-3xl border border-cyan-400/20 bg-white/[0.025] p-4 backdrop-blur-xl sm:p-5 lg:p-6">
-            {/* Mobile / Tablet background image */}
+        <div className="mt-12 grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
+          <article className="relative overflow-hidden rounded-3xl border border-cyan-400/20 bg-white/[0.025] p-5 backdrop-blur-xl sm:p-6 lg:p-6">
             <Image
               src="/result-mascot.png"
               alt=""
@@ -56,18 +51,16 @@ export default function RolesSection() {
               className="
                 pointer-events-none
                 absolute
-                bottom-[-55px]
+                bottom-[-70px]
                 right-[-70px]
-                w-[190px]
-                opacity-5
+                w-[220px]
                 select-none
-                sm:w-[230px]
+                opacity-5
                 lg:hidden
               "
             />
 
             <div className="relative z-10 grid items-center gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-              {/* Desktop image */}
               <div className="relative hidden justify-center lg:flex">
                 <Image
                   src="/result-mascot.png"
@@ -80,32 +73,32 @@ export default function RolesSection() {
 
               <div>
                 <div className="mb-4 flex items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-cyan-400/25 bg-cyan-400/10 text-cyan-300 sm:h-10 sm:w-10 lg:h-11 lg:w-11">
-                    <UserRound className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-cyan-400/25 bg-cyan-400/10 text-cyan-300 lg:h-11 lg:w-11">
+                    <UserRound className="h-5 w-5" />
                   </div>
 
-                  <h3 className="text-base font-bold text-white sm:text-xl lg:text-2xl">
+                  <h3 className="text-xl font-bold text-white lg:text-2xl">
                     For Teachers
                   </h3>
                 </div>
 
-                <p className="text-xs leading-5 text-slate-300 sm:text-sm sm:leading-6">
+                <p className="text-sm leading-6 text-slate-300">
                   Create, manage, and monitor assessments from a single
                   dashboard. Track activity in real time and review results with
                   confidence.
                 </p>
 
-                <div className="mt-5 space-y-2.5 sm:mt-6 sm:space-y-3">
+                <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
                   {educatorItems.map((item) => {
                     const Icon = item.icon;
 
                     return (
                       <div
                         key={item.label}
-                        className="flex items-center gap-2.5 text-xs leading-5 text-slate-300 sm:gap-3 sm:text-sm"
+                        className="flex items-center gap-3 text-sm leading-6 text-slate-300"
                       >
-                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-cyan-400/20 bg-cyan-400/10 text-cyan-300 sm:h-8 sm:w-8">
-                          <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-cyan-400/20 bg-cyan-400/10 text-cyan-300">
+                          <Icon className="h-4 w-4" />
                         </span>
 
                         <span>{item.label}</span>
@@ -117,9 +110,7 @@ export default function RolesSection() {
             </div>
           </article>
 
-          {/* STUDENTS */}
-          <article className="relative overflow-hidden rounded-3xl border border-violet-400/20 bg-white/[0.025] p-4 backdrop-blur-xl sm:p-5 lg:p-6">
-            {/* Mobile / Tablet background image */}
+          <article className="relative overflow-hidden rounded-3xl border border-violet-400/20 bg-white/[0.025] p-5 backdrop-blur-xl sm:p-6 lg:p-6">
             <Image
               src="/quiz-mascot.png"
               alt=""
@@ -129,18 +120,16 @@ export default function RolesSection() {
               className="
                 pointer-events-none
                 absolute
-                bottom-[-55px]
+                bottom-[-70px]
                 right-[-70px]
-                w-[190px]
-                opacity-5
+                w-[220px]
                 select-none
-                sm:w-[230px]
+                opacity-5
                 lg:hidden
               "
             />
 
             <div className="relative z-10 grid items-center gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-              {/* Desktop image */}
               <div className="relative hidden justify-center lg:flex">
                 <Image
                   src="/quiz-mascot.png"
@@ -153,31 +142,31 @@ export default function RolesSection() {
 
               <div>
                 <div className="mb-4 flex items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-violet-400/25 bg-violet-400/10 text-violet-300 sm:h-10 sm:w-10 lg:h-11 lg:w-11">
-                    <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-violet-400/25 bg-violet-400/10 text-violet-300 lg:h-11 lg:w-11">
+                    <GraduationCap className="h-5 w-5" />
                   </div>
 
-                  <h3 className="text-base font-bold text-white sm:text-xl lg:text-2xl">
+                  <h3 className="text-xl font-bold text-white lg:text-2xl">
                     For Students
                   </h3>
                 </div>
 
-                <p className="text-xs leading-5 text-slate-300 sm:text-sm sm:leading-6">
+                <p className="text-sm leading-6 text-slate-300">
                   Join assessments quickly using secure quiz codes and complete
                   quizzes through a simple, distraction-free interface.
                 </p>
 
-                <div className="mt-5 space-y-2.5 sm:mt-6 sm:space-y-3">
+                <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
                   {learnerItems.map((item) => {
                     const Icon = item.icon;
 
                     return (
                       <div
                         key={item.label}
-                        className="flex items-center gap-2.5 text-xs leading-5 text-slate-300 sm:gap-3 sm:text-sm"
+                        className="flex items-center gap-3 text-sm leading-6 text-slate-300"
                       >
-                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-violet-400/20 bg-violet-400/10 text-violet-300 sm:h-8 sm:w-8">
-                          <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-violet-400/20 bg-violet-400/10 text-violet-300">
+                          <Icon className="h-4 w-4" />
                         </span>
 
                         <span>{item.label}</span>
