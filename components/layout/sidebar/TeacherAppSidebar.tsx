@@ -8,8 +8,7 @@ import {
   FileText,
   LayoutDashboard,
   LogOut,
-  PanelLeftClose,
-  PanelLeftOpen,
+  Menu,
   PencilLine,
   ShieldCheck,
   X,
@@ -68,23 +67,11 @@ export default function TeacherAppSidebar({
   const isCollapsed = collapsed && !open;
 
   useEffect(() => {
-    if (!isQuizActive) return;
-
-    const id = requestAnimationFrame(() => {
-      setBuilderOpen(true);
-    });
-
-    return () => cancelAnimationFrame(id);
+    if (isQuizActive) setBuilderOpen(true);
   }, [isQuizActive]);
 
   useEffect(() => {
-    if (!isMonitorActive) return;
-
-    const id = requestAnimationFrame(() => {
-      setMonitorOpen(true);
-    });
-
-    return () => cancelAnimationFrame(id);
+    if (isMonitorActive) setMonitorOpen(true);
   }, [isMonitorActive]);
 
   function closeSidebar() {
@@ -111,12 +98,6 @@ export default function TeacherAppSidebar({
     onLogout();
     closeSidebar();
     setLogoutOpen(false);
-  }
-
-  function expandSidebar() {
-    if (isCollapsed) {
-      onToggleCollapsed?.();
-    }
   }
 
   return (
@@ -153,28 +134,19 @@ export default function TeacherAppSidebar({
               title="Open sidebar"
               aria-label="Open sidebar"
               onClick={onToggleCollapsed}
-              className="group relative flex h-10 w-10 items-center justify-center rounded-2xl transition hover:bg-white/10"
+              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 transition hover:bg-white/10"
             >
-              <Image
-                src="/logo.png"
-                alt="SentriQ Logo"
-                width={36}
-                height={36}
-                className="object-contain transition group-hover:opacity-0"
-                priority
-              />
-
-              <PanelLeftOpen className="absolute h-4 w-4 text-slate-200 opacity-0 transition group-hover:opacity-100" />
+              <Menu className="h-5 w-5 text-slate-200" />
             </button>
           ) : (
             <>
               <div className="flex min-w-0 items-center gap-3">
-                <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-xl">
+                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl">
                   <Image
-                    src="/logo.png"
+                    src="/logoo.png"
                     alt="SentriQ Logo"
                     fill
-                    sizes="36px"
+                    sizes="40px"
                     className="object-contain"
                     priority
                   />
@@ -195,12 +167,12 @@ export default function TeacherAppSidebar({
               ) : (
                 <button
                   type="button"
-                  title="Close sidebar"
-                  aria-label="Close sidebar"
+                  title="Collapse sidebar"
+                  aria-label="Collapse sidebar"
                   onClick={onToggleCollapsed}
                   className="hidden rounded-xl border border-white/10 bg-white/5 p-2 text-slate-300 transition hover:bg-white/10 hover:text-white lg:inline-flex"
                 >
-                  <PanelLeftClose className="h-4 w-4" />
+                  <Menu className="h-4 w-4" />
                 </button>
               )}
             </>
@@ -221,35 +193,78 @@ export default function TeacherAppSidebar({
 
             {isCollapsed ? (
               <>
-                <SidebarButton
-                  icon={PencilLine}
-                  active={activePage === "drafts"}
-                  onClick={() => navigate("/teacher/drafts")}
-                  collapsed={isCollapsed}
-                  title="Drafts"
-                >
-                  Drafts
-                </SidebarButton>
+                <div className="group relative">
+                  <SidebarButton
+                    icon={FileText}
+                    active={isQuizActive}
+                    collapsed={isCollapsed}
+                    title="Quiz Builder"
+                  >
+                    Quiz Builder
+                  </SidebarButton>
 
-                <SidebarButton
-                  icon={FilePlus2}
-                  active={activePage === "quiz-builder"}
-                  onClick={createNewQuiz}
-                  collapsed={isCollapsed}
-                  title="Create New"
-                >
-                  Create New
-                </SidebarButton>
+                  <div className="invisible absolute left-full top-0 z-[90] ml-3 w-52 translate-x-2 rounded-2xl border border-white/10 bg-slate-950/95 p-2 opacity-0 shadow-2xl backdrop-blur-xl transition group-hover:visible group-hover:translate-x-0 group-hover:opacity-100">
+                    <p className="px-3 py-2 text-xs font-semibold text-slate-500">
+                      Quiz Builder
+                    </p>
 
-                <SidebarButton
-                  icon={Eye}
-                  active={isMonitorActive}
-                  onClick={expandSidebar}
-                  collapsed={isCollapsed}
-                  title="Live Monitor"
-                >
-                  Live Monitor
-                </SidebarButton>
+                    <SidebarButton
+                      sidebarVariant="sub"
+                      icon={PencilLine}
+                      active={activePage === "drafts"}
+                      onClick={() => navigate("/teacher/drafts")}
+                    >
+                      Drafts
+                    </SidebarButton>
+
+                    <SidebarButton
+                      sidebarVariant="sub"
+                      icon={FilePlus2}
+                      active={activePage === "quiz-builder"}
+                      onClick={createNewQuiz}
+                    >
+                      Create New
+                    </SidebarButton>
+                  </div>
+                </div>
+
+                <div className="group relative">
+                  <SidebarButton
+                    icon={Eye}
+                    active={isMonitorActive}
+                    collapsed={isCollapsed}
+                    title="Live Monitor"
+                  >
+                    Live Monitor
+                  </SidebarButton>
+
+                  <div className="invisible absolute left-full top-0 z-[90] ml-3 w-56 translate-x-2 rounded-2xl border border-white/10 bg-slate-950/95 p-2 opacity-0 shadow-2xl backdrop-blur-xl transition group-hover:visible group-hover:translate-x-0 group-hover:opacity-100">
+                    <p className="px-3 py-2 text-xs font-semibold text-slate-500">
+                      Live Monitor
+                    </p>
+
+                    {liveQuizzes.length === 0 ? (
+                      <p className="rounded-xl px-3 py-2 text-xs text-slate-500">
+                        No published quizzes yet.
+                      </p>
+                    ) : (
+                      liveQuizzes.map((quiz) => (
+                        <SidebarButton
+                          key={quiz.id}
+                          sidebarVariant="sub"
+                          active={activeQuizId === quiz.id}
+                          onClick={() =>
+                            navigate(`/teacher/quiz/${quiz.id}/monitor`)
+                          }
+                        >
+                          <span className="block max-w-[150px] truncate text-left">
+                            {quiz.title}
+                          </span>
+                        </SidebarButton>
+                      ))
+                    )}
+                  </div>
+                </div>
               </>
             ) : (
               <>
