@@ -312,7 +312,7 @@ export default function AIChatPanel({
   }
 
   return (
-    <div className="fixed bottom-16 left-1/2 z-[9999] flex h-[76vh] w-[92vw] max-w-[380px] -translate-x-1/2 flex-col overflow-hidden rounded-[28px] border border-white/10 bg-slate-950/95 shadow-2xl shadow-black/50 backdrop-blur-2xl sm:bottom-20 md:left-auto md:right-6 md:top-auto md:h-[680px] md:w-[400px] md:translate-x-0">
+    <div className="fixed bottom-16 left-1/2 z-[9999] flex h-[58vh] w-[92vw] max-w-[380px] -translate-x-1/2 flex-col overflow-hidden rounded-[28px] border border-white/10 bg-slate-950/95 shadow-2xl shadow-black/50 backdrop-blur-2xl sm:bottom-20 md:left-auto md:right-6 md:top-auto md:h-[560px] md:w-[400px] md:translate-x-0">
       <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-4 py-3">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-violet-300" />
