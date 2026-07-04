@@ -4,10 +4,12 @@ import { useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
+  CheckSquare,
   ChevronDown,
   Clock3,
   Eye,
   Lock,
+  Square,
   UserX,
   XCircle,
 } from "lucide-react";
@@ -26,6 +28,9 @@ type Props = {
   onApprove: (id: string) => void;
   onReject: (id: string) => void;
   formatTime: (value: Date | string | undefined) => string;
+  selectMode?: boolean;
+  selected?: boolean;
+  onToggleSelected?: (id: string) => void;
 };
 
 function countEvents(session: QuizSession, type: string) {
@@ -66,9 +71,9 @@ function getAccentClass(session: QuizSession) {
     return "border-red-500/20 bg-red-950/10 before:bg-red-500";
   }
 
-if (isAbandoned(session)) {
-  return "border-red-500/20 bg-orange-950/10 before:bg-red-500";
-}
+  if (isAbandoned(session)) {
+    return "border-red-500/20 bg-orange-950/10 before:bg-red-500";
+  }
 
   if (isTimedOut(session)) {
     return "before:bg-yellow-400";
@@ -202,6 +207,36 @@ function StatusIcon({ session }: { session: QuizSession }) {
   return <CheckCircle2 className="mr-1 h-3.5 w-3.5" />;
 }
 
+function SelectButton({
+  selected,
+  onClick,
+}: {
+  selected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={(event) => {
+        event.stopPropagation();
+        onClick();
+      }}
+      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition ${
+        selected
+          ? "border-cyan-400/30 bg-cyan-500/20 text-cyan-200"
+          : "border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white"
+      }`}
+      aria-label={selected ? "Unselect session" : "Select session"}
+    >
+      {selected ? (
+        <CheckSquare className="h-5 w-5" />
+      ) : (
+        <Square className="h-5 w-5" />
+      )}
+    </button>
+  );
+}
+
 export default function SessionCard({
   quiz,
   session,
@@ -209,6 +244,9 @@ export default function SessionCard({
   onApprove,
   onReject,
   formatTime,
+  selectMode = false,
+  selected = false,
+  onToggleSelected,
 }: Props) {
   const [kickDialogOpen, setKickDialogOpen] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState(false);
@@ -234,50 +272,66 @@ export default function SessionCard({
     setKickDialogOpen(false);
   }
 
+  function toggleSelected() {
+    onToggleSelected?.(session.id);
+  }
+
   if (isPending) {
     return (
-      <GlassCard className="overflow-hidden p-4 md:p-5">
+      <GlassCard
+        className={`overflow-hidden p-4 transition md:p-5 ${
+          selected ? "border-cyan-400/30 bg-cyan-500/10" : ""
+        }`}
+      >
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="text-lg font-bold leading-tight text-white">
-                {session.studentName}
-              </h3>
+          <div className="flex min-w-0 flex-1 gap-3">
+            {selectMode && (
+              <SelectButton selected={selected} onClick={toggleSelected} />
+            )}
 
-              <Badge className="border-yellow-400/20 bg-yellow-500/10 text-yellow-200">
-                Pending
-              </Badge>
-            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-lg font-bold leading-tight text-white">
+                  {session.studentName}
+                </h3>
 
-            <div className="mt-4 flex items-center gap-2 text-sm text-slate-400">
-              <Clock3 className="h-4 w-4" />
-              Requested at {formatTime(session.startedAt)}
+                <Badge className="border-yellow-400/20 bg-yellow-500/10 text-yellow-200">
+                  Pending
+                </Badge>
+              </div>
+
+              <div className="mt-4 flex items-center gap-2 text-sm text-slate-400">
+                <Clock3 className="h-4 w-4" />
+                Requested at {formatTime(session.startedAt)}
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 md:flex">
-            <Button
-              type="button"
-              variant="success"
-              size="mobile"
-              onClick={() => onApprove(session.id)}
-              className="rounded-xl font-semibold md:min-w-[120px]"
-            >
-              <CheckCircle2 className="h-4 w-4" />
-              Approve
-            </Button>
+          {!selectMode && (
+            <div className="grid grid-cols-2 gap-2 md:flex">
+              <Button
+                type="button"
+                variant="success"
+                size="mobile"
+                onClick={() => onApprove(session.id)}
+                className="rounded-xl font-semibold md:min-w-[120px]"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                Approve
+              </Button>
 
-            <Button
-              type="button"
-              variant="dangerSoft"
-              size="mobile"
-              onClick={() => onReject(session.id)}
-              className="rounded-xl font-semibold md:min-w-[120px]"
-            >
-              <XCircle className="h-4 w-4" />
-              Reject
-            </Button>
-          </div>
+              <Button
+                type="button"
+                variant="dangerSoft"
+                size="mobile"
+                onClick={() => onReject(session.id)}
+                className="rounded-xl font-semibold md:min-w-[120px]"
+              >
+                <XCircle className="h-4 w-4" />
+                Reject
+              </Button>
+            </div>
+          )}
         </div>
       </GlassCard>
     );
@@ -287,83 +341,93 @@ export default function SessionCard({
     <GlassCard
       className={`relative overflow-hidden p-0 transition before:absolute before:bottom-6 before:left-0 before:top-6 before:w-1 before:rounded-r-full ${getAccentClass(
         session,
-      )}`}
+      )} ${selected ? "border-cyan-400/30 bg-cyan-500/10" : ""}`}
     >
-      <button
-        type="button"
-        onClick={() => setMobileExpanded((current) => !current)}
-        className="w-full p-4 text-left md:pointer-events-none md:p-5"
-      >
-        <div className="flex items-start gap-3">
-          <div className="min-w-0 flex-1">
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <h3 className="text-lg font-extrabold leading-tight text-white md:text-xl">
-                {session.studentName}
-              </h3>
+      <div className="flex items-start gap-3 p-4 md:p-5">
+        {selectMode && (
+          <SelectButton selected={selected} onClick={toggleSelected} />
+        )}
 
-              <Badge
-                className={`shrink-0 px-2.5 py-1 text-xs ${getStatusBadgeClass(
-                  session,
-                )}`}
-              >
-                <StatusIcon session={session} />
-                {getStatusLabel(session)}
-              </Badge>
+        <button
+          type="button"
+          onClick={() => setMobileExpanded((current) => !current)}
+          className="min-w-0 flex-1 text-left md:pointer-events-none"
+        >
+          <div className="flex items-start gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <h3 className="text-lg font-extrabold leading-tight text-white md:text-xl">
+                  {session.studentName}
+                </h3>
 
-              <Badge
-                className={`shrink-0 px-2.5 py-1 text-xs ${risk.className}`}
-              >
-                <AlertTriangle className="mr-1 h-3.5 w-3.5" />
-                {risk.label}
-              </Badge>
+                <Badge
+                  className={`shrink-0 px-2.5 py-1 text-xs ${getStatusBadgeClass(
+                    session,
+                  )}`}
+                >
+                  <StatusIcon session={session} />
+                  {getStatusLabel(session)}
+                </Badge>
+
+                <Badge
+                  className={`shrink-0 px-2.5 py-1 text-xs ${risk.className}`}
+                >
+                  <AlertTriangle className="mr-1 h-3.5 w-3.5" />
+                  {risk.label}
+                </Badge>
+              </div>
+
+              <div className="mt-2 flex items-center gap-2 text-xs text-slate-400 md:text-sm">
+                <Clock3 className="h-4 w-4 shrink-0 text-slate-500" />
+                <span>{formatTime(session.startedAt)}</span>
+              </div>
+
+              <div className="mt-4 grid grid-cols-4 gap-2 md:flex md:flex-wrap md:gap-3">
+                <ViolationPill label="Tab" value={tabLeft} tone="red" />
+                <ViolationPill
+                  label="Full"
+                  value={fullscreenExit}
+                  tone="orange"
+                />
+                <ViolationPill label="Copy" value={copyAttempt} tone="blue" />
+                <ViolationPill
+                  label="Paste"
+                  value={pasteAttempt}
+                  tone="pink"
+                />
+              </div>
             </div>
 
-            <div className="mt-2 flex items-center gap-2 text-xs text-slate-400 md:text-sm">
-              <Clock3 className="h-4 w-4 shrink-0 text-slate-500" />
-              <span>{formatTime(session.startedAt)}</span>
-            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <p
+                className={
+                  isFinished(session) && !kicked
+                    ? isAbandoned(session)
+                      ? "text-xl font-black text-red-500 md:text-2xl"
+                      : isTimedOut(session)
+                        ? "text-xl font-black text-yellow-300 md:text-2xl"
+                        : "text-xl font-black text-emerald-300 md:text-2xl"
+                    : kicked
+                      ? "text-xl font-black text-red-300 md:text-2xl"
+                      : "text-xl font-black text-slate-500 md:text-2xl"
+                }
+              >
+                {isFinished(session) && session.score !== undefined
+                  ? `${session.score}/${totalQuestions}`
+                  : "—"}
+              </p>
 
-            <div className="mt-4 grid grid-cols-4 gap-2 md:flex md:flex-wrap md:gap-3">
-              <ViolationPill label="Tab" value={tabLeft} tone="red" />
-              <ViolationPill
-                label="Full"
-                value={fullscreenExit}
-                tone="orange"
+              <ChevronDown
+                className={`h-5 w-5 text-slate-400 transition md:hidden ${
+                  mobileExpanded ? "rotate-180" : ""
+                }`}
               />
-              <ViolationPill label="Copy" value={copyAttempt} tone="blue" />
-              <ViolationPill label="Paste" value={pasteAttempt} tone="pink" />
             </div>
           </div>
+        </button>
+      </div>
 
-          <div className="flex shrink-0 items-center gap-2">
-            <p
-              className={
-                isFinished(session) && !kicked
-                  ? isAbandoned(session)
-                    ? "text-xl font-black text-red-500 md:text-2xl"
-                    : isTimedOut(session)
-                      ? "text-xl font-black text-yellow-300 md:text-2xl"
-                      : "text-xl font-black text-emerald-300 md:text-2xl"
-                  : kicked
-                    ? "text-xl font-black text-red-300 md:text-2xl"
-                    : "text-xl font-black text-slate-500 md:text-2xl"
-              }
-            >
-              {isFinished(session) && session.score !== undefined
-                ? `${session.score}/${totalQuestions}`
-                : "—"}
-            </p>
-
-            <ChevronDown
-              className={`h-5 w-5 text-slate-400 transition md:hidden ${
-                mobileExpanded ? "rotate-180" : ""
-              }`}
-            />
-          </div>
-        </div>
-      </button>
-
-      {mobileExpanded && (
+      {mobileExpanded && !selectMode && (
         <div className="border-t border-white/10 p-3 md:hidden">
           <div className="flex items-center justify-between gap-2">
             <div className="flex h-10 min-w-0 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3">
@@ -401,39 +465,41 @@ export default function SessionCard({
         </div>
       )}
 
-      <div className="hidden items-center justify-between gap-3 px-5 pb-5 md:flex">
-        <div className="flex w-fit items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-          <Lock className="h-4 w-4 shrink-0 text-slate-300" />
+      {!selectMode && (
+        <div className="hidden items-center justify-between gap-3 px-5 pb-5 md:flex">
+          <div className="flex w-fit items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+            <Lock className="h-4 w-4 shrink-0 text-slate-300" />
 
-          <span className="text-sm font-semibold leading-tight text-slate-300">
-            {getReportLabel(session.reportVisibility)}
-          </span>
-        </div>
+            <span className="text-sm font-semibold leading-tight text-slate-300">
+              {getReportLabel(session.reportVisibility)}
+            </span>
+          </div>
 
-        <div className="flex items-center gap-3">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => onView(session.id)}
-            className="h-12 rounded-xl border border-white/10 bg-white/5 px-5 text-sm font-semibold text-white hover:bg-white/10"
-          >
-            <Eye className="h-4 w-4" />
-            View Details
-          </Button>
-
-          {canKick && (
+          <div className="flex items-center gap-3">
             <Button
               type="button"
-              variant="destructive"
-              onClick={() => setKickDialogOpen(true)}
-              className="h-12 rounded-xl px-5 text-sm font-semibold"
+              variant="ghost"
+              onClick={() => onView(session.id)}
+              className="h-12 rounded-xl border border-white/10 bg-white/5 px-5 text-sm font-semibold text-white hover:bg-white/10"
             >
-              <UserX className="h-4 w-4" />
-              Kick
+              <Eye className="h-4 w-4" />
+              View Details
             </Button>
-          )}
+
+            {canKick && (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => setKickDialogOpen(true)}
+                className="h-12 rounded-xl px-5 text-sm font-semibold"
+              >
+                <UserX className="h-4 w-4" />
+                Kick
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       <ConfirmDialog
         open={kickDialogOpen}

@@ -285,3 +285,27 @@ export async function updateSessionHeartbeat(
 export async function cleanupInactiveSessions() {
   return cleanupInactiveSessionsService();
 }
+
+export async function deleteTeacherSessions(sessionIds: string[]) {
+  if (sessionIds.length === 0) return { deletedCount: 0 };
+
+  const { error: eventsError } = await supabase
+    .from("session_events")
+    .delete()
+    .in("session_id", sessionIds);
+
+  if (eventsError) {
+    throw new Error(eventsError.message);
+  }
+
+  const { error: sessionsError } = await supabase
+    .from("sessions")
+    .delete()
+    .in("id", sessionIds);
+
+  if (sessionsError) {
+    throw new Error(sessionsError.message);
+  }
+
+  return { deletedCount: sessionIds.length };
+}
