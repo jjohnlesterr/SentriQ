@@ -3,9 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { cancelJoinRequest, joinQuiz } from "@/lib/actions";
+import { cancelJoinRequest, getSessionById, joinQuiz } from "@/lib/actions";
 import { supabase } from "@/lib/supabase/client";
 import { VALIDATION_LIMITS } from "@/lib/validations/constants";
+
+type UseStudentJoinParams = {
+  onApproved?: () => void;
+};
 
 function getErrorMessage(error: unknown, fallback: string) {
   if (error instanceof Error && error.message) {
@@ -15,7 +19,7 @@ function getErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
-export function useStudentJoin() {
+export function useStudentJoin({ onApproved }: UseStudentJoinParams = {}) {
   const router = useRouter();
 
   const [studentName, setStudentName] = useState("");
@@ -29,41 +33,57 @@ export function useStudentJoin() {
   useEffect(() => {
     if (!sessionId || !isWaitingApproval) return;
 
+    const activeSessionId = sessionId;
+    let cancelled = false;
+
+    async function checkApprovalStatus() {
+      const sessionData = await getSessionById(activeSessionId);
+
+      if (!sessionData || cancelled) return;
+
+      if (sessionData.approvalStatus === "approved") {
+        setIsWaitingApproval(false);
+        onApproved?.();
+        router.replace(`/student/quiz/${sessionData.id}`);
+        return;
+      }
+
+      if (sessionData.approvalStatus === "rejected") {
+        setIsWaitingApproval(false);
+        setError("Your join request was rejected by the teacher.");
+      }
+    }
+
+    void checkApprovalStatus();
+
     const channel = supabase
-      .channel(`student-join-${sessionId}`)
+      .channel(`student-join-${activeSessionId}`)
       .on(
         "postgres_changes",
         {
           event: "UPDATE",
           schema: "public",
           table: "sessions",
-          filter: `id=eq.${sessionId}`,
+          filter: `id=eq.${activeSessionId}`,
         },
-        (payload) => {
-          const updatedSession = payload.new as {
-            id: string;
-            approval_status: "pending" | "approved" | "rejected";
-          };
-
-          if (updatedSession.approval_status === "approved") {
-            router.push(`/student/quiz/${updatedSession.id}`);
-            return;
-          }
-
-          if (updatedSession.approval_status === "rejected") {
-            setIsWaitingApproval(false);
-            setError("Your join request was rejected by the teacher.");
-          }
+        () => {
+          void checkApprovalStatus();
         },
       )
       .subscribe();
 
+    const polling = window.setInterval(() => {
+      void checkApprovalStatus();
+    }, 1500);
+
     return () => {
+      cancelled = true;
+      window.clearInterval(polling);
       void supabase.removeChannel(channel);
     };
-  }, [sessionId, isWaitingApproval, router]);
+  }, [sessionId, isWaitingApproval, router, onApproved]);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
 
@@ -101,6 +121,14 @@ export function useStudentJoin() {
       setStudentName(trimmedName);
       setQuizCode(trimmedCode);
       setSessionId(session.id);
+
+      if (session.approvalStatus === "approved") {
+        setIsWaitingApproval(false);
+        onApproved?.();
+        router.replace(`/student/quiz/${session.id}`);
+        return;
+      }
+
       setIsWaitingApproval(true);
     } catch (error) {
       setError(
@@ -112,9 +140,11 @@ export function useStudentJoin() {
   }
 
   async function resetRequest() {
-    if (sessionId) {
+    const activeSessionId = sessionId;
+
+    if (activeSessionId) {
       try {
-        await cancelJoinRequest(sessionId);
+        await cancelJoinRequest(activeSessionId);
       } catch (error) {
         console.error("Failed to cancel join request:", error);
       }

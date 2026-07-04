@@ -4,11 +4,7 @@ import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import StudentJoinForm from "@/components/student/join/StudentJoinForm";
 
-export default function QuizCodeModal({
-  onClose,
-}: {
-  onClose: () => void;
-}) {
+export default function QuizCodeModal({ onClose }: { onClose: () => void }) {
   return (
     <motion.div
       initial={{ scale: 0.96, opacity: 0, y: 10 }}
@@ -25,8 +21,8 @@ export default function QuizCodeModal({
         <X className="h-5 w-5" />
       </button>
 
-      <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#0b0f1a]/95 shadow-[0_20px_80px_rgba(0,0,0,0.6)] p-6 sm:p-8">
-        <StudentJoinForm />
+      <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#0b0f1a]/95 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.6)] sm:p-8">
+        <StudentJoinForm onApproved={onClose} />
       </div>
     </motion.div>
   );

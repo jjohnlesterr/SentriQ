@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 
 import { getQuizById, getSessionById } from "@/lib/actions";
@@ -30,8 +30,47 @@ export function useStudentQuizSession({
   setAnswers,
   syncViolationCounts,
 }: Params) {
+  const syncSession = useCallback(async () => {
+    const sessionData = await getSessionById(sessionId);
+
+    if (!sessionData) return;
+
+    setSession(sessionData);
+    syncViolationCounts(sessionData);
+
+    if (sessionData.approvalStatus === "rejected") {
+      router.replace("/student/join");
+      return;
+    }
+
+    if (sessionData.approvalStatus === "approved") {
+      const quizData = await getQuizById(sessionData.quizId);
+
+      if (!quizData) {
+        router.replace("/");
+        return;
+      }
+
+      setQuiz(quizData);
+      setAnswers(sessionData.answers || {});
+      setCurrentIndex(sessionData.currentQuestion || 0);
+
+      router.refresh();
+    }
+  }, [
+    sessionId,
+    router,
+    setSession,
+    setQuiz,
+    setCurrentIndex,
+    setAnswers,
+    syncViolationCounts,
+  ]);
+
   useEffect(() => {
     if (!session || session.approvalStatus !== "pending") return;
+
+    void syncSession();
 
     const channel = supabase
       .channel(`student-quiz-session-${sessionId}`)
@@ -43,46 +82,19 @@ export function useStudentQuizSession({
           table: "sessions",
           filter: `id=eq.${sessionId}`,
         },
-        async () => {
-          const sessionData = await getSessionById(sessionId);
-
-          if (!sessionData) return;
-
-          setSession(sessionData);
-          syncViolationCounts(sessionData);
-
-          if (sessionData.approvalStatus === "rejected") {
-            router.replace("/student/join");
-            return;
-          }
-
-          if (sessionData.approvalStatus === "approved") {
-            const quizData = await getQuizById(sessionData.quizId);
-
-            if (!quizData) {
-              router.replace("/");
-              return;
-            }
-
-            setQuiz(quizData);
-            setAnswers(sessionData.answers || {});
-            setCurrentIndex(sessionData.currentQuestion || 0);
-          }
-        }
+        () => {
+          void syncSession();
+        },
       )
       .subscribe();
 
+    const polling = window.setInterval(() => {
+      void syncSession();
+    }, 1500);
+
     return () => {
+      window.clearInterval(polling);
       supabase.removeChannel(channel);
     };
-  }, [
-    session,
-    sessionId,
-    router,
-    setSession,
-    setQuiz,
-    setCurrentIndex,
-    setAnswers,
-    syncViolationCounts,
-  ]);
+  }, [session, sessionId, syncSession]);
 }

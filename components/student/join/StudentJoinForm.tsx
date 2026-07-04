@@ -4,8 +4,12 @@ import JoinRequestForm from "@/components/student/join/JoinRequestForm";
 import WaitingApprovalCard from "@/components/student/join/WaitingApprovalCard";
 import { useStudentJoin } from "@/hooks/student/useStudentJoin";
 
-export default function StudentJoinForm() {
-  const join = useStudentJoin();
+type Props = {
+  onApproved?: () => void;
+};
+
+export default function StudentJoinForm({ onApproved }: Props) {
+  const join = useStudentJoin({ onApproved });
 
   return (
     <div className="space-y-6">
