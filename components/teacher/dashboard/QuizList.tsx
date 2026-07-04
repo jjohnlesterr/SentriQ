@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Edit,
   Eye,
@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
-import { useExpandableList } from "@/hooks/shared/useExpandableList";
+import { useInfiniteScroll } from "@/hooks/shared/useInfiniteScroll";
 import { useSearchableList } from "@/hooks/shared/useSearchableList";
 
 import type { DashboardQuiz } from "@/hooks/teacher/useTeacherQuizzes";
@@ -41,16 +41,11 @@ export default function QuizList({ items, onDeleteQuiz }: Props) {
     searchBy: (quiz) => `${quiz.title} ${quiz.description} ${quiz.code}`,
   });
 
-  const expandable = useExpandableList(
+  const { visibleItems, hasMoreItems, loaderRef } = useInfiniteScroll(
     filteredItems,
     INITIAL_VISIBLE,
     LOAD_MORE_STEP,
   );
-
-  useEffect(() => {
-    expandable.showLess();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search]);
 
   async function confirmDeleteQuiz() {
     if (!quizToDelete) return;
@@ -212,40 +207,15 @@ export default function QuizList({ items, onDeleteQuiz }: Props) {
           </Card>
         ) : (
           <>
-            <div className="space-y-4">
-              {expandable.visibleItems.map(renderQuizCard)}
-            </div>
+            <div className="space-y-4">{visibleItems.map(renderQuizCard)}</div>
 
-            {(expandable.hasMoreItems || expandable.canShowLess) && (
-              <div className="flex flex-col items-center gap-3 pt-2">
-                <p className="text-center text-xs text-slate-500">
-                  Showing {expandable.visibleCount} of {expandable.totalCount}{" "}
-                  quizzes
-                </p>
-
-                <div className="flex flex-wrap justify-center gap-2">
-                  {expandable.hasMoreItems && (
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={expandable.showMore}
-                      className="h-11 min-w-[220px] cursor-pointer border-white/10 bg-white/5 hover:bg-white/10 hover:text-white"
-                    >
-                      Show More ({expandable.hiddenCount} left)
-                    </Button>
-                  )}
-
-                  {expandable.canShowLess && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={expandable.showLess}
-                      className="h-11 min-w-[160px] cursor-pointer border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
-                    >
-                      Show Less
-                    </Button>
-                  )}
-                </div>
+            {hasMoreItems && (
+              <div
+                ref={loaderRef}
+                className="flex items-center justify-center py-5 text-sm text-slate-400"
+              >
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Loading more quizzes...
               </div>
             )}
           </>
