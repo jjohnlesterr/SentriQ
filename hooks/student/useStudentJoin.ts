@@ -19,6 +19,12 @@ function getErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
+function isAutoDeclined(sessionData: Awaited<ReturnType<typeof getSessionById>>) {
+  return sessionData?.events.some((event) =>
+    event.description?.toLowerCase().includes("automatically declined"),
+  );
+}
+
 export function useStudentJoin({ onApproved }: UseStudentJoinParams = {}) {
   const router = useRouter();
 
@@ -50,7 +56,12 @@ export function useStudentJoin({ onApproved }: UseStudentJoinParams = {}) {
 
       if (sessionData.approvalStatus === "rejected") {
         setIsWaitingApproval(false);
-        setError("Your join request was rejected by the teacher.");
+
+        setError(
+          isAutoDeclined(sessionData)
+            ? "Your join request expired after 10 minutes without approval."
+            : "Your join request was rejected by the teacher.",
+        );
       }
     }
 

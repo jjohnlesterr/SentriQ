@@ -5,6 +5,8 @@ import {
   cancelJoinRequestService,
   cleanupInactiveSessionsService,
   completeSessionService,
+  expirePendingJoinRequestService,
+  expirePendingJoinRequestsService,
   expireSessionService,
   getSessionByIdService,
   joinQuizService,
@@ -93,6 +95,7 @@ export async function cancelJoinRequest(sessionId: string) {
 }
 
 export async function getSessionById(sessionId: string) {
+  await expirePendingJoinRequestService(sessionId);
   return getSessionByIdService(sessionId);
 }
 
@@ -161,6 +164,8 @@ export async function expireSession(
 }
 
 export async function getQuizSessions(quizId: string): Promise<QuizSession[]> {
+  await expirePendingJoinRequestsService();
+
   const { data, error } = await supabase
     .from("sessions")
     .select(
@@ -198,10 +203,21 @@ export async function getQuizSessions(quizId: string): Promise<QuizSession[]> {
 }
 
 export async function approveSession(sessionId: string): Promise<QuizSession> {
+  const checkedSession = await expirePendingJoinRequestService(sessionId);
+
+  if (!checkedSession) {
+    throw new Error("Session not found");
+  }
+
+  if (checkedSession.approvalStatus !== "pending") {
+    throw new Error("This join request is no longer pending.");
+  }
+
   const { error } = await supabase
     .from("sessions")
     .update({ approval_status: "approved" })
-    .eq("id", sessionId);
+    .eq("id", sessionId)
+    .eq("approval_status", "pending");
 
   if (error) {
     throw new Error(error.message);
@@ -272,18 +288,20 @@ export async function getSessionViolations(sessionId: string) {
     fullscreenExit,
     copyAttempt,
     pasteAttempt,
-    total: tabLeft + fullscreenExit + copyAttempt + pasteAttempt,
+    total: tabLeft + fullscreenExit + pasteAttempt + copyAttempt,
   };
 }
 
-export async function updateSessionHeartbeat(
-  sessionId: string,
-) {
+export async function updateSessionHeartbeat(sessionId: string) {
   return updateSessionHeartbeatService(sessionId);
 }
 
 export async function cleanupInactiveSessions() {
   return cleanupInactiveSessionsService();
+}
+
+export async function expirePendingJoinRequests() {
+  return expirePendingJoinRequestsService();
 }
 
 export async function deleteTeacherSessions(sessionIds: string[]) {

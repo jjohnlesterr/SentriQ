@@ -8,6 +8,12 @@ import type {
   SessionEventType,
 } from "@/lib/shared/types";
 
+const JOIN_REQUEST_TIMEOUT_MS = 10 * 60 * 1000;
+
+function isExpiredPendingRequest(startedAt: Date | string) {
+  return Date.now() - new Date(startedAt).getTime() >= JOIN_REQUEST_TIMEOUT_MS;
+}
+
 type QuestionRow = {
   id: string;
   quiz_id: string;
@@ -252,6 +258,39 @@ export async function cancelJoinRequestService(
   if (sessionError) {
     throw new Error(sessionError.message);
   }
+}
+
+export async function expirePendingJoinRequestService(sessionId: string) {
+  const session = await getSessionByIdService(sessionId);
+
+  if (!session) return null;
+  if (session.approvalStatus !== "pending") return session;
+  if (!isExpiredPendingRequest(session.startedAt)) return session;
+
+  const now = new Date().toISOString();
+
+  const { error } = await supabase
+    .from("sessions")
+    .update({
+      approval_status: "rejected",
+      status: "abandoned",
+      completed_at: now,
+    })
+    .eq("id", sessionId)
+    .eq("approval_status", "pending");
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  await supabase.from("session_events").insert({
+    session_id: sessionId,
+    type: "rejected",
+    description:
+      "Join request automatically declined after waiting for more than 10 minutes.",
+  });
+
+  return getSessionWithEvents(sessionId);
 }
 
 export async function getSessionByIdService(
@@ -511,7 +550,57 @@ export async function updateSessionHeartbeatService(
   }
 }
 
+export async function expirePendingJoinRequestsService() {
+  const tenMinutesAgo = new Date(
+    Date.now() - JOIN_REQUEST_TIMEOUT_MS,
+  ).toISOString();
+
+  const { data: expiredRequests, error: selectError } = await supabase
+    .from("sessions")
+    .select("id")
+    .eq("approval_status", "pending")
+    .lt("started_at", tenMinutesAgo);
+
+  if (selectError) {
+    throw new Error(selectError.message);
+  }
+
+  if (!expiredRequests?.length) return;
+
+  const now = new Date().toISOString();
+  const sessionIds = expiredRequests.map((session) => session.id);
+
+  const { error: updateError } = await supabase
+    .from("sessions")
+    .update({
+      approval_status: "rejected",
+      status: "abandoned",
+      completed_at: now,
+    })
+    .in("id", sessionIds)
+    .eq("approval_status", "pending");
+
+  if (updateError) {
+    throw new Error(updateError.message);
+  }
+
+  const { error: eventError } = await supabase.from("session_events").insert(
+    sessionIds.map((sessionId) => ({
+      session_id: sessionId,
+      type: "rejected",
+      description:
+        "Join request automatically declined after waiting for more than 10 minutes.",
+    })),
+  );
+
+  if (eventError) {
+    throw new Error(eventError.message);
+  }
+}
+
 export async function cleanupInactiveSessionsService() {
+  await expirePendingJoinRequestsService();
+
   const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
 
   const now = new Date().toISOString();
@@ -520,6 +609,7 @@ export async function cleanupInactiveSessionsService() {
     .from("sessions")
     .select("id")
     .eq("status", "in-progress")
+    .eq("approval_status", "approved")
     .lt("last_seen_at", fiveMinutesAgo);
 
   if (selectError) {
@@ -540,7 +630,8 @@ export async function cleanupInactiveSessionsService() {
       timed_out_at: null,
     })
     .in("id", sessionIds)
-    .eq("status", "in-progress");
+    .eq("status", "in-progress")
+    .eq("approval_status", "approved");
 
   if (sessionError) {
     throw new Error(sessionError.message);
