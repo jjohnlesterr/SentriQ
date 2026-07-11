@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import TeacherPageLayout from "@/components/layout/TeacherPageLayout";
+import LoginTransitionLoader from "@/components/shared/LoginTransitionLoader";
 import DashboardHeader from "@/components/teacher/dashboard/DashboardHeader";
 import CreateQuizDialog from "@/components/teacher/dashboard/CreateQuizDialog";
 import DashboardStats from "@/components/teacher/dashboard/DashboardStats";
@@ -34,6 +35,14 @@ export default function TeacherDashboardContent() {
     if (!open && searchParams.get("create") === "true") {
       router.replace("/teacher/dashboard");
     }
+  }
+
+  /*
+   * Habang kinukuha ang teacher profile, quizzes at sessions,
+   * SentriQ loader lang muna ang ipapakita.
+   */
+  if (teacher.isLoading) {
+    return <LoginTransitionLoader />;
   }
 
   return (
@@ -82,7 +91,7 @@ export default function TeacherDashboardContent() {
 
           <div className="mt-5 md:mt-8">
             <DashboardQuizTabs
-              isLoading={teacher.isLoading}
+              isLoading={false}
               quizzes={teacher.quizzes}
               publishedQuizzes={teacher.publishedQuizzes}
               draftQuizzes={teacher.draftQuizzes}

@@ -2,12 +2,12 @@
 
 import { Suspense } from "react";
 
-import PageLoader from "@/components/shared/PageLoader";
+import LoginTransitionLoader from "@/components/shared/LoginTransitionLoader";
 import TeacherDashboardContent from "@/components/teacher/dashboard/TeacherDashboardContent";
 
 export default function TeacherDashboardPage() {
   return (
-    <Suspense fallback={<PageLoader label="Loading dashboard..." />}>
+    <Suspense fallback={<LoginTransitionLoader />}>
       <TeacherDashboardContent />
     </Suspense>
   );
