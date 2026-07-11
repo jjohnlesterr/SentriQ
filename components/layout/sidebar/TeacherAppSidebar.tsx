@@ -1,19 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   Eye,
   FilePlus2,
   FileText,
   LayoutDashboard,
   LogOut,
-  Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
   PencilLine,
   ShieldCheck,
   X,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 import AppLogo from "@/components/shared/AppLogo";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
@@ -56,7 +57,9 @@ export default function TeacherAppSidebar({
 }: Props) {
   const router = useRouter();
 
-  const isQuizActive = activePage === "quiz-builder" || activePage === "drafts";
+  const isQuizActive =
+    activePage === "quiz-builder" || activePage === "drafts";
+
   const isMonitorActive = activePage === "monitor";
 
   const [builderOpen, setBuilderOpen] = useState(isQuizActive);
@@ -65,14 +68,6 @@ export default function TeacherAppSidebar({
 
   const liveQuizzes = quizzes.filter((quiz) => quiz.published);
   const isCollapsed = collapsed && !open;
-
-  useEffect(() => {
-    if (isQuizActive) setBuilderOpen(true);
-  }, [isQuizActive]);
-
-  useEffect(() => {
-    if (isMonitorActive) setMonitorOpen(true);
-  }, [isMonitorActive]);
 
   function closeSidebar() {
     onClose?.();
@@ -102,12 +97,13 @@ export default function TeacherAppSidebar({
 
   return (
     <>
+      {/* MOBILE OVERLAY */}
       {open && (
         <button
           type="button"
           aria-label="Close sidebar overlay"
           onClick={closeSidebar}
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 cursor-pointer bg-black/60 backdrop-blur-sm lg:hidden"
         />
       )}
 
@@ -122,24 +118,38 @@ export default function TeacherAppSidebar({
               ),
         )}
       >
+        {/* SIDEBAR HEADER */}
         <div
           className={cn(
-            "mb-6 flex shrink-0 items-center",
+            "mb-6 flex h-12 shrink-0 items-center",
             isCollapsed ? "justify-center" : "justify-between",
           )}
         >
           {isCollapsed ? (
+            /* COLLAPSED LOGO / OPEN BUTTON */
             <button
               type="button"
-              title="Open sidebar"
-              aria-label="Open sidebar"
               onClick={onToggleCollapsed}
-              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 transition hover:bg-white/10"
+              aria-label="Open sidebar"
+              title="Open sidebar"
+              className="group relative flex h-11 w-11 cursor-pointer items-center justify-center rounded-2xl transition hover:bg-white/10"
             >
-              <Menu className="h-5 w-5 text-slate-200" />
+              <span className="relative h-11 w-11 transition group-hover:scale-90 group-hover:opacity-0">
+                <Image
+                  src="/logoo.png"
+                  alt="SentriQ Logo"
+                  fill
+                  sizes="44px"
+                  className="object-contain"
+                  priority
+                />
+              </span>
+
+              <PanelLeftOpen className="absolute h-5 w-5 scale-75 text-slate-300 opacity-0 transition group-hover:scale-100 group-hover:opacity-100" />
             </button>
           ) : (
             <>
+              {/* EXPANDED LOGO */}
               <div className="flex min-w-0 items-center gap-3">
                 <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl">
                   <Image
@@ -152,33 +162,36 @@ export default function TeacherAppSidebar({
                   />
                 </div>
 
-                <AppLogo className="text-xl" />
+                <AppLogo className="truncate text-xl" />
               </div>
 
+              {/* MOBILE CLOSE OR DESKTOP COLLAPSE */}
               {open ? (
                 <button
                   type="button"
-                  aria-label="Close sidebar"
                   onClick={closeSidebar}
-                  className="rounded-xl border border-white/10 bg-white/5 p-2 text-slate-300 transition hover:bg-white/10 hover:text-white lg:hidden"
+                  aria-label="Close sidebar"
+                  title="Close sidebar"
+                  className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white lg:hidden"
                 >
                   <X className="h-4 w-4" />
                 </button>
               ) : (
                 <button
                   type="button"
-                  title="Collapse sidebar"
-                  aria-label="Collapse sidebar"
                   onClick={onToggleCollapsed}
-                  className="hidden rounded-xl border border-white/10 bg-white/5 p-2 text-slate-300 transition hover:bg-white/10 hover:text-white lg:inline-flex"
+                  aria-label="Collapse sidebar"
+                  title="Collapse sidebar"
+                  className="hidden h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-slate-400 transition hover:bg-white/10 hover:text-white lg:flex"
                 >
-                  <Menu className="h-4 w-4" />
+                  <PanelLeftClose className="h-5 w-5" />
                 </button>
               )}
             </>
           )}
         </div>
 
+        {/* NAVIGATION */}
         <ScrollArea className="min-h-0 flex-1 pr-2">
           <nav className="space-y-2 pb-4">
             <SidebarButton
@@ -193,11 +206,12 @@ export default function TeacherAppSidebar({
 
             {isCollapsed ? (
               <>
+                {/* COLLAPSED QUIZ BUILDER */}
                 <div className="group relative">
                   <SidebarButton
                     icon={FileText}
                     active={isQuizActive}
-                    collapsed={isCollapsed}
+                    collapsed
                     title="Quiz Builder"
                   >
                     Quiz Builder
@@ -228,11 +242,12 @@ export default function TeacherAppSidebar({
                   </div>
                 </div>
 
+                {/* COLLAPSED LIVE MONITOR */}
                 <div className="group relative">
                   <SidebarButton
                     icon={Eye}
                     active={isMonitorActive}
-                    collapsed={isCollapsed}
+                    collapsed
                     title="Live Monitor"
                   >
                     Live Monitor
@@ -257,7 +272,10 @@ export default function TeacherAppSidebar({
                             navigate(`/teacher/quiz/${quiz.id}/monitor`)
                           }
                         >
-                          <span className="block max-w-[150px] truncate text-left">
+                          <span
+                            title={quiz.title}
+                            className="block max-w-[150px] truncate text-left"
+                          >
                             {quiz.title}
                           </span>
                         </SidebarButton>
@@ -268,19 +286,22 @@ export default function TeacherAppSidebar({
               </>
             ) : (
               <>
+                {/* EXPANDED QUIZ BUILDER */}
                 <SidebarSection
                   title="Quiz Builder"
                   icon={FileText}
                   active={isQuizActive}
-                  open={builderOpen}
-                  onToggle={() => setBuilderOpen((prev) => !prev)}
+                  open={builderOpen || isQuizActive}
+                  onToggle={() => setBuilderOpen((current) => !current)}
                 >
                   <SidebarButton
                     sidebarVariant="sub"
                     icon={PencilLine}
                     active={activePage === "drafts"}
                     onClick={() => navigate("/teacher/drafts")}
-                    className={activePage !== "drafts" ? "text-violet-200" : ""}
+                    className={
+                      activePage !== "drafts" ? "text-violet-200" : ""
+                    }
                   >
                     Drafts
                   </SidebarButton>
@@ -298,12 +319,13 @@ export default function TeacherAppSidebar({
                   </SidebarButton>
                 </SidebarSection>
 
+                {/* EXPANDED LIVE MONITOR */}
                 <SidebarSection
                   title="Live Monitor"
                   icon={Eye}
                   active={isMonitorActive}
-                  open={monitorOpen}
-                  onToggle={() => setMonitorOpen((prev) => !prev)}
+                  open={monitorOpen || isMonitorActive}
+                  onToggle={() => setMonitorOpen((current) => !current)}
                   contentClassName="pl-0"
                 >
                   {liveQuizzes.length === 0 ? (
@@ -326,7 +348,7 @@ export default function TeacherAppSidebar({
                         >
                           <span
                             title={quiz.title}
-                            className="block w-full max-w-[145px] overflow-hidden truncate whitespace-nowrap text-left"
+                            className="block w-full max-w-[145px] truncate whitespace-nowrap text-left"
                           >
                             {quiz.title}
                           </span>
@@ -340,7 +362,9 @@ export default function TeacherAppSidebar({
           </nav>
         </ScrollArea>
 
+        {/* BOTTOM SECTION */}
         <div className="mt-4 shrink-0 space-y-3">
+          {/* ADMIN SWITCH */}
           {isAdmin && (
             <SidebarButton
               icon={ShieldCheck}
@@ -353,6 +377,7 @@ export default function TeacherAppSidebar({
             </SidebarButton>
           )}
 
+          {/* TEACHER PROFILE */}
           {!isCollapsed && (
             <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
               <div className="flex items-center gap-3">
@@ -364,7 +389,11 @@ export default function TeacherAppSidebar({
                   <p className="truncate text-sm font-semibold text-white">
                     Teacher
                   </p>
-                  <p className="truncate text-xs text-slate-500">
+
+                  <p
+                    title={teacherName}
+                    className="truncate text-xs text-slate-500"
+                  >
                     {teacherName || "teacher@email.com"}
                   </p>
                 </div>
@@ -372,6 +401,7 @@ export default function TeacherAppSidebar({
             </div>
           )}
 
+          {/* LOGOUT */}
           <SidebarButton
             sidebarVariant="logout"
             icon={LogOut}
