@@ -153,3 +153,49 @@ input::-webkit-credentials-auto-fill-button {
   visibility: hidden;
   display: none !important;
 }
+
+@keyframes sentriq-loading {
+  0% {
+    transform: translateX(-110%);
+  }
+
+  50% {
+    transform: translateX(55%);
+  }
+
+  100% {
+    transform: translateX(210%);
+  }
+}
+
+.sentriq-loading-bar {
+  animation: sentriq-loading 1.25s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sentriq-loading-bar {
+    animation: none;
+    width: 100%;
+  }
+}
+
+/* Global interactive cursors */
+button:not(:disabled),
+a[href],
+select:not(:disabled),
+summary,
+label[for],
+input[type="checkbox"]:not(:disabled),
+input[type="radio"]:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+[role="link"]:not([aria-disabled="true"]),
+[data-clickable="true"] {
+  cursor: pointer !important;
+}
+
+button:disabled,
+select:disabled,
+input:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed !important;
+}
