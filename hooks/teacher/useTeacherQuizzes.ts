@@ -4,35 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-import {
-  createQuiz,
-  deleteQuiz,
-  getQuizSessions,
-  getTeacherQuizzes,
-} from "@/lib/actions";
-import {
-  clearTeacherSession,
-  getTeacherSession,
-} from "@/lib/auth/teacher-session";
-import { supabaseBrowser } from "@/lib/supabase/browser";
-import type { Quiz } from "@/lib/shared/types";
+import { createQuiz, deleteQuiz, getTeacherDashboardData } from "@/lib/actions";
+import { clearTeacherSession } from "@/lib/auth/teacher-session";
+import type { TeacherDashboardQuiz } from "@/lib/actions/dashboard.actions";
 
-export type DashboardQuiz = Quiz & {
-  isAnswering: boolean;
-  activeSessionCount: number;
-};
-
-function isActiveAnsweringSession(session: {
-  approvalStatus: string;
-  status: string;
-  completedAt?: Date | string;
-}) {
-  return (
-    session.approvalStatus === "approved" &&
-    session.status === "in-progress" &&
-    !session.completedAt
-  );
-}
+export type DashboardQuiz = TeacherDashboardQuiz;
 
 export function useTeacherQuizzes() {
   const router = useRouter();
@@ -53,77 +29,66 @@ export function useTeacherQuizzes() {
     [quizzes],
   );
 
-  const loadQuizzes = useCallback(
-    async (id = teacherId) => {
-      if (!id) return;
+  const loadQuizzes = useCallback(async () => {
+    setIsLoading(true);
 
-      setIsLoading(true);
+    try {
+      const dashboardData = await getTeacherDashboardData();
 
-      try {
-        const data = await getTeacherQuizzes(id);
+      setTeacherId(dashboardData.teacherId);
+      setTeacherName(dashboardData.teacherName);
+      setIsAdmin(dashboardData.isAdmin);
+      setQuizzes(dashboardData.quizzes);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to load dashboard.";
 
-        const quizzesWithStatus = await Promise.all(
-          data.map(async (quiz) => {
-            if (!quiz.published) {
-              return {
-                ...quiz,
-                isAnswering: false,
-                activeSessionCount: 0,
-              };
-            }
-
-            const sessions = await getQuizSessions(quiz.id);
-            const activeSessionCount = sessions.filter(
-              isActiveAnsweringSession,
-            ).length;
-
-            return {
-              ...quiz,
-              isAnswering: activeSessionCount > 0,
-              activeSessionCount,
-            };
-          }),
-        );
-
-        setQuizzes(quizzesWithStatus);
-      } catch {
-        toast.error("Failed to load quizzes.");
-      } finally {
-        setIsLoading(false);
+      if (message === "Teacher session not found.") {
+        router.push("/");
+        return;
       }
-    },
-    [teacherId],
-  );
+
+      toast.error("Failed to load teacher dashboard.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [router]);
 
   useEffect(() => {
-    async function loadSession() {
-      try {
-        const session = await getTeacherSession();
+    let cancelled = false;
 
-        if (!session) {
-          router.push("/teacher/login");
+    getTeacherDashboardData()
+      .then((dashboardData) => {
+        if (cancelled) return;
+
+        setTeacherId(dashboardData.teacherId);
+        setTeacherName(dashboardData.teacherName);
+        setIsAdmin(dashboardData.isAdmin);
+        setQuizzes(dashboardData.quizzes);
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+
+        const message =
+          error instanceof Error ? error.message : "Failed to load dashboard.";
+
+        if (message === "Teacher session not found.") {
+          router.push("/");
           return;
         }
 
-        setTeacherId(session.user.id);
-        setTeacherName(session.user.email ?? "Teacher");
+        toast.error("Failed to load teacher dashboard.");
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      });
 
-        const { data: profile } = await supabaseBrowser
-          .from("profiles")
-          .select("role")
-          .eq("id", session.user.id)
-          .maybeSingle();
-
-        setIsAdmin(profile?.role === "admin");
-
-        await loadQuizzes(session.user.id);
-      } catch {
-        toast.error("Failed to load teacher session.");
-      }
-    }
-
-    void loadSession();
-  }, [router, loadQuizzes]);
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   async function createNewQuiz(title: string, description: string) {
     if (!teacherId) {
@@ -132,13 +97,13 @@ export function useTeacherQuizzes() {
 
     const quiz = await createQuiz(title, description, teacherId);
 
-    setQuizzes((prev) => [
-      ...prev,
+    setQuizzes((currentQuizzes) => [
       {
         ...quiz,
         isAnswering: false,
         activeSessionCount: 0,
       },
+      ...currentQuizzes,
     ]);
 
     router.push(`/teacher/quiz/${quiz.id}/builder?fresh=1`);
@@ -148,7 +113,9 @@ export function useTeacherQuizzes() {
     try {
       await deleteQuiz(quizId);
 
-      setQuizzes((prev) => prev.filter((quiz) => quiz.id !== quizId));
+      setQuizzes((currentQuizzes) =>
+        currentQuizzes.filter((quiz) => quiz.id !== quizId),
+      );
 
       toast.success("Quiz deleted.");
     } catch {
