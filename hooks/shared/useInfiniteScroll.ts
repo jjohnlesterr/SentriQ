@@ -19,10 +19,6 @@ export function useInfiniteScroll<T>(
   const hasMoreItems = safeVisibleCount < items.length;
 
   useEffect(() => {
-    setVisibleCount(initialVisible);
-  }, [items, initialVisible]);
-
-  useEffect(() => {
     const loader = loaderRef.current;
 
     if (!loader || !hasMoreItems) return;
