@@ -61,9 +61,8 @@ export default function FeaturesSection() {
   return (
     <section
       id="features"
-      className="relative flex min-h-screen items-center overflow-hidden py-8"
+className="relative flex items-center overflow-hidden py-14 md:py-16"
     >
-      {/* ================= MOBILE + TABLET ROBOT (ONLY) ================= */}
       <Image
         src="/monitoring-mascot.png"
         alt="SentriQ mascot background mobile"
