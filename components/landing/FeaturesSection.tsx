@@ -64,7 +64,7 @@ export default function FeaturesSection() {
 className="relative flex items-center overflow-hidden py-14 md:py-16"
     >
       <Image
-        src="/monitoring-mascot.png"
+        src="/sentriq-monitoring-mascot-2k.png"
         alt="SentriQ mascot background mobile"
         width={600}
         height={600}
@@ -83,10 +83,9 @@ className="relative flex items-center overflow-hidden py-14 md:py-16"
 
       <div className="relative grid w-full items-center gap-8 lg:grid-cols-[0.82fr_1.18fr]">
 
-        {/* ================= DESKTOP ROBOT (UNCHANGED) ================= */}
         <div className="relative hidden justify-center lg:flex">
           <Image
-            src="/monitoring-mascot.png"
+            src="/sentriq-monitoring-mascot-2k.png"
             alt="SentriQ monitoring mascot"
             width={500}
             height={500}
@@ -94,7 +93,6 @@ className="relative flex items-center overflow-hidden py-14 md:py-16"
           />
         </div>
 
-        {/* CONTENT */}
         <div>
           <h2 className="max-w-3xl text-4xl font-extrabold leading-[1.05] tracking-tight text-white md:text-5xl">
             Built for modern digital assessments

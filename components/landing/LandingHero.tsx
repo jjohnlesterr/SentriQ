@@ -83,7 +83,7 @@ export default function LandingHero() {
 
       <div className="pointer-events-none relative flex items-center justify-center">
         <Image
-          src="/hero.png"
+          src="/sentriq-mascot-8k-final.png"
           alt="SentriQ mascot background"
           width={540}
           height={540}
@@ -101,7 +101,7 @@ export default function LandingHero() {
         />
 
         <Image
-          src="/hero.png"
+          src="/sentriq-mascot-8k-final.png"
           alt="SentriQ mascot"
           width={540}
           height={540}

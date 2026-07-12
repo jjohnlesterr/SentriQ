@@ -43,7 +43,7 @@ export default function RolesSection() {
         <div className="mt-12 grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
           <article className="relative overflow-hidden rounded-3xl border border-cyan-400/20 bg-white/[0.025] p-5 backdrop-blur-xl sm:p-6 lg:p-6">
             <Image
-              src="/result-mascot.png"
+              src="/sentriq-results-mascot-2k.png"
               alt=""
               width={420}
               height={420}
@@ -63,7 +63,7 @@ export default function RolesSection() {
             <div className="relative z-10 grid items-center gap-6 lg:grid-cols-[0.9fr_1.1fr]">
               <div className="relative hidden justify-center lg:flex">
                 <Image
-                  src="/result-mascot.png"
+                  src="/sentriq-results-mascot-2k.png"
                   alt="SentriQ educator mascot"
                   width={360}
                   height={360}
@@ -112,7 +112,7 @@ export default function RolesSection() {
 
           <article className="relative overflow-hidden rounded-3xl border border-violet-400/20 bg-white/[0.025] p-5 backdrop-blur-xl sm:p-6 lg:p-6">
             <Image
-              src="/quiz-mascot.png"
+              src="/sentriq-quiz-code-mascot-2k.png"
               alt=""
               width={420}
               height={420}
@@ -132,7 +132,7 @@ export default function RolesSection() {
             <div className="relative z-10 grid items-center gap-6 lg:grid-cols-[0.9fr_1.1fr]">
               <div className="relative hidden justify-center lg:flex">
                 <Image
-                  src="/quiz-mascot.png"
+                  src="/sentriq-quiz-code-mascot-2k.png"
                   alt="SentriQ learner mascot"
                   width={360}
                   height={360}
