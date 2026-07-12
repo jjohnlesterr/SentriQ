@@ -23,9 +23,9 @@ export const metadata: Metadata = {
     "A smart quiz and monitoring platform designed to ensure integrity and fairness during digital assessments.",
 
   icons: {
-    icon: "/logoo.png",
-    shortcut: "/logoo.png",
-    apple: "/logoo.png",
+    icon: "/logo-final.png",
+    shortcut: "/logo-final.png",
+    apple: "/logo-final.png",
   },
 };
 

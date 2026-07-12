@@ -51,6 +51,7 @@ function getReportVisibilityLabel(value: ReportVisibility | "mixed") {
   if (value === "locked") return "Reports Locked";
   if (value === "summary") return "Answers Released";
   if (value === "full") return "Full Review Released";
+
   return "Mixed Access";
 }
 
@@ -65,7 +66,7 @@ export default function MonitorHeader({
   const [reportOpen, setReportOpen] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
-  const joiningClosed = !!quiz?.joinLocked;
+  const joiningClosed = Boolean(quiz?.joinLocked);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -106,16 +107,16 @@ export default function MonitorHeader({
       <button
         type="button"
         onClick={() => handleUpdateReportVisibility(visibility)}
-        className={`flex w-full items-start gap-3 rounded-2xl border px-3 py-3 text-left transition ${
+        className={`flex w-full cursor-pointer items-start gap-3 rounded-2xl border px-3 py-3 text-left transition ${
           active
-            ? "border-cyan-400/30 bg-cyan-500/10 text-white"
+            ? "border-cyan-300/40 bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-blue-950/30"
             : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
         }`}
       >
         <span
           className={`mt-0.5 rounded-xl border p-2 ${
             active
-              ? "border-cyan-400/30 bg-cyan-400/10 text-cyan-200"
+              ? "border-white/20 bg-white/15 text-white"
               : "border-white/10 bg-white/5 text-slate-300"
           }`}
         >
@@ -125,10 +126,15 @@ export default function MonitorHeader({
         <span className="min-w-0 flex-1">
           <span className="flex items-center justify-between gap-2 text-sm font-semibold">
             {title}
-            {active && <Check className="h-4 w-4 text-cyan-200" />}
+
+            {active && <Check className="h-4 w-4 text-white" />}
           </span>
 
-          <span className="mt-1 block text-xs leading-5 text-slate-400">
+          <span
+            className={`mt-1 block text-xs leading-5 ${
+              active ? "text-cyan-50/80" : "text-slate-400"
+            }`}
+          >
             {description}
           </span>
         </span>
@@ -141,9 +147,11 @@ export default function MonitorHeader({
       <div className="relative p-4 md:p-8">
         <div className="absolute right-0 top-0 h-24 w-24 rounded-full bg-blue-500/10 blur-2xl md:h-32 md:w-32" />
 
-        <div className="relative z-10 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex items-start gap-3 md:gap-4">
+        <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          {/* QUIZ INFORMATION */}
+          <div className="flex min-w-0 items-start gap-3 md:gap-4">
             <Button
+              type="button"
               variant="ghost"
               size="sm"
               onClick={onBack}
@@ -165,7 +173,8 @@ export default function MonitorHeader({
                 descriptionClassName="mt-1 text-sm text-slate-300 md:mt-2 md:text-base"
               />
 
-              <div className="mt-2 flex flex-wrap items-center gap-2 md:mt-3">
+              {/* QUIZ METADATA AND RESULT ACCESS */}
+              <div className="mt-3 flex flex-wrap items-center gap-2">
                 {quiz?.published && (
                   <p className="inline-flex rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 font-mono text-xs text-cyan-200 md:text-sm">
                     Join Code: {quiz.code}
@@ -177,14 +186,17 @@ export default function MonitorHeader({
                   Time Limit: {formatTimeLimit(quiz?.timeLimitMinutes)}
                 </p>
 
+                {/* RESULT ACCESS DROPDOWN */}
                 <div ref={reportRef} className="relative w-full sm:w-auto">
                   <button
                     type="button"
-                    onClick={() => setReportOpen((prev) => !prev)}
-                    className="inline-flex w-full items-center justify-between gap-3 rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 text-xs text-cyan-100 transition hover:bg-cyan-500/15 md:text-sm"
+                    onClick={() => setReportOpen((current) => !current)}
+                    aria-expanded={reportOpen}
+                    className="inline-flex w-full cursor-pointer items-center justify-between gap-3 rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 text-xs text-cyan-100 transition hover:bg-cyan-500/15 md:text-sm"
                   >
                     <span className="inline-flex min-w-0 items-center gap-2">
                       <Eye className="h-3.5 w-3.5 shrink-0" />
+
                       <span className="truncate">
                         Result Access:{" "}
                         <span className="font-semibold">
@@ -227,7 +239,8 @@ export default function MonitorHeader({
                           visibility: "full",
                           icon: <Unlock className="h-4 w-4" />,
                           title: "Release Full Review",
-                          description: "Allow full question review after quiz.",
+                          description:
+                            "Allow full question review after quiz.",
                         })}
                       </div>
                     </div>
@@ -237,70 +250,72 @@ export default function MonitorHeader({
             </div>
           </div>
 
-          <div className="flex w-full flex-col gap-3 lg:w-auto lg:min-w-[430px]">
-            <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-stretch">
+          {/* JOINING CONTROL */}
+          <div className="flex w-full flex-col gap-3 lg:w-auto lg:min-w-[220px]">
+            <div
+              className={`flex min-h-14 items-center gap-3 rounded-2xl border px-4 py-3 ${
+                joiningClosed
+                  ? "border-red-400/20 bg-red-500/10"
+                  : "border-emerald-400/20 bg-emerald-500/10"
+              }`}
+            >
               <div
-                className={`flex min-h-12 flex-1 items-center gap-3 rounded-2xl border px-4 py-3 ${
-                  joiningClosed
-                    ? "border-red-400/20 bg-red-500/10"
-                    : "border-emerald-400/20 bg-emerald-500/10"
+                className={`relative flex h-3 w-3 shrink-0 ${
+                  joiningClosed ? "text-red-400" : "text-emerald-400"
                 }`}
               >
-                <div
-                  className={`relative flex h-3 w-3 shrink-0 ${
-                    joiningClosed ? "text-red-400" : "text-emerald-400"
+                <span
+                  className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${
+                    joiningClosed ? "bg-red-400" : "bg-emerald-400"
                   }`}
-                >
-                  <span
-                    className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${
-                      joiningClosed ? "bg-red-400" : "bg-emerald-400"
-                    }`}
-                  />
-                  <span
-                    className={`relative inline-flex h-3 w-3 rounded-full ${
-                      joiningClosed ? "bg-red-400" : "bg-emerald-400"
-                    }`}
-                  />
-                </div>
+                />
 
-                <div className="flex min-w-0 flex-col">
-                  <span
-                    className={`truncate text-sm font-semibold ${
-                      joiningClosed ? "text-red-200" : "text-emerald-200"
-                    }`}
-                  >
-                    {joiningClosed ? "Joining Closed" : "Joining Open"}
-                  </span>
-
-                  <span
-                    className={`truncate text-xs ${
-                      joiningClosed ? "text-red-300/80" : "text-emerald-300/80"
-                    }`}
-                  >
-                    Last Sync {lastUpdated.toLocaleTimeString()}
-                  </span>
-                </div>
+                <span
+                  className={`relative inline-flex h-3 w-3 rounded-full ${
+                    joiningClosed ? "bg-red-400" : "bg-emerald-400"
+                  }`}
+                />
               </div>
 
-              <Button
-                type="button"
-                variant={joiningClosed ? "primary" : "dangerSoft"}
-                onClick={onToggleJoining}
-                className="h-auto min-h-12 shrink-0 rounded-2xl px-6 font-semibold sm:min-w-[180px]"
-              >
-                {joiningClosed ? (
-                  <>
-                    <Unlock className="h-4 w-4" />
-                    Reopen Joining
-                  </>
-                ) : (
-                  <>
-                    <Lock className="h-4 w-4" />
-                    Lock Joining
-                  </>
-                )}
-              </Button>
+              <div className="flex min-w-0 flex-col">
+                <span
+                  className={`truncate text-sm font-semibold ${
+                    joiningClosed ? "text-red-200" : "text-emerald-200"
+                  }`}
+                >
+                  {joiningClosed ? "Joining Closed" : "Joining Open"}
+                </span>
+
+                <span
+                  className={`truncate text-xs ${
+                    joiningClosed
+                      ? "text-red-300/80"
+                      : "text-emerald-300/80"
+                  }`}
+                >
+                  Last Sync {lastUpdated.toLocaleTimeString()}
+                </span>
+              </div>
             </div>
+
+            <Button
+              type="button"
+              variant={joiningClosed ? "primary" : "dangerSoft"}
+              onClick={onToggleJoining}
+              className="min-h-11 w-full rounded-2xl font-semibold"
+            >
+              {joiningClosed ? (
+                <>
+                  <Unlock className="h-4 w-4" />
+                  Reopen Joining
+                </>
+              ) : (
+                <>
+                  <Lock className="h-4 w-4" />
+                  Lock Joining
+                </>
+              )}
+            </Button>
           </div>
         </div>
       </div>

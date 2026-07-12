@@ -21,7 +21,7 @@ export default function LoginTransitionLoader() {
         {/* SentriQ logo */}
         <div className="relative mb-5 h-28 w-28 sm:h-32 sm:w-32">
           <Image
-            src="/logoo.png"
+            src="/logo-final.png"
             alt="SentriQ"
             fill
             priority

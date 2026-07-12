@@ -77,7 +77,7 @@ export default function SiteHeader({ className }: SiteHeaderProps) {
           <Link href="/" className="flex items-center gap-3">
             <div className="relative h-10 w-10 overflow-hidden">
               <Image
-                src="/logoo.png"
+                src="/logo-final.png"
                 alt="SentriQ Logo"
                 fill
                 sizes="40px"

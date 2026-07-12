@@ -42,7 +42,7 @@ export default function SiteFooter({ className }: SiteFooterProps) {
             <Link href="/" className="inline-flex items-center gap-4">
               <div className="relative h-14 w-14 overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-2">
                 <Image
-                  src="/logoo.png"
+                  src="/logo-final.png"
                   alt="SentriQ Logo"
                   fill
                   sizes="56px"

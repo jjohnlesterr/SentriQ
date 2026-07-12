@@ -136,7 +136,7 @@ export default function TeacherAppSidebar({
             >
               <span className="relative h-11 w-11 transition group-hover:scale-90 group-hover:opacity-0">
                 <Image
-                  src="/logoo.png"
+                  src="/logo-final.png"
                   alt="SentriQ Logo"
                   fill
                   sizes="44px"
@@ -153,7 +153,7 @@ export default function TeacherAppSidebar({
               <div className="flex min-w-0 items-center gap-3">
                 <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl">
                   <Image
-                    src="/logoo.png"
+                    src="/logo-final.png"
                     alt="SentriQ Logo"
                     fill
                     sizes="40px"
