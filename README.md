@@ -1,36 +1,169 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<div align="center">
+
+# SentriQ
+
+### Secure Quiz Monitoring Platform
+
+A modern digital assessment platform that helps teachers create quizzes, monitor student activity, and protect academic integrity—all in one secure platform.
+
+</div>
+
+---
+
+## About the Project
+
+SentriQ is a web-based quiz and assessment platform designed for teachers and students. Teachers can create and manage quizzes, distribute access codes, monitor assessment activity, and review student performance.
+
+Students can join assessments using a quiz code and answer questions through a simple and secure interface.
+
+## Key Features
+
+### For Teachers
+
+- Create, edit, publish, and manage quizzes
+- Generate unique quiz access codes
+- Monitor student activity during assessments
+- Receive alerts for suspicious actions
+- Review quiz attempts and student answers
+- View assessment results and performance reports
+
+### For Students
+
+- Join quizzes using an access code
+- Access assessments through a simple interface
+- Answer and submit quizzes securely
+- Receive immediate confirmation after submission
+
+## How SentriQ Works
+
+1. **Create and Publish**  
+   Teachers create quiz questions, configure settings, and publish an assessment.
+
+2. **Share Quiz Access**  
+   SentriQ generates a unique access code that students can use to join.
+
+3. **Monitor Activity**  
+   Student sessions and assessment activity are monitored in real time.
+
+4. **Review Performance**  
+   Teachers can analyze attempts, answers, results, and assessment records.
+
+## Project Preview
+
+<p align="center">
+  <img
+    src="./public/preview.png"
+    alt="SentriQ Web Application Preview"
+    width="850"
+  />
+</p>
+
+## Technology Stack
+
+- **Next.js**
+- **React**
+- **TypeScript**
+- **Tailwind CSS**
+- **Supabase**
+- **PostgreSQL**
+- **Vercel**
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+Make sure the following are installed:
+
+- [Node.js](https://nodejs.org/)
+- npm
+- Git
+
+### Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/YOUR-USERNAME/sentriq.git
+```
+
+2. Open the project directory:
+
+```bash
+cd sentriq
+```
+
+3. Install the dependencies:
+
+```bash
+npm install
+```
+
+4. Create a `.env.local` file in the project root:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+5. Start the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+6. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Description |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | URL of the Supabase project |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public anonymous key used to connect to Supabase |
 
-## Learn More
+> Never include private keys, passwords, or the actual contents of your `.env.local` file in the repository.
 
-To learn more about Next.js, take a look at the following resources:
+## Available Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Starts the local development server.
 
-## Deploy on Vercel
+```bash
+npm run build
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Creates a production-ready build.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run start
+```
+
+Runs the production build locally.
+
+```bash
+npm run lint
+```
+
+Checks the project for linting issues.
+
+## Project Status
+
+SentriQ is currently under active development. Some features and interfaces may continue to change as the platform is improved.
+
+## Author
+
+Developed by **John Lester Tan**.
+
+## License
+
+This project is intended for educational and portfolio purposes.
+
+---
+
+<div align="center">
+
+Built for modern and secure digital assessments.
+
+</div>
