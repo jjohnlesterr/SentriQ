@@ -10,7 +10,7 @@ SentriQ helps teachers create quizzes, manage assessment sessions, monitor stude
 
 <p align="center">
   <img
-    src="./public/preview.png"
+    src="./public/preview1.png"
     alt="SentriQ Quiz Monitoring Platform Preview"
     width="100%"
   />
