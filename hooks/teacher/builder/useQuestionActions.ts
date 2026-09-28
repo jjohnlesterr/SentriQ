@@ -17,6 +17,14 @@ function reorder<T>(items: T[], fromIndex: number, toIndex: number) {
   return updated;
 }
 
+function isBlankQuestion(question: Question) {
+  return (
+    !question.text.trim() &&
+    !question.correctTextAnswer?.trim() &&
+    question.options.every((option) => !option.trim() || option === "True" || option === "False")
+  );
+}
+
 type Params = {
   questions: Question[];
   activeQuestion: number;
@@ -164,6 +172,23 @@ export function useQuestionActions({
     toast.success("Question duplicated.");
   }
 
+  // Adds already-validated questions (e.g. AI-generated). Blank starter
+  // questions at the end are replaced instead of being left behind.
+  function insertQuestions(newQuestions: Question[]) {
+    if (newQuestions.length === 0) return;
+
+    setQuestions((prev) => {
+      const kept = [...prev];
+
+      while (kept.length > 0 && isBlankQuestion(kept[kept.length - 1])) {
+        kept.pop();
+      }
+
+      setActiveQuestion(kept.length);
+      return [...kept, ...newQuestions];
+    });
+  }
+
   return {
     currentQuestion,
     canAddQuestion,
@@ -176,5 +201,6 @@ export function useQuestionActions({
     moveQuestionUp,
     moveQuestionDown,
     duplicateQuestion,
+    insertQuestions,
   };
 }

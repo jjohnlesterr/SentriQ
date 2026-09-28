@@ -137,7 +137,7 @@ export default function QuestionEditor({
   return (
     <QuestionSection>
       <div className="relative">
-        <div className="mb-6 border-b border-white/10 pb-5">
+        <div className="mb-6 border-b border-line pb-5">
           <div className="mb-4 flex items-center gap-2 xl:hidden">
             {onOpenQuestionSelector && (
               <Button
@@ -145,7 +145,8 @@ export default function QuestionEditor({
                 variant="ghost"
                 onClick={onOpenQuestionSelector}
                 aria-label="Open question settings"
-                className="h-12 w-12 shrink-0 rounded-2xl border border-white/10 bg-white/5 p-0 text-cyan-300 hover:bg-white/10"
+                size="icon"
+                className="h-10 w-10 shrink-0"
               >
                 <ListChecks className="h-5 w-5" />
               </Button>
@@ -156,14 +157,14 @@ export default function QuestionEditor({
                 type="button"
                 variant="ghost"
                 onClick={() => setQuestionMenuOpen((prev) => !prev)}
-                className="h-12 w-full justify-between rounded-2xl border border-white/10 bg-slate-950/50 px-4 text-white hover:bg-white/10"
+                className="h-10 w-full justify-between px-3.5"
               >
                 Question {activeQuestion + 1}
                 <ChevronDown className="h-4 w-4 text-slate-400" />
               </Button>
 
               {questionMenuOpen && (
-                <div className="absolute right-0 top-14 z-40 w-full overflow-hidden rounded-2xl border border-white/10 bg-slate-950/95 p-1 shadow-2xl backdrop-blur-xl">
+                <div className="absolute right-0 top-14 z-40 w-full overflow-hidden rounded-xl border border-line bg-surface p-1">
                   {questions.map((item, index) => (
                     <button
                       key={item.id}
@@ -196,7 +197,7 @@ export default function QuestionEditor({
                 Selected Question
               </p>
 
-              <h2 className="mt-1 text-2xl font-extrabold text-white md:text-3xl">
+              <h2 className="mt-1 text-xl font-semibold tracking-tight text-white md:text-2xl">
                 Question {activeQuestion + 1}
               </h2>
 
@@ -214,12 +215,10 @@ export default function QuestionEditor({
                 }}
                 variant="ghost"
                 size="sm"
-                aria-label="Add hint"
-                className={
-                  hasHint
-                    ? "h-11 w-11 cursor-pointer rounded-2xl border border-cyan-400/40 bg-cyan-500/20 p-0 text-cyan-200 shadow-[0_0_24px_rgba(34,211,238,0.12)] hover:bg-cyan-500/30 hover:text-cyan-100"
-                    : "h-11 w-11 cursor-pointer rounded-2xl border border-cyan-400/20 bg-cyan-500/10 p-0 text-cyan-300 hover:bg-cyan-500/20 hover:text-cyan-100"
-                }
+                aria-label={hasHint ? "Edit hint" : "Add hint"}
+                aria-expanded={hintOpen}
+                title={hasHint ? "Edit hint" : "Add hint"}
+                className={`h-9 w-9 p-0 ${hasHint ? "border-amber-400/40 text-amber-300" : "text-slate-400"}`}
               >
                 <Lightbulb className="h-4 w-4" />
               </Button>
@@ -230,7 +229,8 @@ export default function QuestionEditor({
                 variant="ghost"
                 size="sm"
                 aria-label="Delete current question"
-                className="h-11 w-11 cursor-pointer rounded-2xl border border-red-400/20 bg-red-500/10 p-0 text-red-300 hover:bg-red-500/20 hover:text-red-200"
+                title="Delete question"
+                className="h-9 w-9 p-0 text-slate-400 hover:border-red-400/40 hover:bg-red-500/10 hover:text-red-300"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -239,17 +239,17 @@ export default function QuestionEditor({
         </div>
 
         {hintOpen && (
-          <div className="absolute right-0 top-16 z-[9998] w-[360px] max-w-[calc(100vw-2rem)] rounded-3xl border border-cyan-400/20 bg-slate-950/95 p-4 shadow-2xl shadow-black/50 backdrop-blur-xl">
+          <div className="absolute right-0 top-14 z-[9998] w-[360px] max-w-[calc(100vw-2rem)] rounded-lg border border-line-strong bg-surface-raised p-4 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.7)]">
             <div className="mb-3 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <Lightbulb className="h-4 w-4 text-cyan-300" />
-                <p className="font-bold text-white">Hint / Clue</p>
+                <Lightbulb className="h-4 w-4 text-amber-300" />
+                <p className="text-sm font-medium text-white">Hint</p>
               </div>
 
               <button
                 type="button"
                 onClick={() => setHintOpen(false)}
-                className="rounded-xl p-2 text-slate-400 hover:bg-white/10 hover:text-white"
+                className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-white/[0.06] hover:text-white"
                 aria-label="Close hint editor"
               >
                 <X className="h-4 w-4" />
@@ -265,7 +265,7 @@ export default function QuestionEditor({
               }
               placeholder="Example: We discussed this during class."
               rows={3}
-              className="min-h-[96px] resize-none rounded-2xl border-white/10 bg-slate-950/60 text-white placeholder:text-slate-600 focus:border-cyan-400/40 focus:ring-cyan-400/20"
+              className="min-h-[96px] resize-none"
             />
 
             <div className="mt-3 flex items-center justify-between gap-3">
@@ -278,7 +278,7 @@ export default function QuestionEditor({
                   type="button"
                   variant="ghost"
                   onClick={clearHint}
-                  className="rounded-xl text-slate-300 hover:bg-white/10 hover:text-white"
+                  className="text-slate-300"
                 >
                   Clear
                 </Button>
@@ -286,7 +286,7 @@ export default function QuestionEditor({
                 <Button
                   type="button"
                   onClick={saveHint}
-                  className="rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-600 hover:to-blue-600"
+                 
                 >
                   Save
                 </Button>
@@ -306,21 +306,21 @@ export default function QuestionEditor({
                     e.target.value as QuestionType,
                   )
                 }
-                className="h-12 w-full appearance-none rounded-2xl border border-cyan-400/20 bg-slate-950/60 px-4 pr-10 text-sm text-white outline-none transition focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20"
+                className="h-12 w-full appearance-none rounded-xl border border-cyan-400/20 bg-surface px-4 pr-10 text-sm text-white outline-none transition focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20"
               >
                 <option
-                  className="bg-slate-950 text-white"
+                  className="bg-surface text-white"
                   value="multiple_choice"
                 >
                   Multiple Choice
                 </option>
 
-                <option className="bg-slate-950 text-white" value="true_false">
+                <option className="bg-surface text-white" value="true_false">
                   True / False
                 </option>
 
                 <option
-                  className="bg-slate-950 text-white"
+                  className="bg-surface text-white"
                   value="identification"
                 >
                   Identification
@@ -358,7 +358,7 @@ export default function QuestionEditor({
                 }}
                 placeholder="Enter your question"
                 rows={3}
-                className="min-h-[112px] w-full resize-none rounded-2xl border-white/10 bg-slate-950/40 px-4 py-3 text-base text-white placeholder:text-slate-600"
+                className="min-h-[112px] w-full resize-none rounded-xl border-line bg-surface px-4 py-3 text-base text-white placeholder:text-slate-600"
               />
 
               {showQuestionWarning && (
@@ -396,7 +396,7 @@ export default function QuestionEditor({
 
             onAddQuestionDirect();
           }}
-          className="mt-5 h-12 w-full cursor-pointer rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-600 hover:to-blue-600"
+          className="mt-5 w-full"
         >
           <Plus className="h-4 w-4" />
           Add Another Question

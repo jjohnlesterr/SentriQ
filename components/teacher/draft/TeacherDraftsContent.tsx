@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import TeacherPageLayout from "@/components/layout/TeacherPageLayout";
 import PageLoader from "@/components/shared/PageLoader";
-import DraftHeader from "@/components/teacher/draft/DraftHeader";
+import TeacherPageHeader from "@/components/layout/TeacherPageHeader";
 import QuizList from "@/components/teacher/dashboard/QuizList";
 import CreateQuizDialog from "@/components/teacher/dashboard/CreateQuizDialog";
 import { useCreateQuizDialog } from "@/hooks/teacher/useCreateQuizDialog";
@@ -30,11 +30,12 @@ export default function TeacherDraftsContent() {
       }}
     >
       <div className="min-h-screen">
-        <main className="min-w-0 px-4 py-5 sm:px-6 md:px-10 lg:px-8 xl:px-10">
-          <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
-            <DraftHeader onOpenSidebar={() => setSidebarOpen(true)} />
-
-            <div className="w-full md:mt-[3.25rem] md:w-auto">
+        <main className="mx-auto min-w-0 max-w-5xl px-4 py-6 sm:px-6 md:py-10 lg:px-8">
+          <TeacherPageHeader
+            title="Drafts"
+            description="Unpublished quizzes you can keep editing."
+            onOpenSidebar={() => setSidebarOpen(true)}
+            actions={
               <CreateQuizDialog
                 open={createDialog.open}
                 onOpenChange={createDialog.setOpen}
@@ -45,10 +46,10 @@ export default function TeacherDraftsContent() {
                 onDescriptionChange={createDialog.setDescription}
                 onCreate={createDialog.handleCreateQuiz}
               />
-            </div>
-          </div>
+            }
+          />
 
-          <section className="mt-7 md:mt-8">
+          <section className="mt-8">
             {teacher.isLoading ? (
               <PageLoader label="Loading drafts..." variant="card" />
             ) : (

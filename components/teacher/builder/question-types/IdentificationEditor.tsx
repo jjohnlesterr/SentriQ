@@ -44,7 +44,7 @@ export default function IdentificationEditor({
               })
             }
             placeholder="Enter correct answer"
-            className="h-12 rounded-2xl border-white/10 bg-slate-950/40 px-4 text-base"
+            className="h-12 rounded-xl border-line bg-surface px-4 text-base"
           />
 
           {!value.trim() && (

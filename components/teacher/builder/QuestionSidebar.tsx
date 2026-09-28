@@ -73,7 +73,7 @@ export default function QuestionSidebar({
   }
 
   const content = (
-    <section className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
+    <section className="rounded-xl border border-line bg-white/[0.04] p-4">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <h2 className="text-sm font-bold text-white">Questions</h2>
@@ -88,7 +88,7 @@ export default function QuestionSidebar({
             type="button"
             aria-label="Close question selector"
             onClick={() => onMobileOpenChange(false)}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-line bg-white/[0.03] text-slate-300 hover:bg-white/10 hover:text-white"
           >
             <X className="h-4 w-4" />
           </button>
@@ -96,12 +96,12 @@ export default function QuestionSidebar({
       </div>
 
       {questions.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] p-4">
+        <div className="rounded-xl border border-dashed border-line bg-white/[0.03] p-4">
           <Button
             type="button"
             data-add-question-trigger
             onClick={handleAddQuestion}
-            className="h-11 w-full cursor-pointer rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-600 hover:to-blue-600"
+            className="w-full"
           >
             <Plus className="h-4 w-4" />
             Add First Question
@@ -135,7 +135,7 @@ export default function QuestionSidebar({
             data-add-question-trigger
             onClick={handleAddQuestion}
             disabled={!canAddQuestion}
-            className="h-11 w-full cursor-pointer rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/10 hover:from-cyan-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:bg-black/30 disabled:from-black/30 disabled:to-black/30 disabled:text-slate-500"
+            className="w-full"
           >
             <Plus className="h-4 w-4" />
             Add Question
@@ -155,7 +155,7 @@ export default function QuestionSidebar({
     return (
       <>
         {mobileOpen && (
-          <div className="fixed inset-0 z-50 bg-slate-950 text-white xl:hidden">
+          <div className="fixed inset-0 z-50 bg-surface text-white xl:hidden">
             <div className="h-full overflow-y-auto px-4 pb-40 pt-4">
               <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-white/20" />
               {content}

@@ -57,22 +57,22 @@ export default function CreateQuizDialog({
           <Button
             type="button"
             data-create-quiz-trigger
-            className="h-12 w-full cursor-pointer rounded-full px-6 text-sm font-semibold shadow-[0_20px_60px_rgba(59,130,246,0.25)] transition hover:scale-[1.01] md:h-14 md:w-auto md:min-w-[260px] md:text-base"
+            className="w-full md:w-auto"
           >
             <Plus className="h-4 w-4" />
-            Create New Quiz
+            New quiz
           </Button>
         </DialogTrigger>
       )}
 
-      <DialogContent className="w-[calc(100%-2rem)] border border-white/10 bg-slate-950/95 text-white backdrop-blur-2xl sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-2xl font-bold text-transparent">
-            Create New Quiz
+          <DialogTitle>
+            New quiz
           </DialogTitle>
 
-          <DialogDescription className="text-slate-400">
-            Create a new quiz draft and add questions in the builder.
+          <DialogDescription>
+            Start a draft. You can add questions in the builder next.
           </DialogDescription>
         </DialogHeader>
 

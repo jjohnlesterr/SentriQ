@@ -83,7 +83,7 @@ export default function TrueFalseEditor({
         </div>
       </QuestionField>
 
-      <div className="mt-5 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4">
+      <div className="mt-5 rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-4">
         <div className="flex gap-3">
           <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" />
 

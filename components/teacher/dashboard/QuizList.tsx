@@ -14,7 +14,6 @@ import { useRouter } from "next/navigation";
 
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
 import { useInfiniteScroll } from "@/hooks/shared/useInfiniteScroll";
@@ -60,111 +59,105 @@ export default function QuizList({ items, onDeleteQuiz }: Props) {
     }
   }
 
-  function renderQuizCard(quiz: DashboardQuiz) {
+  function renderQuizRow(quiz: DashboardQuiz) {
     return (
-      <Card
+      <li
         key={quiz.id}
-        className="rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl transition hover:border-white/20 md:p-6"
+        className="flex flex-col gap-4 px-4 py-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between"
       >
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="min-w-0">
-            <div className="mb-2 flex flex-wrap items-center gap-2.5">
-              <h3 className="text-lg font-bold leading-tight text-white md:text-xl">
-                {quiz.title}
-              </h3>
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <h3 className="truncate font-medium text-white">{quiz.title}</h3>
 
-              <span
-                className={
-                  quiz.published
-                    ? "rounded-full border border-blue-400/20 bg-blue-500/10 px-3 py-1 text-xs text-blue-200"
-                    : "rounded-full border border-violet-400/20 bg-violet-500/10 px-3 py-1 text-xs text-violet-200"
-                }
-              >
-                {quiz.published ? "Published" : "Draft"}
+            {quiz.published ? (
+              <span className="inline-flex items-center gap-1.5 text-xs text-emerald-300">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                Published
               </span>
-
-              {quiz.isAnswering && (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  Answering
-                  {quiz.activeSessionCount > 0
-                    ? ` (${quiz.activeSessionCount})`
-                    : ""}
-                </span>
-              )}
-            </div>
-
-            <p className="text-sm leading-6 text-slate-400">
-              {quiz.description || "No description provided."}
-            </p>
-
-            <div className="mt-3 flex flex-wrap gap-3 text-sm text-slate-400">
-              <span>{quiz.questions.length} Questions</span>
-
-              {quiz.published && (
-                <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 font-mono text-cyan-200">
-                  {quiz.code}
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={quiz.isAnswering}
-              title={
-                quiz.isAnswering
-                  ? "Students are currently answering this quiz."
-                  : undefined
-              }
-              onClick={() => router.push(`/teacher/quiz/${quiz.id}/builder`)}
-              className="h-10 min-w-0 flex-1 cursor-pointer border-white/10 bg-white/5 px-3 text-xs hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-45 sm:flex-none sm:text-sm"
-            >
-              <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Edit
-            </Button>
-
-            {quiz.published && (
-              <Button
-                type="button"
-                onClick={() => router.push(`/teacher/quiz/${quiz.id}/monitor`)}
-                className="h-10 min-w-0 flex-1 cursor-pointer px-3 text-xs sm:flex-none sm:text-sm"
-              >
-                <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                Monitor
-              </Button>
+            ) : (
+              <span className="text-xs text-slate-500">Draft</span>
             )}
 
+            {quiz.isAnswering && (
+              <span className="inline-flex items-center gap-1.5 text-xs text-cyan-300">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                {quiz.activeSessionCount > 0
+                  ? `${quiz.activeSessionCount} answering`
+                  : "Answering"}
+              </span>
+            )}
+          </div>
+
+          {quiz.description && (
+            <p className="mt-1 line-clamp-1 text-sm text-slate-400">{quiz.description}</p>
+          )}
+
+          <p className="mt-1.5 text-xs text-slate-500">
+            {quiz.questions.length} {quiz.questions.length === 1 ? "question" : "questions"}
+            {quiz.published && (
+              <>
+                {" · "}
+                Code <span className="font-mono tracking-wider text-slate-300">{quiz.code}</span>
+              </>
+            )}
+          </p>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          {quiz.published && (
             <Button
               type="button"
-              variant="destructive"
-              onClick={() => setQuizToDelete(quiz)}
-              className="h-10 min-w-0 flex-1 cursor-pointer px-3 text-xs sm:flex-none sm:text-sm"
+              size="sm"
+              onClick={() => router.push(`/teacher/quiz/${quiz.id}/monitor`)}
+              className="h-9 flex-1 px-3 text-sm sm:flex-none"
             >
-              <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Delete
+              <Eye className="h-4 w-4" />
+              Monitor
             </Button>
-          </div>
+          )}
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={quiz.isAnswering}
+            title={
+              quiz.isAnswering
+                ? "Students are currently answering this quiz."
+                : undefined
+            }
+            onClick={() => router.push(`/teacher/quiz/${quiz.id}/builder`)}
+            className="h-9 flex-1 px-3 text-sm sm:flex-none"
+          >
+            <Edit className="h-4 w-4" />
+            Edit
+          </Button>
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label={`Delete ${quiz.title}`}
+            title="Delete quiz"
+            onClick={() => setQuizToDelete(quiz)}
+            className="h-9 w-9 shrink-0 text-slate-400 hover:border-red-400/40 hover:bg-red-500/10 hover:text-red-300"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
-      </Card>
+      </li>
     );
   }
 
   if (items.length === 0) {
     return (
-      <Card className="rounded-3xl border border-white/10 bg-white/5 p-8 text-center backdrop-blur-xl md:p-12">
-        <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-white/5 text-slate-500 md:h-24 md:w-24">
-          <FileText className="h-9 w-9 md:h-10 md:w-10" />
-        </div>
+      <div className="rounded-xl border border-dashed border-line-strong px-6 py-14 text-center">
+        <FileText className="mx-auto h-6 w-6 text-slate-500" />
 
-        <h3 className="text-lg font-bold text-white md:text-xl">
-          No quizzes yet
-        </h3>
+        <h3 className="mt-3 font-medium text-white">No quizzes here yet</h3>
 
-        <p className="mt-2 text-sm text-slate-400">
-          Create your first quiz to get started.
+        <p className="mt-1 text-sm text-slate-400">
+          Create a quiz to start adding questions.
         </p>
 
         <Button
@@ -177,37 +170,40 @@ export default function QuizList({ items, onDeleteQuiz }: Props) {
 
             trigger?.click();
           }}
-          className="mx-auto mt-5 h-11 rounded-2xl border border-white/10 bg-white/5 px-5 text-sm text-white hover:bg-white/10"
+          className="mx-auto mt-5"
         >
           <Plus className="h-4 w-4" />
-          Create Quiz
+          Create quiz
         </Button>
-      </Card>
+      </div>
     );
   }
 
   return (
     <>
-      <div className="space-y-4">
-        <div className="relative rounded-2xl border border-cyan-400/10 bg-[#081121] shadow-[0_0_0_1px_rgba(34,211,238,0.03)] transition focus-within:border-cyan-400/30 focus-within:ring-2 focus-within:ring-cyan-400/10">
-          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-cyan-300/70" />
+      <div className="space-y-3">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
 
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search quizzes..."
+            placeholder="Search by title, description or code"
+            aria-label="Search quizzes"
             maxLength={100}
-            className="h-12 rounded-2xl border-0 bg-transparent pl-11 text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0"
+            className="h-10 pl-10"
           />
         </div>
 
         {filteredItems.length === 0 ? (
-          <Card className="rounded-3xl border border-white/10 bg-white/5 p-8 text-center backdrop-blur-xl">
-            <p className="text-sm text-slate-400">No quizzes found.</p>
-          </Card>
+          <p className="rounded-xl border border-dashed border-line-strong px-6 py-10 text-center text-sm text-slate-400">
+            No quizzes match “{search}”.
+          </p>
         ) : (
           <>
-            <div className="space-y-4">{visibleItems.map(renderQuizCard)}</div>
+            <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
+              {visibleItems.map(renderQuizRow)}
+            </ul>
 
             {hasMoreItems && (
               <div
@@ -226,8 +222,8 @@ export default function QuizList({ items, onDeleteQuiz }: Props) {
         open={!!quizToDelete}
         title="Delete quiz?"
         description={`Are you sure you want to delete "${quizToDelete?.title}"? This will also delete its sessions.`}
-        confirmText="Delete Quiz"
-        loadingText="Deleting..."
+        confirmText="Delete quiz"
+        loadingText="Deleting…"
         isLoading={isDeleting}
         confirmVariant="destructive"
         onOpenChange={(open) => {

@@ -24,9 +24,9 @@ export default function QuizDetailsForm({
   onDescriptionChange,
 }: Props) {
   return (
-    <section className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
+    <section className="rounded-xl border border-line bg-white/[0.04] p-4">
       <div className="mb-5 hidden items-center gap-3 sm:flex">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-500/10 text-cyan-300">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-cyan-400/20 bg-cyan-500/10 text-cyan-300">
           <FileText className="h-5 w-5" />
         </div>
 
@@ -70,7 +70,7 @@ export default function QuizDetailsForm({
               )
             }
             placeholder="e.g. Chemistry Quiz"
-            className="h-12 rounded-2xl border-white/10 bg-slate-950/40 px-4"
+            className="h-12 rounded-xl border-line bg-surface px-4"
           />
 
           {title.trim().length > 0 &&
@@ -111,7 +111,7 @@ export default function QuizDetailsForm({
             }
             placeholder="Add instructions for students"
             rows={4}
-            className="min-h-[132px] resize-none rounded-2xl border-white/10 bg-slate-950/40 px-4 py-3"
+            className="min-h-[132px] resize-none rounded-xl border-line bg-surface px-4 py-3"
           />
         </div>
       </div>

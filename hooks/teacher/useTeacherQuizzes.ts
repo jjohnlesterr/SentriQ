@@ -126,7 +126,8 @@ export function useTeacherQuizzes() {
   async function handleLogout() {
     try {
       await clearTeacherSession();
-      router.push("/");
+      router.replace("/");
+      router.refresh();
     } catch {
       toast.error("Failed to logout.");
     }

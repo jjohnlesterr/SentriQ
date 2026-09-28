@@ -9,6 +9,7 @@ import TeacherPageLayout from "@/components/layout/TeacherPageLayout";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import PageLoader from "@/components/shared/PageLoader";
 import BuilderHeader from "@/components/teacher/builder/BuilderHeader";
+import GenerateQuestionsDialog from "@/components/teacher/builder/GenerateQuestionsDialog";
 import PublishCodeDialog from "@/components/teacher/builder/PublishCodeDialog";
 import QuizTimerDialog from "@/components/teacher/builder/QuizTimerDialog";
 import CreateQuizDialog from "@/components/teacher/dashboard/CreateQuizDialog";
@@ -22,13 +23,18 @@ import {
   getTeacherSession,
 } from "@/lib/auth/teacher-session";
 import { useQuizBuilder } from "@/hooks/teacher/builder/useQuizBuilder";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useCreateQuizDialog } from "@/hooks/teacher/useCreateQuizDialog";
 
 export default function QuizBuilderPage() {
   const router = useRouter();
   const builder = useQuizBuilder();
+  // Mount only the layout for the current viewport (Tailwind xl = 1280px) so the
+  // question editor is not rendered twice.
+  const isDesktop = useMediaQuery("(min-width: 1280px)");
 
   const [timerDialogOpen, setTimerDialogOpen] = useState(false);
+  const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [teacherName, setTeacherName] = useState("Teacher");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -214,20 +220,21 @@ export default function QuizBuilderPage() {
             onSave={builder.handleSaveQuiz}
             onPublish={builder.handlePublishQuiz}
             onOpenTimer={() => setTimerDialogOpen(true)}
+            onOpenGenerate={() => setGenerateDialogOpen(true)}
             onOpenSidebar={() => setSidebarOpen(true)}
           />
 
-          <BuilderMobileLayout
-            builder={builder}
-            questionPanelOpen={questionPanelOpen}
-            onQuestionPanelOpenChange={setQuestionPanelOpen}
-          >
-            {editorContent}
-          </BuilderMobileLayout>
-
-          <BuilderDesktopLayout builder={builder}>
-            {editorContent}
-          </BuilderDesktopLayout>
+          {isDesktop ? (
+            <BuilderDesktopLayout builder={builder}>{editorContent}</BuilderDesktopLayout>
+          ) : (
+            <BuilderMobileLayout
+              builder={builder}
+              questionPanelOpen={questionPanelOpen}
+              onQuestionPanelOpenChange={setQuestionPanelOpen}
+            >
+              {editorContent}
+            </BuilderMobileLayout>
+          )}
         </div>
       </div>
 
@@ -241,6 +248,14 @@ export default function QuizBuilderPage() {
         onDescriptionChange={createDialog.setDescription}
         onCreate={createDialog.handleCreateQuiz}
         hideTrigger
+      />
+
+      <GenerateQuestionsDialog
+        open={generateDialogOpen}
+        onOpenChange={setGenerateDialogOpen}
+        quizTitle={builder.title}
+        existingQuestions={builder.questions}
+        onInsert={builder.insertQuestions}
       />
 
       <QuizTimerDialog

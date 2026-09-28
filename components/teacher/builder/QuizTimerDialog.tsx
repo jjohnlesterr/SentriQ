@@ -1,9 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Clock, Infinity, Minus, Plus, X } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { cn } from "@/lib/shared/utils";
 
 type Props = {
   open: boolean;
@@ -16,13 +24,17 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
+function plural(count: number, unit: string) {
+  return `${count} ${unit}${count === 1 ? "" : "s"}`;
+}
+
 function formatDuration(totalMinutes: number) {
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
 
-  if (hours > 0 && minutes > 0) return `${hours} hour ${minutes} minutes`;
-  if (hours > 0) return `${hours} hour${hours > 1 ? "s" : ""}`;
-  return `${minutes} minutes`;
+  if (hours > 0 && minutes > 0) return `${plural(hours, "hour")} ${plural(minutes, "minute")}`;
+  if (hours > 0) return plural(hours, "hour");
+  return plural(minutes, "minute");
 }
 
 export default function QuizTimerDialog({
@@ -51,8 +63,6 @@ export default function QuizTimerDialog({
     return clamp(hours * 60 + minutes, 1, 24 * 60);
   }, [hours, minutes]);
 
-  if (!open) return null;
-
   function applyTimer() {
     onApply(enabled ? totalMinutes : null);
     onOpenChange(false);
@@ -68,171 +78,151 @@ export default function QuizTimerDialog({
     setMinutes(Number.isNaN(parsed) ? 0 : clamp(parsed, 0, 59));
   }
 
+  const optionClass = (active: boolean) =>
+    cn(
+      "flex w-full items-start gap-3 rounded-lg border p-3.5 text-left transition-colors",
+      active
+        ? "border-cyan-400/70 bg-cyan-400/[0.06]"
+        : "border-line-strong hover:border-slate-500/70 hover:bg-white/[0.03]",
+    );
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 backdrop-blur-sm sm:p-4">
-      <div className="max-h-[92dvh] w-full max-w-[390px] overflow-y-auto rounded-3xl border border-white/10 bg-[#101827]/95 p-4 shadow-2xl shadow-black/40 sm:max-w-md sm:p-6">
-        <div className="mb-4 flex items-start justify-between gap-4 sm:mb-5">
-          <div>
-            <h2 className="text-xl font-extrabold text-white sm:text-2xl">
-              Set Quiz Timer
-            </h2>
-            <p className="mt-1 text-sm leading-relaxed text-slate-400">
-              The quiz will auto-save and close when time runs out.
-            </p>
-          </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Time limit</DialogTitle>
+          <DialogDescription>
+            When time runs out, answers are saved and the attempt is closed.
+          </DialogDescription>
+        </DialogHeader>
 
+        <div className="space-y-2" role="radiogroup" aria-label="Time limit">
           <button
             type="button"
-            onClick={() => onOpenChange(false)}
-            className="shrink-0 rounded-2xl bg-white/5 p-2 text-slate-400 hover:bg-white/10 hover:text-white"
-            aria-label="Close timer dialog"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <div className="space-y-3">
-          <button
-            type="button"
+            role="radio"
+            aria-checked={!enabled}
             onClick={() => setEnabled(false)}
-            className={
-              !enabled
-                ? "flex w-full items-center gap-3 rounded-2xl border border-blue-400/60 bg-blue-500/10 p-3 text-left sm:gap-4 sm:p-4"
-                : "flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-3 text-left hover:bg-white/10 sm:gap-4 sm:p-4"
-            }
+            className={optionClass(!enabled)}
           >
-            <Infinity className="h-5 w-5 shrink-0 text-blue-300 sm:h-6 sm:w-6" />
-            <div>
-              <p className="font-semibold text-white">No timer</p>
-              <p className="text-sm text-slate-400">
-                Students can take the quiz without time limit.
-              </p>
-            </div>
+            <span
+              className={cn(
+                "mt-1 h-3.5 w-3.5 shrink-0 rounded-full border",
+                !enabled ? "border-cyan-400 bg-cyan-400" : "border-slate-500",
+              )}
+            />
+            <span>
+              <span className="block text-sm font-medium text-white">No time limit</span>
+              <span className="block text-sm text-slate-400">Students can take as long as they need.</span>
+            </span>
           </button>
 
           <button
             type="button"
+            role="radio"
+            aria-checked={enabled}
             onClick={() => setEnabled(true)}
-            className={
-              enabled
-                ? "flex w-full items-center gap-3 rounded-2xl border border-blue-400/60 bg-blue-500/10 p-3 text-left sm:gap-4 sm:p-4"
-                : "flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-3 text-left hover:bg-white/10 sm:gap-4 sm:p-4"
-            }
+            className={optionClass(enabled)}
           >
-            <Clock className="h-5 w-5 shrink-0 text-blue-300 sm:h-6 sm:w-6" />
-            <div>
-              <p className="font-semibold text-white">Enable timer</p>
-              <p className="text-sm text-slate-400">
-                Set a specific time limit for this quiz.
-              </p>
-            </div>
+            <span
+              className={cn(
+                "mt-1 h-3.5 w-3.5 shrink-0 rounded-full border",
+                enabled ? "border-cyan-400 bg-cyan-400" : "border-slate-500",
+              )}
+            />
+            <span>
+              <span className="block text-sm font-medium text-white">Set a time limit</span>
+              <span className="block text-sm text-slate-400">Applies to every student&apos;s attempt.</span>
+            </span>
           </button>
         </div>
 
         {enabled && (
-          <div className="mt-4 space-y-3 sm:mt-5 sm:space-y-4">
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-sm font-medium text-slate-200">Hours</span>
+          <div className="mt-5 space-y-3">
+            <Stepper
+              label="Hours"
+              value={hours}
+              max={24}
+              onChange={updateHours}
+              onDecrease={() => setHours((prev) => clamp(prev - 1, 0, 24))}
+              onIncrease={() => setHours((prev) => clamp(prev + 1, 0, 24))}
+            />
 
-              <div className="flex items-center rounded-2xl border border-white/10 bg-white/5">
-                <button
-                  type="button"
-                  onClick={() => setHours((prev) => clamp(prev - 1, 0, 24))}
-                  className="p-3 text-slate-300 hover:text-white"
-                  aria-label="Decrease hours"
-                >
-                  <Minus className="h-4 w-4" />
-                </button>
+            <Stepper
+              label="Minutes"
+              value={minutes}
+              max={59}
+              onChange={updateMinutes}
+              onDecrease={() => setMinutes((prev) => clamp(prev - 5, 0, 59))}
+              onIncrease={() => setMinutes((prev) => clamp(prev + 5, 0, 59))}
+            />
 
-                <input
-                  type="number"
-                  min={0}
-                  max={24}
-                  value={hours}
-                  onChange={(event) => updateHours(event.target.value)}
-                  className="w-14 bg-transparent text-center font-semibold text-white outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                  aria-label="Hours"
-                />
-
-                <button
-                  type="button"
-                  onClick={() => setHours((prev) => clamp(prev + 1, 0, 24))}
-                  className="p-3 text-slate-300 hover:text-white"
-                  aria-label="Increase hours"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-sm font-medium text-slate-200">
-                Minutes
-              </span>
-
-              <div className="flex items-center rounded-2xl border border-white/10 bg-white/5">
-                <button
-                  type="button"
-                  onClick={() => setMinutes((prev) => clamp(prev - 5, 0, 59))}
-                  className="p-3 text-slate-300 hover:text-white"
-                  aria-label="Decrease minutes"
-                >
-                  <Minus className="h-4 w-4" />
-                </button>
-
-                <input
-                  type="number"
-                  min={0}
-                  max={59}
-                  value={minutes}
-                  onChange={(event) => updateMinutes(event.target.value)}
-                  className="w-14 bg-transparent text-center font-semibold text-white outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                  aria-label="Minutes"
-                />
-
-                <button
-                  type="button"
-                  onClick={() => setMinutes((prev) => clamp(prev + 5, 0, 59))}
-                  className="p-3 text-slate-300 hover:text-white"
-                  aria-label="Increase minutes"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-3 sm:p-4">
-              <div className="flex items-center gap-3">
-                <Clock className="h-5 w-5 text-blue-300" />
-                <div>
-                  <p className="text-sm text-slate-400">Total Time</p>
-                  <p className="font-semibold text-cyan-200">
-                    {formatDuration(totalMinutes)}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <p className="pt-1 text-sm text-slate-400">
+              Total: <span className="font-medium text-white">{formatDuration(totalMinutes)}</span>
+            </p>
           </div>
         )}
 
-        <div className="mt-5 grid gap-3 sm:mt-6 sm:grid-cols-2">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => onOpenChange(false)}
-            className="h-11 rounded-2xl border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white sm:h-12"
-          >
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
 
-          <Button
-            type="button"
-            onClick={applyTimer}
-            className="h-11 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 font-semibold text-white sm:h-12"
-          >
-            Apply Timer
+          <Button type="button" onClick={applyTimer}>
+            Apply
           </Button>
         </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function Stepper({
+  label,
+  value,
+  max,
+  onChange,
+  onDecrease,
+  onIncrease,
+}: {
+  label: string;
+  value: number;
+  max: number;
+  onChange: (value: string) => void;
+  onDecrease: () => void;
+  onIncrease: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <span className="text-sm text-slate-300">{label}</span>
+
+      <div className="flex items-center rounded-lg border border-line-strong">
+        <button
+          type="button"
+          onClick={onDecrease}
+          className="p-2.5 text-slate-400 transition-colors hover:text-white"
+          aria-label={`Decrease ${label.toLowerCase()}`}
+        >
+          <Minus className="h-4 w-4" />
+        </button>
+
+        <input
+          type="number"
+          min={0}
+          max={max}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className="w-12 bg-transparent text-center text-sm font-medium tabular-nums text-white outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          aria-label={label}
+        />
+
+        <button
+          type="button"
+          onClick={onIncrease}
+          className="p-2.5 text-slate-400 transition-colors hover:text-white"
+          aria-label={`Increase ${label.toLowerCase()}`}
+        >
+          <Plus className="h-4 w-4" />
+        </button>
       </div>
     </div>
   );

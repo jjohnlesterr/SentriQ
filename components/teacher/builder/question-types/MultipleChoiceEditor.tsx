@@ -170,7 +170,7 @@ useEffect(() => {
       </QuestionField>
 
       {hasDuplicateOptions && (
-        <div className="mt-4 rounded-2xl border border-red-400/20 bg-red-500/10 p-4">
+        <div className="mt-4 rounded-xl border border-red-400/20 bg-red-500/10 p-4">
           <div className="flex gap-3">
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-300" />
 
@@ -192,13 +192,13 @@ useEffect(() => {
         onClick={() => onAddOption(activeQuestion)}
         disabled={question.options.length >= 10}
         variant="ghost"
-        className="mt-4 h-11 w-full cursor-pointer rounded-2xl border border-dashed border-violet-400/30 bg-transparent text-violet-300 hover:bg-violet-500/10 hover:text-violet-200 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-black/20 disabled:text-slate-500"
+        className="mt-4 h-11 w-full cursor-pointer rounded-xl border border-dashed border-cyan-400/30 bg-transparent text-cyan-300 hover:bg-cyan-500/10 hover:text-cyan-200 disabled:cursor-not-allowed disabled:border-line disabled:bg-black/20 disabled:text-slate-500"
       >
         <Plus className="h-4 w-4" />
         Add Option
       </Button>
 
-      <div className="mt-5 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4">
+      <div className="mt-5 rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-4">
         <div className="flex gap-3">
           <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" />
 
