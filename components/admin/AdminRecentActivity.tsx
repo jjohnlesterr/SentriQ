@@ -87,7 +87,7 @@ function getEventClass(type: string | null) {
   if (!type) {
     return {
       icon: "bg-white/10 text-slate-300",
-      badge: "border-white/10 bg-white/10 text-slate-300",
+      badge: "border-line bg-white/10 text-slate-300",
     };
   }
 
@@ -142,8 +142,8 @@ function getEventClass(type: string | null) {
 
   if (type === "copy-attempt") {
     return {
-      icon: "bg-purple-500/10 text-purple-300",
-      badge: "border-purple-400/20 bg-purple-500/10 text-purple-300",
+      icon: "bg-cyan-500/10 text-cyan-300",
+      badge: "border-cyan-400/20 bg-cyan-500/10 text-cyan-300",
     };
   }
 
@@ -156,8 +156,8 @@ function getEventClass(type: string | null) {
 
   if (type === "answered-question") {
     return {
-      icon: "bg-blue-500/10 text-blue-300",
-      badge: "border-blue-400/20 bg-blue-500/10 text-blue-300",
+      icon: "bg-cyan-500/10 text-cyan-300",
+      badge: "border-cyan-400/20 bg-cyan-500/10 text-cyan-300",
     };
   }
 
@@ -182,8 +182,8 @@ export default function AdminRecentActivity({ events }: Props) {
   const nextShowCount = nextVisibleCount - visibleCount;
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03]">
-      <div className="flex flex-col gap-3 border-b border-white/10 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
+    <div className="overflow-hidden rounded-xl border border-line bg-white/[0.03]">
+      <div className="flex flex-col gap-3 border-b border-line px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold text-white">Recent Activity</h2>
           <p className="mt-1 text-sm text-slate-400">
@@ -199,7 +199,7 @@ export default function AdminRecentActivity({ events }: Props) {
         </Link>
       </div>
 
-      <div className="hidden grid-cols-[1fr_180px_130px] border-b border-white/10 px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 md:grid">
+      <div className="hidden grid-cols-[1fr_180px_130px] border-b border-line px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 md:grid">
         <p>Event</p>
         <p>Type</p>
         <p className="text-right">Time</p>
@@ -265,7 +265,7 @@ export default function AdminRecentActivity({ events }: Props) {
       </div>
 
       {(hasMoreItems || canShowLess) && (
-        <div className="border-t border-white/10 px-5 py-4 text-center">
+        <div className="border-t border-line px-5 py-4 text-center">
           <p className="mb-3 text-xs text-slate-400">
             Showing {visibleCount} of {totalCount} activity logs
           </p>
@@ -276,7 +276,7 @@ export default function AdminRecentActivity({ events }: Props) {
                 type="button"
                 variant="ghost"
                 onClick={showLess}
-                className="h-11 w-full rounded-2xl border border-white/10 bg-white/5 text-sm font-semibold text-white hover:bg-white/10 sm:max-w-[220px]"
+                className="h-11 w-full rounded-xl border border-line bg-white/[0.03] text-sm font-semibold text-white hover:bg-white/10 sm:max-w-[220px]"
               >
                 Show Less
               </Button>
@@ -287,7 +287,7 @@ export default function AdminRecentActivity({ events }: Props) {
                 type="button"
                 variant="ghost"
                 onClick={showMore}
-                className="h-11 w-full rounded-2xl border border-white/10 bg-white/5 text-sm font-semibold text-white hover:bg-white/10 sm:max-w-[220px]"
+                className="h-11 w-full rounded-xl border border-line bg-white/[0.03] text-sm font-semibold text-white hover:bg-white/10 sm:max-w-[220px]"
               >
                 Show {nextShowCount} More
               </Button>

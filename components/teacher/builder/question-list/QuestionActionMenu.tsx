@@ -22,7 +22,7 @@
     onClose,
   }: Props) {
     return (
-      <div className="absolute right-2 top-14 z-[999] w-52 overflow-hidden rounded-2xl border border-white/10 bg-slate-950 p-2 shadow-2xl shadow-black/60 backdrop-blur-xl">
+      <div className="absolute right-2 top-14 z-[999] w-52 overflow-hidden rounded-xl border border-line bg-surface p-2 shadow-black/60">
         <button
           type="button"
           onClick={() => {

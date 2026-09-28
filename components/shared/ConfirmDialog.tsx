@@ -46,9 +46,9 @@ export default function ConfirmDialog({
 }: ConfirmDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-2rem)] max-w-md border-cyan-400/20 bg-slate-950 p-5 sm:p-6">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-md border-cyan-400/20 bg-surface p-5 sm:p-6">
         <DialogHeader>
-          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-300">
+          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-300">
             <AlertTriangle className="h-6 w-6" />
           </div>
 
@@ -64,7 +64,7 @@ export default function ConfirmDialog({
               variant="ghost"
               disabled={isLoading}
               onClick={() => onOpenChange(false)}
-              className="h-11 border-white/10 bg-white/5 hover:bg-white/10 sm:min-w-[110px]"
+              className="h-11 border-line bg-white/[0.03] hover:bg-white/10 sm:min-w-[110px]"
             >
               {cancelText}
             </Button>

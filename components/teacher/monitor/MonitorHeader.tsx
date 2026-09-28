@@ -10,13 +10,10 @@ import {
   Eye,
   FileCheck2,
   Lock,
-  ShieldCheck,
   Unlock,
 } from "lucide-react";
 
-import SectionHeading from "@/components/shared/SectionHeading";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import type { Quiz, ReportVisibility } from "@/lib/shared/types";
 
 type Props = {
@@ -48,11 +45,11 @@ function formatTimeLimit(minutes?: number | null) {
 }
 
 function getReportVisibilityLabel(value: ReportVisibility | "mixed") {
-  if (value === "locked") return "Reports Locked";
-  if (value === "summary") return "Answers Released";
-  if (value === "full") return "Full Review Released";
+  if (value === "locked") return "Results locked";
+  if (value === "summary") return "Answers released";
+  if (value === "full") return "Full review released";
 
-  return "Mixed Access";
+  return "Mixed access";
 }
 
 export default function MonitorHeader({
@@ -106,219 +103,153 @@ export default function MonitorHeader({
     return (
       <button
         type="button"
+        role="menuitemradio"
+        aria-checked={active}
         onClick={() => handleUpdateReportVisibility(visibility)}
-        className={`flex w-full cursor-pointer items-start gap-3 rounded-2xl border px-3 py-3 text-left transition ${
-          active
-            ? "border-cyan-300/40 bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-blue-950/30"
-            : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
+        className={`flex w-full items-start gap-3 rounded-md px-3 py-2.5 text-left transition-colors ${
+          active ? "bg-white/[0.06] text-white" : "text-slate-300 hover:bg-white/[0.04] hover:text-white"
         }`}
       >
-        <span
-          className={`mt-0.5 rounded-xl border p-2 ${
-            active
-              ? "border-white/20 bg-white/15 text-white"
-              : "border-white/10 bg-white/5 text-slate-300"
-          }`}
-        >
-          {icon}
-        </span>
+        <span className="mt-0.5 text-slate-400">{icon}</span>
 
         <span className="min-w-0 flex-1">
-          <span className="flex items-center justify-between gap-2 text-sm font-semibold">
-            {title}
-
-            {active && <Check className="h-4 w-4 text-white" />}
-          </span>
-
-          <span
-            className={`mt-1 block text-xs leading-5 ${
-              active ? "text-cyan-50/80" : "text-slate-400"
-            }`}
-          >
-            {description}
-          </span>
+          <span className="block text-sm font-medium">{title}</span>
+          <span className="mt-0.5 block text-xs leading-5 text-slate-500">{description}</span>
         </span>
+
+        {active && <Check className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />}
       </button>
     );
   }
 
   return (
-    <Card className="relative z-30 mb-5 overflow-visible rounded-3xl border border-white/10 bg-white/5 p-0 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl md:mb-6">
-      <div className="relative p-4 md:p-8">
-        <div className="absolute right-0 top-0 h-24 w-24 rounded-full bg-blue-500/10 blur-2xl md:h-32 md:w-32" />
+    <header className="relative z-30 mb-6 border-b border-line pb-6">
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onBack}
+            aria-label="Back to dashboard"
+            className="h-9 w-9 shrink-0"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
 
-        <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-          {/* QUIZ INFORMATION */}
-          <div className="flex min-w-0 items-start gap-3 md:gap-4">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={onBack}
-              className="h-9 w-9 shrink-0 border border-white/10 bg-white/5 p-0 hover:bg-white/10 md:h-11 md:w-11"
-            >
-              <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
-            </Button>
+          <div className="min-w-0">
+            <p className="text-xs font-medium uppercase tracking-[0.14em] text-cyan-300">
+              Live monitor
+            </p>
 
-            <div className="min-w-0">
-              <SectionHeading
-                icon={ShieldCheck}
-                badge="Live Monitoring Console"
-                title="Live Monitor"
-                description={quiz?.title || "Quiz not found"}
-                variant="page"
-                badgeClassName="mb-2 border-sky-400/20 bg-sky-400/10 px-2.5 py-1 text-[10px] text-sky-200 md:mb-3 md:px-3 md:py-1.5 md:text-xs"
-                iconClassName="h-3 w-3 md:h-3.5 md:w-3.5"
-                titleClassName="text-2xl md:text-4xl"
-                descriptionClassName="mt-1 text-sm text-slate-300 md:mt-2 md:text-base"
-              />
+            <h1 className="mt-1 truncate text-2xl font-semibold tracking-tight text-white">
+              {quiz?.title || "Quiz not found"}
+            </h1>
 
-              {/* QUIZ METADATA AND RESULT ACCESS */}
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                {quiz?.published && (
-                  <p className="inline-flex rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 font-mono text-xs text-cyan-200 md:text-sm">
-                    Join Code: {quiz.code}
-                  </p>
-                )}
-
-                <p className="inline-flex items-center gap-1.5 rounded-full border border-violet-400/20 bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-200 md:text-sm">
-                  <Clock3 className="h-3.5 w-3.5" />
-                  Time Limit: {formatTimeLimit(quiz?.timeLimitMinutes)}
-                </p>
-
-                {/* RESULT ACCESS DROPDOWN */}
-                <div ref={reportRef} className="relative w-full sm:w-auto">
-                  <button
-                    type="button"
-                    onClick={() => setReportOpen((current) => !current)}
-                    aria-expanded={reportOpen}
-                    className="inline-flex w-full cursor-pointer items-center justify-between gap-3 rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 text-xs text-cyan-100 transition hover:bg-cyan-500/15 md:text-sm"
-                  >
-                    <span className="inline-flex min-w-0 items-center gap-2">
-                      <Eye className="h-3.5 w-3.5 shrink-0" />
-
-                      <span className="truncate">
-                        Result Access:{" "}
-                        <span className="font-semibold">
-                          {getReportVisibilityLabel(reportVisibilityState)}
-                        </span>
-                      </span>
-                    </span>
-
-                    <ChevronDown
-                      className={`h-3.5 w-3.5 shrink-0 transition ${
-                        reportOpen ? "rotate-180" : ""
-                      }`}
-                    />
-                  </button>
-
-                  {reportOpen && (
-                    <div className="absolute left-0 top-full z-[999] mt-2 w-[320px] max-w-[calc(100vw-2rem)] rounded-3xl border border-white/10 bg-[#0b0f1a]/95 p-3 shadow-[0_20px_80px_rgba(0,0,0,0.65)] backdrop-blur-xl">
-                      {reportVisibilityState === "mixed" && (
-                        <div className="mb-2 rounded-2xl border border-orange-400/20 bg-orange-500/10 px-3 py-2 text-xs font-semibold text-orange-200">
-                          Mixed access detected
-                        </div>
-                      )}
-
-                      <div className="grid gap-2">
-                        {renderReportOption({
-                          visibility: "locked",
-                          icon: <Lock className="h-4 w-4" />,
-                          title: "Lock All Reports",
-                          description: "Hide all quiz results from students.",
-                        })}
-
-                        {renderReportOption({
-                          visibility: "summary",
-                          icon: <FileCheck2 className="h-4 w-4" />,
-                          title: "Release Answers",
-                          description: "Show scores and correct answers.",
-                        })}
-
-                        {renderReportOption({
-                          visibility: "full",
-                          icon: <Unlock className="h-4 w-4" />,
-                          title: "Release Full Review",
-                          description:
-                            "Allow full question review after quiz.",
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* JOINING CONTROL */}
-          <div className="flex w-full flex-col gap-3 lg:w-auto lg:min-w-[220px]">
-            <div
-              className={`flex min-h-14 items-center gap-3 rounded-2xl border px-4 py-3 ${
-                joiningClosed
-                  ? "border-red-400/20 bg-red-500/10"
-                  : "border-emerald-400/20 bg-emerald-500/10"
-              }`}
-            >
-              <div
-                className={`relative flex h-3 w-3 shrink-0 ${
-                  joiningClosed ? "text-red-400" : "text-emerald-400"
-                }`}
-              >
-                <span
-                  className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${
-                    joiningClosed ? "bg-red-400" : "bg-emerald-400"
-                  }`}
-                />
-
-                <span
-                  className={`relative inline-flex h-3 w-3 rounded-full ${
-                    joiningClosed ? "bg-red-400" : "bg-emerald-400"
-                  }`}
-                />
-              </div>
-
-              <div className="flex min-w-0 flex-col">
-                <span
-                  className={`truncate text-sm font-semibold ${
-                    joiningClosed ? "text-red-200" : "text-emerald-200"
-                  }`}
-                >
-                  {joiningClosed ? "Joining Closed" : "Joining Open"}
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-400">
+              {quiz?.published && (
+                <span>
+                  Code{" "}
+                  <span className="font-mono font-medium tracking-wider text-white">{quiz.code}</span>
                 </span>
-
-                <span
-                  className={`truncate text-xs ${
-                    joiningClosed
-                      ? "text-red-300/80"
-                      : "text-emerald-300/80"
-                  }`}
-                >
-                  Last Sync {lastUpdated.toLocaleTimeString()}
-                </span>
-              </div>
-            </div>
-
-            <Button
-              type="button"
-              variant={joiningClosed ? "primary" : "dangerSoft"}
-              onClick={onToggleJoining}
-              className="min-h-11 w-full rounded-2xl font-semibold"
-            >
-              {joiningClosed ? (
-                <>
-                  <Unlock className="h-4 w-4" />
-                  Reopen Joining
-                </>
-              ) : (
-                <>
-                  <Lock className="h-4 w-4" />
-                  Lock Joining
-                </>
               )}
-            </Button>
+
+              <span className="inline-flex items-center gap-1.5">
+                <Clock3 className="h-3.5 w-3.5 text-slate-500" />
+                {formatTimeLimit(quiz?.timeLimitMinutes)}
+              </span>
+
+              <div ref={reportRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setReportOpen((current) => !current)}
+                  aria-expanded={reportOpen}
+                  aria-haspopup="menu"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-line-strong px-2.5 py-1 text-sm text-slate-200 transition-colors hover:bg-white/[0.04]"
+                >
+                  <Eye className="h-3.5 w-3.5 text-slate-500" />
+                  {getReportVisibilityLabel(reportVisibilityState)}
+                  <ChevronDown
+                    className={`h-3.5 w-3.5 text-slate-500 transition-transform ${reportOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+
+                {reportOpen && (
+                  <div
+                    role="menu"
+                    className="absolute left-0 top-full z-[999] mt-2 w-[300px] max-w-[calc(100vw-2rem)] rounded-lg border border-line-strong bg-surface-raised p-1.5 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.7)]"
+                  >
+                    <p className="px-3 pb-1.5 pt-2 text-xs text-slate-500">
+                      What students see after submitting
+                    </p>
+
+                    {reportVisibilityState === "mixed" && (
+                      <p className="mx-3 mb-1.5 text-xs text-amber-300">
+                        Students currently have different access levels.
+                      </p>
+                    )}
+
+                    {renderReportOption({
+                      visibility: "locked",
+                      icon: <Lock className="h-4 w-4" />,
+                      title: "Locked",
+                      description: "Students see their score only.",
+                    })}
+
+                    {renderReportOption({
+                      visibility: "summary",
+                      icon: <FileCheck2 className="h-4 w-4" />,
+                      title: "Release answers",
+                      description: "Also show each answer and the correct one.",
+                    })}
+
+                    {renderReportOption({
+                      visibility: "full",
+                      icon: <Unlock className="h-4 w-4" />,
+                      title: "Release full review",
+                      description: "Answers plus their activity summary.",
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
+
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center lg:flex-col lg:items-end">
+          <p className="flex items-center gap-2 text-sm">
+            <span
+              className={`h-2 w-2 rounded-full ${joiningClosed ? "bg-slate-500" : "bg-emerald-400"}`}
+            />
+            <span className={joiningClosed ? "text-slate-300" : "text-emerald-300"}>
+              {joiningClosed ? "Joining closed" : "Accepting new students"}
+            </span>
+            <span className="text-xs text-slate-500">
+              · synced {lastUpdated.toLocaleTimeString()}
+            </span>
+          </p>
+
+          <Button
+            type="button"
+            variant={joiningClosed ? "ghost" : "dangerSoft"}
+            size="sm"
+            onClick={onToggleJoining}
+            className="h-9 px-3 text-sm"
+          >
+            {joiningClosed ? (
+              <>
+                <Unlock className="h-4 w-4" />
+                Reopen joining
+              </>
+            ) : (
+              <>
+                <Lock className="h-4 w-4" />
+                Lock joining
+              </>
+            )}
+          </Button>
+        </div>
       </div>
-    </Card>
+    </header>
   );
 }

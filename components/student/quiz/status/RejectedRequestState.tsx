@@ -1,17 +1,25 @@
-import { Card } from "@/components/ui/card";
+import Link from "next/link";
 
 export default function RejectedRequestState() {
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
-      <Card className="w-full max-w-md rounded-3xl border border-red-400/20 bg-red-500/10 p-8 text-center backdrop-blur-xl">
-        <h1 className="text-3xl font-extrabold text-red-200">
-          Request Rejected
+      <div className="w-full max-w-sm rounded-xl border border-line bg-surface p-8 text-center">
+        <h1 className="text-lg font-semibold tracking-tight text-white">
+          Request declined
         </h1>
 
-        <p className="mt-3 text-sm leading-6 text-red-100/80">
-          Your teacher rejected your request to join this quiz.
+        <p className="mt-2 text-sm leading-6 text-slate-400">
+          Your teacher didn&apos;t approve your request to join this quiz. Check
+          the code with your teacher and try again.
         </p>
-      </Card>
+
+        <Link
+          href="/"
+          className="mt-6 inline-flex h-10 items-center rounded-lg border border-line px-4 text-sm font-medium text-slate-200 transition-colors hover:border-line-strong hover:bg-white/[0.04]"
+        >
+          Back to home
+        </Link>
+      </div>
     </div>
   );
 }

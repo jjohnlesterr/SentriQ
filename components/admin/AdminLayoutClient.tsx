@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import AdminAppSidebar from "@/components/admin/AdminAppSidebar";
 import GradientBackground from "@/components/layout/GradientBackground";
 import AppLogo from "@/components/shared/AppLogo";
-import { supabaseBrowser } from "@/lib/supabase/browser";
+import { clearTeacherSession } from "@/lib/auth/teacher-session";
 import { cn } from "@/lib/shared/utils";
 
 type Props = {
@@ -22,13 +22,13 @@ export default function AdminLayoutClient({ children, adminEmail }: Props) {
   const [collapsed, setCollapsed] = useState(false);
 
   async function handleLogout() {
-    await supabaseBrowser.auth.signOut();
-    router.push("/teacher/login");
+    await clearTeacherSession();
+    router.replace("/teacher/login");
     router.refresh();
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-950 text-white">
+    <div className="relative min-h-screen overflow-hidden bg-canvas text-white">
       <GradientBackground />
 
       <AdminAppSidebar
@@ -51,7 +51,7 @@ export default function AdminLayoutClient({ children, adminEmail }: Props) {
             type="button"
             onClick={() => setSidebarOpen(true)}
             aria-label="Open sidebar"
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-200 transition hover:bg-white/10"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-white/[0.03] text-slate-200 transition hover:bg-white/10"
           >
             <Menu className="h-5 w-5" />
           </button>

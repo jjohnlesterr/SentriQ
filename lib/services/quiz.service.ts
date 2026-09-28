@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase/client";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Question, Quiz } from "@/lib/shared/types";
 import {
   createQuizSchema,
@@ -44,6 +44,8 @@ function generateCode(length: number = 6): string {
 }
 
 async function generateUniqueQuizCode(): Promise<string> {
+  const supabase = await createSupabaseServerClient();
+
   let code = generateCode();
 
   while (true) {
@@ -101,6 +103,8 @@ export async function createQuizService(
   description: string,
   teacherId: string,
 ): Promise<Quiz> {
+  const supabase = await createSupabaseServerClient();
+
   const validated = createQuizSchema.parse({
     title,
     description,
@@ -136,6 +140,8 @@ export async function updateQuizService(
   questions: Question[],
   timeLimitMinutes?: number | null,
 ): Promise<Quiz> {
+  const supabase = await createSupabaseServerClient();
+
   const validated = {
     quizId,
     title: title.trim(),
@@ -194,6 +200,8 @@ export async function updateQuizService(
   };
 }
 export async function publishQuizService(quizId: string): Promise<Quiz> {
+  const supabase = await createSupabaseServerClient();
+
   const validated = publishQuizSchema.parse({ quizId });
 
   const existingQuiz = await getQuizByIdService(validated.quizId);
@@ -231,6 +239,8 @@ export async function publishQuizService(quizId: string): Promise<Quiz> {
 }
 
 export async function deleteQuizService(quizId: string): Promise<void> {
+  const supabase = await createSupabaseServerClient();
+
   const validated = publishQuizSchema.parse({ quizId });
 
   const { error } = await supabase
@@ -246,6 +256,8 @@ export async function deleteQuizService(quizId: string): Promise<void> {
 export async function getTeacherQuizzesService(
   teacherId: string,
 ): Promise<Quiz[]> {
+  const supabase = await createSupabaseServerClient();
+
   if (!teacherId) {
     throw new Error("Teacher ID is required.");
   }
@@ -264,6 +276,8 @@ export async function getTeacherQuizzesService(
 }
 
 export async function getQuizByIdService(quizId: string): Promise<Quiz | null> {
+  const supabase = await createSupabaseServerClient();
+
   const validated = publishQuizSchema.parse({ quizId });
 
   const { data, error } = await supabase
@@ -281,18 +295,3 @@ export async function getQuizByIdService(quizId: string): Promise<Quiz | null> {
   return mapQuizRow(data);
 }
 
-export async function getAllQuizzesWithSessionsService() {
-  const { data, error } = await supabase
-    .from("quizzes")
-    .select("*, questions(*)")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return (data || []).map((quiz) => ({
-    ...mapQuizRow(quiz),
-    sessions: [],
-  }));
-}

@@ -28,8 +28,8 @@ export default function TabWarning({
     <div
       className={
         !isFullscreenActive
-          ? "mb-4 rounded-2xl border border-orange-400/20 bg-orange-500/[0.07] px-4 py-3 text-orange-100 md:mb-5"
-          : "mb-4 rounded-2xl border border-red-400/15 bg-red-500/[0.06] px-4 py-3 text-red-100 md:mb-5"
+          ? "mb-4 rounded-xl border border-orange-400/20 bg-orange-500/[0.07] px-4 py-3 text-orange-100 md:mb-5"
+          : "mb-4 rounded-xl border border-red-400/15 bg-red-500/[0.06] px-4 py-3 text-red-100 md:mb-5"
       }
     >
       <div className="flex items-start gap-3">

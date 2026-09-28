@@ -5,9 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import TeacherPageLayout from "@/components/layout/TeacherPageLayout";
 import LoginTransitionLoader from "@/components/shared/LoginTransitionLoader";
-import DashboardHeader from "@/components/teacher/dashboard/DashboardHeader";
+import TeacherPageHeader from "@/components/layout/TeacherPageHeader";
 import CreateQuizDialog from "@/components/teacher/dashboard/CreateQuizDialog";
-import DashboardStats from "@/components/teacher/dashboard/DashboardStats";
 import DashboardQuizTabs from "@/components/teacher/dashboard/DashboardQuizTabs";
 
 import { useCreateQuizDialog } from "@/hooks/teacher/useCreateQuizDialog";
@@ -60,14 +59,17 @@ export default function TeacherDashboardContent() {
       }}
     >
       <div className="min-h-screen">
-        <main className="min-w-0 px-4 py-4 sm:px-6 sm:py-5 md:px-10 lg:px-8 xl:px-10">
-          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-            <DashboardHeader
-              teacherName={teacher.teacherName}
-              onOpenSidebar={() => setSidebarOpen(true)}
-            />
-
-            <div className="w-full md:mt-[3.25rem] md:w-auto">
+        <main className="mx-auto min-w-0 max-w-5xl px-4 py-6 sm:px-6 md:py-10 lg:px-8">
+          <TeacherPageHeader
+            title="Quizzes"
+            description={
+              <>
+                Signed in as{" "}
+                <span className="text-slate-300">{teacher.teacherName || "Teacher"}</span>
+              </>
+            }
+            onOpenSidebar={() => setSidebarOpen(true)}
+            actions={
               <CreateQuizDialog
                 open={createDialog.open}
                 onOpenChange={handleDialogOpenChange}
@@ -78,18 +80,10 @@ export default function TeacherDashboardContent() {
                 onDescriptionChange={createDialog.setDescription}
                 onCreate={createDialog.handleCreateQuiz}
               />
-            </div>
-          </div>
+            }
+          />
 
-          <div className="mt-5 md:mt-8">
-            <DashboardStats
-              total={teacher.quizzes.length}
-              published={teacher.publishedQuizzes.length}
-              drafts={teacher.draftQuizzes.length}
-            />
-          </div>
-
-          <div className="mt-5 md:mt-8">
+          <div className="mt-8">
             <DashboardQuizTabs
               isLoading={false}
               quizzes={teacher.quizzes}

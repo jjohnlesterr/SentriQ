@@ -102,7 +102,7 @@ function getStatusClass(status: UserStatus) {
 
 function getRoleClass(role: string) {
   if (role === "admin") {
-    return "border-violet-400/20 bg-violet-500/10 text-violet-200";
+    return "border-cyan-400/20 bg-cyan-500/10 text-cyan-200";
   }
 
   return "border-cyan-400/20 bg-cyan-400/10 text-cyan-200";
@@ -243,7 +243,7 @@ export default function AdminUsersTable({
 
   return (
     <>
-      <div className="grid gap-3 border-b border-white/10 px-5 py-4 lg:grid-cols-[1fr_180px_180px]">
+      <div className="grid gap-3 border-b border-line px-5 py-4 lg:grid-cols-[1fr_180px_180px]">
         <div className="relative">
           <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
 
@@ -258,7 +258,7 @@ export default function AdminUsersTable({
         <select
           value={roleFilter}
           onChange={(event) => setRoleFilter(event.target.value)}
-          className="h-11 rounded-xl border border-white/10 bg-black/20 px-4 pr-10 text-sm text-white outline-none"
+          className="h-11 rounded-xl border border-line bg-black/20 px-4 pr-10 text-sm text-white outline-none"
         >
           <option value="all">All roles</option>
           <option value="owner">Owner</option>
@@ -269,7 +269,7 @@ export default function AdminUsersTable({
         <select
           value={statusFilter}
           onChange={(event) => setStatusFilter(event.target.value)}
-          className="h-11 rounded-xl border border-white/10 bg-black/20 px-4 pr-10 text-sm text-white outline-none"
+          className="h-11 rounded-xl border border-line bg-black/20 px-4 pr-10 text-sm text-white outline-none"
         >
           <option value="all">All statuses</option>
           <option value="active">Active</option>
@@ -280,7 +280,7 @@ export default function AdminUsersTable({
       </div>
 
       {isRefreshing && (
-        <div className="flex items-center gap-2 border-b border-white/10 px-5 py-3 text-sm text-slate-400">
+        <div className="flex items-center gap-2 border-b border-line px-5 py-3 text-sm text-slate-400">
           <Loader2 className="h-4 w-4 animate-spin" />
           Refreshing users...
         </div>
@@ -288,7 +288,7 @@ export default function AdminUsersTable({
 
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[1180px] table-fixed text-left text-sm">
-          <thead className="border-b border-white/10 text-slate-400">
+          <thead className="border-b border-line text-slate-400">
             <tr>
               <th className="w-[340px] px-5 py-3 font-medium">User</th>
               <th className="w-[180px] px-5 py-3 font-medium">Role</th>
@@ -312,7 +312,7 @@ export default function AdminUsersTable({
                 <tr key={user.id} className="border-b border-white/5">
                   <td className="px-5 py-4">
                     <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
                         {user.role === "admin" ? (
                           <ShieldCheck className="h-5 w-5" />
                         ) : (
@@ -341,7 +341,7 @@ export default function AdminUsersTable({
                   <td className="px-5 py-4">
                     <div className="flex flex-wrap gap-2">
                       <span
-                        className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getRoleClass(
+                        className={`inline-flex rounded-md border px-2 py-0.5 text-xs font-medium ${getRoleClass(
                           user.role,
                         )}`}
                       >
@@ -349,7 +349,7 @@ export default function AdminUsersTable({
                       </span>
 
                       {user.is_owner && (
-                        <span className="inline-flex rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-medium text-cyan-200">
+                        <span className="inline-flex rounded-md border border-cyan-400/20 bg-cyan-400/10 px-2 py-0.5 text-xs font-medium text-cyan-200">
                           Owner
                         </span>
                       )}
@@ -367,7 +367,7 @@ export default function AdminUsersTable({
 
                   <td className="px-5 py-4">
                     <span
-                      className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getStatusClass(
+                      className={`inline-flex rounded-md border px-2 py-0.5 text-xs font-medium ${getStatusClass(
                         status,
                       )}`}
                     >
@@ -381,7 +381,7 @@ export default function AdminUsersTable({
 
                   <td className="px-5 py-4">
                     {isProtected ? (
-                      <span className="inline-flex h-9 min-w-[150px] items-center justify-center rounded-xl border border-white/10 bg-white/5 px-4 text-xs font-medium text-slate-400">
+                      <span className="inline-flex h-9 min-w-[150px] items-center justify-center rounded-xl border border-line bg-white/[0.03] px-4 text-xs font-medium text-slate-400">
                         {user.is_owner
                           ? "Protected Owner"
                           : isCurrentUser
@@ -462,7 +462,7 @@ export default function AdminUsersTable({
           return (
             <div key={user.id} className="space-y-4 px-5 py-5">
               <div className="flex min-w-0 items-start gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
                   {user.role === "admin" ? (
                     <ShieldCheck className="h-5 w-5" />
                   ) : (
@@ -481,7 +481,7 @@ export default function AdminUsersTable({
 
                   <div className="mt-2 flex flex-wrap gap-2">
                     <span
-                      className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getRoleClass(
+                      className={`inline-flex rounded-md border px-2 py-0.5 text-xs font-medium ${getRoleClass(
                         user.role,
                       )}`}
                     >
@@ -489,13 +489,13 @@ export default function AdminUsersTable({
                     </span>
 
                     {user.is_owner && (
-                      <span className="inline-flex rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-medium text-cyan-200">
+                      <span className="inline-flex rounded-md border border-cyan-400/20 bg-cyan-400/10 px-2 py-0.5 text-xs font-medium text-cyan-200">
                         Owner
                       </span>
                     )}
 
                     <span
-                      className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getStatusClass(
+                      className={`inline-flex rounded-md border px-2 py-0.5 text-xs font-medium ${getStatusClass(
                         status,
                       )}`}
                     >
@@ -505,7 +505,7 @@ export default function AdminUsersTable({
                 </div>
               </div>
 
-              <div className="grid gap-3 rounded-2xl border border-white/10 bg-white/[0.02] p-4 text-sm">
+              <div className="grid gap-3 rounded-xl border border-line bg-white/[0.02] p-4 text-sm">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-slate-500">Last Login</span>
                   <span className="text-right text-slate-300">
@@ -523,7 +523,7 @@ export default function AdminUsersTable({
 
               <div className="grid gap-2">
                 {isProtected ? (
-                  <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-xs font-medium text-slate-400">
+                  <div className="rounded-xl border border-line bg-white/[0.03] px-4 py-3 text-center text-xs font-medium text-slate-400">
                     {user.is_owner
                       ? "Protected Owner"
                       : isCurrentUser

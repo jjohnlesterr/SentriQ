@@ -355,7 +355,7 @@ export default function AdminSessionsTable({
 
   return (
     <>
-      <div className="grid gap-3 border-b border-white/10 px-5 py-4 md:grid-cols-[1fr_220px]">
+      <div className="grid gap-3 border-b border-line px-5 py-4 md:grid-cols-[1fr_220px]">
         <div className="relative">
           <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
 
@@ -370,7 +370,7 @@ export default function AdminSessionsTable({
         <select
           value={statusFilter}
           onChange={(event) => setStatusFilter(event.target.value)}
-          className="h-11 rounded-xl border border-white/10 bg-black/20 px-4 text-sm text-white outline-none"
+          className="h-11 rounded-xl border border-line bg-black/20 px-4 text-sm text-white outline-none"
         >
           <option value="all">All statuses</option>
           <option value="in-progress">In Progress</option>
@@ -392,7 +392,7 @@ export default function AdminSessionsTable({
       </div>
 
       {isRefreshing && (
-        <div className="flex items-center gap-2 border-b border-white/10 px-5 py-3 text-sm text-slate-400">
+        <div className="flex items-center gap-2 border-b border-line px-5 py-3 text-sm text-slate-400">
           <Loader2 className="h-4 w-4 animate-spin" />
           Refreshing sessions...
         </div>
@@ -400,7 +400,7 @@ export default function AdminSessionsTable({
 
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[1320px] table-auto text-left text-sm">
-          <thead className="border-b border-white/10 text-slate-400">
+          <thead className="border-b border-line text-slate-400">
             <tr>
               <th className="w-[220px] px-5 py-3 font-medium">Student</th>
               <th className="w-[260px] px-5 py-3 font-medium">Quiz</th>
@@ -422,7 +422,7 @@ export default function AdminSessionsTable({
                 <tr key={session.id} className="border-b border-white/5">
                   <td className="px-5 py-4">
                     <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
                         <User className="h-5 w-5" />
                       </div>
 
@@ -459,7 +459,7 @@ export default function AdminSessionsTable({
 
                   <td className="px-5 py-4">
                     <span
-                      className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getStatusClass(
+                      className={`inline-flex rounded-md border px-2 py-0.5 text-xs font-medium ${getStatusClass(
                         session.status,
                       )}`}
                     >
@@ -469,7 +469,7 @@ export default function AdminSessionsTable({
 
                   <td className="px-5 py-4">
                     <span
-                      className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getRiskClass(
+                      className={`inline-flex rounded-md border px-2 py-0.5 text-xs font-medium ${getRiskClass(
                         risk,
                       )}`}
                     >
@@ -537,7 +537,7 @@ export default function AdminSessionsTable({
           return (
             <div key={session.id} className="space-y-4 px-5 py-5">
               <div className="flex min-w-0 items-start gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
                   <User className="h-5 w-5" />
                 </div>
 
@@ -552,7 +552,7 @@ export default function AdminSessionsTable({
 
                   <div className="mt-2 flex flex-wrap gap-2">
                     <span
-                      className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getStatusClass(
+                      className={`inline-flex rounded-md border px-2 py-0.5 text-xs font-medium ${getStatusClass(
                         session.status,
                       )}`}
                     >
@@ -560,7 +560,7 @@ export default function AdminSessionsTable({
                     </span>
 
                     <span
-                      className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getRiskClass(
+                      className={`inline-flex rounded-md border px-2 py-0.5 text-xs font-medium ${getRiskClass(
                         risk,
                       )}`}
                     >
@@ -570,7 +570,7 @@ export default function AdminSessionsTable({
                 </div>
               </div>
 
-              <div className="grid gap-3 rounded-2xl border border-white/10 bg-white/[0.02] p-4 text-sm">
+              <div className="grid gap-3 rounded-xl border border-line bg-white/[0.02] p-4 text-sm">
                 <div className="flex justify-between gap-3">
                   <span className="text-slate-500">Score</span>
                   <span className="text-slate-300">{session.score ?? "—"}</span>
@@ -642,7 +642,7 @@ export default function AdminSessionsTable({
         open={selectedSession !== null}
         onOpenChange={() => setSelectedSession(null)}
       >
-        <DialogContent className="max-h-[85vh] w-[calc(100vw-2rem)] max-w-5xl overflow-y-auto border-cyan-400/20 bg-slate-950 p-5 sm:p-6">
+        <DialogContent className="max-h-[85vh] w-[calc(100vw-2rem)] max-w-5xl overflow-y-auto border-cyan-400/20 bg-surface p-5 sm:p-6">
           {selectedSession && (
             <>
               <DialogHeader>
@@ -656,7 +656,7 @@ export default function AdminSessionsTable({
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="mt-5 grid gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm md:grid-cols-2">
+              <div className="mt-5 grid gap-3 rounded-xl border border-line bg-white/[0.03] p-4 text-sm md:grid-cols-2">
                 <div>
                   <p className="text-slate-500">Student</p>
                   <p className="mt-1 font-semibold text-white">
@@ -691,7 +691,7 @@ export default function AdminSessionsTable({
                 <div>
                   <p className="text-slate-500">Status</p>
                   <span
-                    className={`mt-1 inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getStatusClass(
+                    className={`mt-1 inline-flex rounded-md border px-2 py-0.5 text-xs font-medium ${getStatusClass(
                       selectedSession.status,
                     )}`}
                   >
@@ -702,7 +702,7 @@ export default function AdminSessionsTable({
                 <div>
                   <p className="text-slate-500">Approval</p>
                   <span
-                    className={`mt-1 inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getApprovalClass(
+                    className={`mt-1 inline-flex rounded-md border px-2 py-0.5 text-xs font-medium ${getApprovalClass(
                       selectedSession.approval_status,
                     )}`}
                   >
@@ -713,7 +713,7 @@ export default function AdminSessionsTable({
                 <div>
                   <p className="text-slate-500">Risk Level</p>
                   <span
-                    className={`mt-1 inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getRiskClass(
+                    className={`mt-1 inline-flex rounded-md border px-2 py-0.5 text-xs font-medium ${getRiskClass(
                       getRiskLevel(selectedSession),
                     )}`}
                   >
@@ -762,7 +762,7 @@ export default function AdminSessionsTable({
               </div>
 
               {loadingDetailsId === selectedSession.id && (
-                <div className="mt-5 flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4 text-sm text-slate-400">
+                <div className="mt-5 flex items-center gap-2 rounded-xl border border-line bg-white/[0.03] px-5 py-4 text-sm text-slate-400">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Loading session details...
                 </div>
@@ -782,7 +782,7 @@ export default function AdminSessionsTable({
                         ([key, value]) => (
                           <div
                             key={key}
-                            className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                            className="rounded-xl border border-line bg-white/[0.03] p-4"
                           >
                             <p className="text-xs font-semibold uppercase tracking-wide text-cyan-300">
                               {getQuestionLabel(selectedSession, key)}
@@ -798,7 +798,7 @@ export default function AdminSessionsTable({
                         ),
                       )
                     ) : (
-                      <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-8 text-center text-slate-400">
+                      <div className="rounded-xl border border-line bg-white/[0.03] px-5 py-8 text-center text-slate-400">
                         {loadingDetailsId === selectedSession.id
                           ? "Loading answers..."
                           : "No submitted answers found."}
@@ -820,10 +820,10 @@ export default function AdminSessionsTable({
                       return (
                         <div
                           key={event.id}
-                          className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                          className="rounded-xl border border-line bg-white/[0.03] p-4"
                         >
                           <div className="flex gap-3">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
                               <Icon className="h-5 w-5" />
                             </div>
 
@@ -854,7 +854,7 @@ export default function AdminSessionsTable({
                     })}
 
                     {!selectedSession.events.length && (
-                      <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-8 text-center text-slate-400">
+                      <div className="rounded-xl border border-line bg-white/[0.03] px-5 py-8 text-center text-slate-400">
                         {loadingDetailsId === selectedSession.id
                           ? "Loading activity logs..."
                           : "No activity logs found for this session."}

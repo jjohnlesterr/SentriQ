@@ -3,12 +3,11 @@
 import { ZodError } from "zod";
 
 import type { Question } from "@/lib/shared/types";
-import { supabase } from "@/lib/supabase/client";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import {
   createQuizService,
   deleteQuizService,
-  getAllQuizzesWithSessionsService,
   getQuizByIdService,
   getTeacherQuizzesService,
   publishQuizService,
@@ -71,6 +70,8 @@ export async function updateQuizJoinLocked(
   quizId: string,
   joinLocked: boolean,
 ) {
+  const supabase = await createSupabaseServerClient();
+
   try {
     const { data, error } = await supabase
       .from("quizzes")
@@ -115,12 +116,3 @@ export async function getQuizById(quizId: string) {
   }
 }
 
-export async function getAllQuizzesWithSessions() {
-  try {
-    return await getAllQuizzesWithSessionsService();
-  } catch (error) {
-    throw new Error(
-      getActionErrorMessage(error, "Failed to load quiz sessions."),
-    );
-  }
-}

@@ -1,12 +1,4 @@
-import {
-  AlertTriangle,
-  CheckCircle2,
-  ClipboardList,
-  Clock3,
-  PartyPopper,
-  TimerOff,
-  XCircle,
-} from "lucide-react";
+import { AlertTriangle, CheckCircle2, TimerOff } from "lucide-react";
 
 import type { QuizSession } from "@/lib/shared/types";
 
@@ -22,7 +14,7 @@ type ResultSummaryCardProps = {
 };
 
 function formatDuration(seconds?: number) {
-  if (seconds === undefined) return "N/A";
+  if (seconds === undefined) return "—";
 
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
@@ -35,34 +27,27 @@ function formatDuration(seconds?: number) {
 function getResultCopy(status: QuizSession["status"]) {
   if (status === "timed-out") {
     return {
-      title: "Time Expired",
-      description:
-        "Your quiz was automatically submitted because the time limit was reached.",
+      label: "Time expired",
+      description: "Your answers were submitted automatically when time ran out.",
       icon: TimerOff,
-      iconClassName: "border-yellow-400/20 bg-yellow-500/10 text-yellow-300",
-      scoreClassName: "border-yellow-400/20 bg-yellow-500/10 text-yellow-100",
-      nameClassName: "text-yellow-300",
+      tone: "text-amber-300",
     };
   }
 
   if (status === "abandoned") {
     return {
-      title: "Session Abandoned",
-      description: "Your session was marked inactive for more than 5 minutes.",
+      label: "Session ended",
+      description: "Your session was closed after more than 5 minutes of inactivity.",
       icon: AlertTriangle,
-      iconClassName: "border-orange-400/20 bg-orange-500/10 text-orange-300",
-      scoreClassName: "border-orange-400/20 bg-orange-500/10 text-orange-100",
-      nameClassName: "text-orange-300",
+      tone: "text-amber-300",
     };
   }
 
   return {
-    title: "Quiz Complete!",
-    description: "Great job on completing the quiz!",
-    icon: PartyPopper,
-    iconClassName: "border-violet-400/20 bg-violet-500/10 text-violet-300",
-    scoreClassName: "border-violet-400/20 bg-violet-500/10 text-violet-100",
-    nameClassName: "text-violet-300",
+    label: "Submitted",
+    description: "Your quiz has been submitted.",
+    icon: CheckCircle2,
+    tone: "text-emerald-300",
   };
 }
 
@@ -79,102 +64,57 @@ export default function ResultSummaryCard({
   const resultCopy = getResultCopy(status);
   const Icon = resultCopy.icon;
 
+  const stats = [
+    { label: "Correct", value: score },
+    { label: "Incorrect", value: incorrect },
+    { label: "Time spent", value: formatDuration(timeSpentSeconds) },
+  ];
+
   return (
-    <section className="relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-5 shadow-[0_16px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:p-6">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.14),transparent_34%),radial-gradient(circle_at_top_right,rgba(34,211,238,0.1),transparent_34%)]" />
+    <section className="rounded-xl border border-line bg-surface">
+      <div className="flex flex-col gap-6 p-5 sm:flex-row sm:items-start sm:justify-between sm:p-6">
+        <div className="min-w-0">
+          <p className={`inline-flex items-center gap-1.5 text-sm font-medium ${resultCopy.tone}`}>
+            <Icon className="h-4 w-4" />
+            {resultCopy.label}
+          </p>
 
-      <div className="relative z-10 space-y-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="min-w-0">
-            <div className="mb-4 flex items-center gap-3">
-              <div
-                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border ${resultCopy.iconClassName}`}
-              >
-                <Icon className="h-5 w-5" />
-              </div>
+          <h1 className="mt-2 line-clamp-2 text-xl font-semibold tracking-tight text-white sm:text-2xl">
+            {quizTitle || "Untitled quiz"}
+          </h1>
 
-              <div className="min-w-0">
-                <h1 className="text-2xl font-black text-white sm:text-3xl">
-                  {resultCopy.title}
-                </h1>
-
-                <p className="mt-1 text-sm text-slate-400">
-                  <span className={`font-semibold ${resultCopy.nameClassName}`}>
-                    {studentName}
-                  </span>
-                  {" • "}
-                  {resultCopy.description}
-                </p>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
-              <div className="flex items-start gap-3">
-                <ClipboardList className="mt-0.5 h-5 w-5 shrink-0 text-cyan-300" />
-
-                <div className="min-w-0">
-                  <p className="line-clamp-2 text-lg font-bold leading-6 text-slate-100 sm:text-xl">
-                    {quizTitle || "Untitled Quiz"}
-                  </p>
-
-                  {quizDescription?.trim() && (
-                    <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-400">
-                      {quizDescription}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div
-            className={`rounded-2xl border px-5 py-4 text-center lg:min-w-[160px] ${resultCopy.scoreClassName}`}
-          >
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-current/80">
-              Score
+          {quizDescription?.trim() && (
+            <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-slate-400">
+              {quizDescription}
             </p>
+          )}
 
-            <p className="mt-2 text-4xl font-black text-white">
-              {score}
-              <span className="text-xl text-slate-400">
-                {" "}
-                / {totalQuestions}
-              </span>
-            </p>
-          </div>
+          <p className="mt-3 text-sm text-slate-400">
+            <span className="font-medium text-slate-200">{studentName}</span>
+            {" · "}
+            {resultCopy.description}
+          </p>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-3">
-          <div className="flex flex-col items-center justify-center gap-2 rounded-xl px-2 py-3 text-center">
-            <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-400" />
-
-            <div>
-              <p className="text-xl font-black text-white">{score}</p>
-              <p className="text-xs text-slate-400">Correct</p>
-            </div>
-          </div>
-
-          <div className="flex flex-col items-center justify-center gap-2 rounded-xl px-2 py-3 text-center">
-            <XCircle className="h-5 w-5 shrink-0 text-red-400" />
-
-            <div>
-              <p className="text-xl font-black text-white">{incorrect}</p>
-              <p className="text-xs text-slate-400">Incorrect</p>
-            </div>
-          </div>
-
-          <div className="flex flex-col items-center justify-center gap-2 rounded-xl px-2 py-3 text-center">
-            <Clock3 className="h-5 w-5 shrink-0 text-violet-300" />
-
-            <div>
-              <p className="text-xl font-black text-violet-300">
-                {formatDuration(timeSpentSeconds)}
-              </p>
-              <p className="text-xs text-slate-400">Time Spent</p>
-            </div>
-          </div>
+        <div className="shrink-0 sm:text-right">
+          <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
+            Score
+          </p>
+          <p className="mt-1 text-4xl font-semibold tabular-nums tracking-tight text-white">
+            {score}
+            <span className="text-xl font-normal text-slate-500"> / {totalQuestions}</span>
+          </p>
         </div>
       </div>
+
+      <dl className="grid grid-cols-3 divide-x divide-line border-t border-line">
+        {stats.map((stat) => (
+          <div key={stat.label} className="px-5 py-4 sm:px-6">
+            <dt className="text-xs text-slate-500">{stat.label}</dt>
+            <dd className="mt-1 text-lg font-semibold tabular-nums text-white">{stat.value}</dd>
+          </div>
+        ))}
+      </dl>
     </section>
   );
 }

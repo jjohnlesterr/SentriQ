@@ -13,6 +13,10 @@ type Props = {
   onDeleteQuiz: (quizId: string) => void;
 };
 
+function TabCount({ value }: { value: number }) {
+  return <span className="tabular-nums text-slate-500">{value}</span>;
+}
+
 export default function DashboardQuizTabs({
   isLoading,
   quizzes,
@@ -26,26 +30,29 @@ export default function DashboardQuizTabs({
 
   return (
     <Tabs defaultValue="all" className="w-full">
-      <TabsList className="mb-4 h-auto w-full rounded-2xl border border-white/10 bg-white/5 p-1 backdrop-blur-xl md:mb-5 md:w-auto">
+      <TabsList className="mb-4 h-auto w-full md:w-auto">
         <TabsTrigger
           value="all"
-          className="flex-1 cursor-pointer whitespace-nowrap rounded-xl px-3 py-2 text-xs sm:text-sm"
+          className="flex-1 gap-2 whitespace-nowrap text-xs sm:text-sm"
         >
-          All Quizzes
+          All
+          <TabCount value={quizzes.length} />
         </TabsTrigger>
 
         <TabsTrigger
           value="published"
-          className="flex-1 cursor-pointer whitespace-nowrap rounded-xl px-3 py-2 text-xs sm:text-sm"
+          className="flex-1 gap-2 whitespace-nowrap text-xs sm:text-sm"
         >
           Published
+          <TabCount value={publishedQuizzes.length} />
         </TabsTrigger>
 
         <TabsTrigger
           value="drafts"
-          className="flex-1 cursor-pointer whitespace-nowrap rounded-xl px-3 py-2 text-xs sm:text-sm"
+          className="flex-1 gap-2 whitespace-nowrap text-xs sm:text-sm"
         >
           Drafts
+          <TabCount value={draftQuizzes.length} />
         </TabsTrigger>
       </TabsList>
 

@@ -145,8 +145,8 @@ function SessionList({
     <>
       <div className="space-y-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="relative flex-1 rounded-2xl border border-cyan-400/10 bg-[#081121] shadow-[0_0_0_1px_rgba(34,211,238,0.03)] transition focus-within:border-cyan-400/30 focus-within:ring-2 focus-within:ring-cyan-400/10">
-            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-cyan-300/70" />
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
 
             <Input
               value={search}
@@ -154,9 +154,10 @@ function SessionList({
                 setSearch(event.target.value);
                 setSelectedIds([]);
               }}
-              placeholder="Search sessions..."
+              placeholder="Search students"
+              aria-label="Search students"
               maxLength={100}
-              className="h-12 rounded-2xl border-0 bg-transparent pl-11 text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="h-10 pl-10"
             />
           </div>
 
@@ -166,10 +167,9 @@ function SessionList({
                 type="button"
                 variant="success"
                 onClick={handleApproveAll}
-                className="h-12 rounded-2xl px-5 font-semibold"
               >
                 <CheckCheck className="h-4 w-4" />
-                Approve All ({pendingOnly.length})
+                Approve all ({pendingOnly.length})
               </Button>
             )}
 
@@ -178,7 +178,6 @@ function SessionList({
                 type="button"
                 variant={selectMode ? "secondary" : "ghost"}
                 onClick={toggleSelectMode}
-                className="h-12 rounded-2xl border border-white/10 bg-white/5 px-5 font-semibold text-white hover:bg-white/10"
               >
                 {selectMode ? (
                   <>
@@ -199,9 +198,8 @@ function SessionList({
                 type="button"
                 variant="ghost"
                 onClick={allFilteredSelected ? clearSelection : selectAllFiltered}
-                className="h-12 rounded-2xl border border-white/10 bg-white/5 px-5 font-semibold text-white hover:bg-white/10"
               >
-                {allFilteredSelected ? "Clear All" : "Select All"}
+                {allFilteredSelected ? "Clear all" : "Select all"}
               </Button>
             )}
           </div>
@@ -210,10 +208,10 @@ function SessionList({
         {items.length === 0 ? (
           <EmptyState title={emptyTitle} />
         ) : filteredItems.length === 0 ? (
-          <EmptyState title="No matching sessions found." />
+          <EmptyState title="No students match your search." />
         ) : (
           <>
-            <div className="space-y-4">
+            <div className="space-y-2.5">
               {visibleItems.map((session) => (
                 <SessionCard
                   key={session.id}
@@ -244,13 +242,9 @@ function SessionList({
       </div>
 
       {selectMode && selectedCount > 0 && (
-        <div className="fixed bottom-5 left-1/2 z-50 w-[calc(100vw-2rem)] max-w-3xl -translate-x-1/2 rounded-3xl border border-violet-400/20 bg-slate-950/95 p-3 shadow-[0_20px_80px_rgba(0,0,0,0.65)] backdrop-blur-xl lg:left-[calc(50%+8rem)]">
+        <div className="fixed bottom-5 left-1/2 z-50 w-[calc(100vw-2rem)] max-w-3xl -translate-x-1/2 rounded-xl border border-line-strong bg-surface-raised p-3 shadow-[0_16px_48px_-12px_rgba(0,0,0,0.8)] lg:left-[calc(50%+8rem)]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-violet-500 text-sm font-black text-white">
-                {selectedCount}
-              </div>
-
+            <div className="flex items-center gap-3 px-1">
               <div>
                 <p className="text-sm font-semibold text-white">
                   {selectedCount} selected
@@ -267,7 +261,6 @@ function SessionList({
                 variant="ghost"
                 onClick={clearSelection}
                 disabled={isDeleting}
-                className="h-11 rounded-2xl border border-white/10 bg-white/5 px-5 text-white hover:bg-white/10"
               >
                 <RotateCcw className="h-4 w-4" />
                 Clear
@@ -278,10 +271,9 @@ function SessionList({
                 variant="destructive"
                 onClick={() => setDeleteDialogOpen(true)}
                 disabled={isDeleting}
-                className="h-11 rounded-2xl px-5 font-semibold"
               >
                 <Trash2 className="h-4 w-4" />
-                Delete Selected
+                Delete selected
               </Button>
             </div>
           </div>
@@ -294,7 +286,7 @@ function SessionList({
         description={`This will permanently delete ${selectedCount} selected session${
           selectedCount === 1 ? "" : "s"
         }, including answers, scores, and monitoring activity logs. This action cannot be undone.`}
-        confirmText="Delete Sessions"
+        confirmText="Delete sessions"
         loadingText="Deleting..."
         confirmVariant="destructive"
         isLoading={isDeleting}
@@ -318,33 +310,33 @@ export default function SessionTabs({
 }: Props) {
   return (
     <Tabs defaultValue="pending" className="w-full">
-      <TabsList className="mb-5 h-auto w-full flex-wrap rounded-2xl border border-white/10 bg-white/5 p-1 backdrop-blur-xl md:mb-6 md:w-auto">
+      <TabsList className="mb-5 h-auto w-full flex-wrap md:w-auto">
         <TabsTrigger
           value="pending"
-          className="flex-1 rounded-xl px-3 py-2 text-[11px] sm:text-sm md:flex-none md:px-4"
+          className="flex-1 gap-1.5 text-xs sm:text-sm md:flex-none"
         >
-          Pending ({pendingRequests.length})
+          Pending <span className="tabular-nums text-slate-500">{pendingRequests.length}</span>
         </TabsTrigger>
 
         <TabsTrigger
           value="all"
-          className="flex-1 rounded-xl px-3 py-2 text-[11px] sm:text-sm md:flex-none md:px-4"
+          className="flex-1 gap-1.5 text-xs sm:text-sm md:flex-none"
         >
-          All Sessions ({sessions.length})
+          All <span className="tabular-nums text-slate-500">{sessions.length}</span>
         </TabsTrigger>
 
         <TabsTrigger
           value="progress"
-          className="flex-1 rounded-xl px-3 py-2 text-[11px] sm:text-sm md:flex-none md:px-4"
+          className="flex-1 gap-1.5 text-xs sm:text-sm md:flex-none"
         >
-          In Progress ({inProgress.length})
+          In progress <span className="tabular-nums text-slate-500">{inProgress.length}</span>
         </TabsTrigger>
 
         <TabsTrigger
           value="suspicious"
-          className="flex-1 rounded-xl px-3 py-2 text-[11px] sm:text-sm md:flex-none md:px-4"
+          className="flex-1 gap-1.5 text-xs sm:text-sm md:flex-none"
         >
-          Suspicious ({suspicious.length})
+          Flagged <span className="tabular-nums text-slate-500">{suspicious.length}</span>
         </TabsTrigger>
       </TabsList>
 

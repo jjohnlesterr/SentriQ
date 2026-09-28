@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 export async function middleware(request: NextRequest) {
-  const response = NextResponse.next({
+  let response = NextResponse.next({
     request,
   });
 
@@ -15,8 +15,17 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
+          cookiesToSet.forEach(({ name, value }) => {
             request.cookies.set(name, value);
+          });
+
+          // Recreate the response so refreshed auth cookies reach both
+          // downstream server code and the browser.
+          response = NextResponse.next({
+            request,
+          });
+
+          cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set(name, value, options);
           });
         },
@@ -41,13 +50,31 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/teacher/login") ||
     pathname.startsWith("/teacher/register");
 
+  // Redirects must carry any refreshed auth cookies, otherwise the session is lost.
+  function redirectTo(url: URL) {
+    const redirectResponse = NextResponse.redirect(url);
+
+    response.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie);
+    });
+
+    return redirectResponse;
+  }
+
   if ((isAdminRoute || isTeacherProtectedRoute) && !user) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/teacher/login";
-    return NextResponse.redirect(redirectUrl);
+    redirectUrl.search = "";
+    redirectUrl.searchParams.set(
+      "next",
+      `${pathname}${request.nextUrl.search}`,
+    );
+    return redirectTo(redirectUrl);
   }
 
-  if (!user) {
+  // Teacher pages only need a signed-in user; the role lookup is only
+  // needed for admin routes and for redirecting away from login/register.
+  if (!user || (!isAdminRoute && !isTeacherAuthRoute)) {
     return response;
   }
 
@@ -62,14 +89,16 @@ export async function middleware(request: NextRequest) {
   if (isAdminRoute && role !== "admin") {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/teacher/dashboard";
-    return NextResponse.redirect(redirectUrl);
+    redirectUrl.search = "";
+    return redirectTo(redirectUrl);
   }
 
   if (isTeacherAuthRoute) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname =
       role === "admin" ? "/admin/dashboard" : "/teacher/dashboard";
-    return NextResponse.redirect(redirectUrl);
+    redirectUrl.search = "";
+    return redirectTo(redirectUrl);
   }
 
   return response;

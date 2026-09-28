@@ -66,7 +66,7 @@ export default function SessionAnswersView({
 
   if (!questions.length) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-sm text-slate-400">
+      <div className="py-8 text-center text-sm text-slate-500">
         Quiz questions not available.
       </div>
     );
@@ -90,11 +90,11 @@ export default function SessionAnswersView({
         return (
           <div
             key={question.id}
-            className="rounded-2xl border border-white/10 bg-slate-950/40 p-4"
+            className="rounded-lg bg-white/[0.02] p-4"
           >
             <div className="mb-4 flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-start gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-xs font-bold text-slate-300">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line-strong text-xs font-bold text-slate-300">
                   Q{index + 1}
                 </div>
 
@@ -104,7 +104,7 @@ export default function SessionAnswersView({
               </div>
 
               <span
-                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold ${
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-bold ${
                   correct
                     ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-300"
                     : "border-red-400/20 bg-red-500/10 text-red-300"
@@ -157,7 +157,7 @@ export default function SessionAnswersView({
                           ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-100"
                           : isWrongSelected
                             ? "border-red-400/25 bg-red-500/10 text-red-100"
-                            : "border-white/10 bg-white/[0.035] text-slate-300"
+                            : "border-line bg-white/[0.035] text-slate-300"
                       }`}
                     >
                       {isCorrectChoice ? (
@@ -201,7 +201,7 @@ export default function SessionAnswersView({
                   Math.min(current + PREVIEW_LIMIT, questions.length),
                 )
               }
-              className="h-10 w-full rounded-2xl border border-white/10 bg-white/5 text-sm text-white hover:bg-white/10"
+              className="h-9 w-full text-sm"
             >
               See More ({nextCount})
             </Button>
@@ -212,7 +212,7 @@ export default function SessionAnswersView({
               type="button"
               variant="ghost"
               onClick={() => setVisibleCount(PREVIEW_LIMIT)}
-              className="h-10 w-full rounded-2xl border border-white/10 bg-white/5 text-sm text-slate-300 hover:bg-white/10 hover:text-white"
+              className="h-9 w-full text-sm text-slate-400"
             >
               See Less
             </Button>

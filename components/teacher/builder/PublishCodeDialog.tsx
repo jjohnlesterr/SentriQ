@@ -40,9 +40,9 @@ export default function PublishCodeDialog({
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-white/10 bg-slate-950/95 text-white backdrop-blur-2xl">
+      <DialogContent className="border-line bg-surface text-white">
         <DialogHeader>
-          <DialogTitle className="bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-2xl font-bold text-transparent">
+          <DialogTitle className="text-2xl font-bold text-white">
             Quiz Published!
           </DialogTitle>
 
@@ -52,7 +52,7 @@ export default function PublishCodeDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="rounded-2xl border border-cyan-400/20 bg-cyan-500/10 p-6 text-center">
+          <div className="rounded-xl border border-cyan-400/20 bg-cyan-500/10 p-6 text-center">
             <p className="mb-2 text-sm text-slate-300">Join Code</p>
 
             <p className="break-all font-mono text-4xl font-bold tracking-[0.25em] text-cyan-200">
@@ -60,7 +60,7 @@ export default function PublishCodeDialog({
             </p>
           </div>
 
-          <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-white/[0.03] px-4 py-3">
             <div className="flex items-center gap-3">
               <Clock className="h-5 w-5 text-cyan-300" />
 
@@ -77,7 +77,7 @@ export default function PublishCodeDialog({
             type="button"
             onClick={onCopyCode}
             variant="ghost"
-            className="h-11 w-full cursor-pointer rounded-xl border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white"
+            className="w-full"
           >
             <Copy className="h-4 w-4" />
             Copy Code
@@ -86,7 +86,7 @@ export default function PublishCodeDialog({
           <Button
             type="button"
             onClick={onGoToMonitor}
-            className="h-11 w-full cursor-pointer rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-600 hover:to-blue-600"
+            className="w-full"
           >
             Go to Monitor
           </Button>

@@ -20,20 +20,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "SentriQ - Quiz Monitoring",
   description:
-    "A smart quiz and monitoring platform designed to ensure integrity and fairness during digital assessments.",
-
-  icons: {
-    icon: "/logo-final.png",
-    shortcut: "/logo-final.png",
-    apple: "/logo-final.png",
-  },
+    "Online quizzes with live monitoring for classrooms: build a quiz, approve who joins, and see integrity signals as they happen.",
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0d0d14" },
-  ],
+  themeColor: "#0a0c10",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({

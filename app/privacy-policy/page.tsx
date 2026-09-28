@@ -1,33 +1,25 @@
-"use client";
+import Link from "next/link";
 
-import { useRouter } from "next/navigation";
 import MarketingPageShell from "@/components/layout/MarketingPageShell";
-import { GlassCard } from "@/components/shared/GlassCard";
-import SectionHeading from "@/components/shared/SectionHeading";
 
 export default function PrivacyPolicyPage() {
-  const router = useRouter();
-
   return (
     <MarketingPageShell>
-      <div className="mx-auto mb-6 max-w-3xl">
-        <button
-          onClick={() => router.back()}
-          className="text-sm text-slate-400 transition hover:text-white"
-        >
-          ← Back
-        </button>
-      </div>
+      <article className="mx-auto max-w-2xl">
+        <Link href="/" className="text-sm text-slate-400 transition-colors hover:text-white">
+          ← Home
+        </Link>
 
-      <GlassCard className="mx-auto max-w-3xl p-8 text-center">
-        <SectionHeading
-          badge="🚧 Privacy Policy"
-          title="Work in Progress"
-          description="We're currently working on our Privacy Policy page. Please check back later for updates."
-          variant="page"
-          align="center"
-        />
-      </GlassCard>
+        <h1 className="mt-6 text-2xl font-semibold tracking-tight text-white md:text-3xl">
+          Privacy policy
+        </h1>
+
+        <p className="mt-4 text-sm leading-6 text-slate-400">
+          Our full privacy policy is still being written. If you have questions
+          about how SentriQ handles quiz or account data in the meantime,
+          please contact the SentriQ team.
+        </p>
+      </article>
     </MarketingPageShell>
   );
 }

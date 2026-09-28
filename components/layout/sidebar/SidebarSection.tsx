@@ -26,20 +26,14 @@ export default function SidebarSection({
   contentClassName,
 }: SidebarSectionProps) {
   return (
-    <div
-      className={cn(
-        "rounded-2xl p-2",
-        active
-          ? "border border-cyan-400/20 bg-cyan-500/10"
-          : "transition hover:bg-white/[0.03]"
-      )}
-    >
+    <div>
       <button
         type="button"
         onClick={onToggle}
+        aria-expanded={open}
         className={cn(
-          "flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold transition",
-          active ? "text-white" : "text-slate-300 hover:text-white"
+          "flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-white/[0.04]",
+          active ? "text-white" : "text-slate-400 hover:text-white"
         )}
       >
         <div className="flex items-center gap-3">
@@ -48,12 +42,12 @@ export default function SidebarSection({
         </div>
 
         <ChevronDown
-          className={cn("h-4 w-4 shrink-0 transition", open && "rotate-180")}
+          className={cn("h-4 w-4 shrink-0 text-slate-500 transition-transform", open && "rotate-180")}
         />
       </button>
 
       {open && (
-        <div className={cn("mt-2 space-y-1 pl-6", contentClassName)}>
+        <div className={cn("ml-5 mt-1 space-y-0.5 border-l border-line pl-2.5", contentClassName)}>
           {children}
         </div>
       )}

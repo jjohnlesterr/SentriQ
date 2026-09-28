@@ -11,8 +11,6 @@ import MonitorStats from "@/components/teacher/monitor/MonitorStats";
 import SessionTabs from "@/components/teacher/monitor/SessionTabs";
 import SessionDetailsDialog from "@/components/teacher/monitor/view-details/SessionDetailsDialog";
 
-import { Button } from "@/components/ui/button";
-
 import { useTeacherMonitor } from "@/hooks/teacher/useTeacherMonitor";
 
 export default function TeacherMonitorPage() {
@@ -33,22 +31,20 @@ export default function TeacherMonitorPage() {
         <PageLoader label="Loading monitor..." />
       ) : (
         <div className="min-h-screen">
-          <main className="min-w-0 px-4 py-4 sm:px-6 sm:py-5 md:px-10 lg:px-8 xl:px-10">
-            <div className="mb-4 flex items-center justify-between lg:hidden">
-              <Button
+          <main className="mx-auto min-w-0 max-w-6xl px-4 py-6 sm:px-6 md:py-8 lg:px-8">
+            <div className="mb-6 flex items-center justify-between lg:hidden">
+              <button
                 type="button"
-                variant="ghost"
-                size="sm"
                 onClick={() => monitor.setSidebarOpen(true)}
                 aria-label="Open sidebar"
-                className="h-11 w-11 rounded-2xl border border-white/10 bg-white/5 p-0 text-slate-300 hover:bg-white/10 hover:text-white"
+                className="-ml-2 flex h-10 w-10 items-center justify-center rounded-md text-slate-300 transition-colors hover:bg-white/[0.05] hover:text-white"
               >
                 <Menu className="h-5 w-5" />
-              </Button>
+              </button>
 
-              <AppLogo className="text-2xl" />
+              <AppLogo className="text-lg" />
 
-              <div className="h-11 w-11" />
+              <div className="h-10 w-10" />
             </div>
 
             <MonitorHeader

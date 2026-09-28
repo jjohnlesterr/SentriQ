@@ -6,21 +6,8 @@ type Props = {
 
 export default function AppLogo({ className }: Props) {
   return (
-    <h1
-      className={cn(
-        `
-        bg-gradient-to-r
-        from-blue-400
-        via-cyan-300
-        to-indigo-400
-        bg-clip-text
-        font-extrabold
-        text-transparent
-        `,
-        className
-      )}
-    >
-      SentriQ
-    </h1>
+    <span className={cn("font-semibold tracking-tight text-white", className)}>
+      Sentri<span className="text-cyan-300">Q</span>
+    </span>
   );
 }

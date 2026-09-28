@@ -1,6 +1,97 @@
 "use server";
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import {
+  GoogleGenerativeAI,
+  GoogleGenerativeAIAbortError,
+  GoogleGenerativeAIFetchError,
+  type GenerationConfig,
+  type ResponseSchema,
+} from "@google/generative-ai";
+
+import {
+  buildGenerationPrompt,
+  buildResponseSchema,
+  generationRequestSchema,
+  parseGeneratedQuestions,
+} from "@/lib/ai/quiz-generation";
+import type { Question } from "@/lib/shared/types";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { questionSchema } from "@/lib/validations/quiz.schema";
+
+// Tried in order. The gemini-2.5 models are no longer available to new API keys.
+const DEFAULT_MODELS = ["gemini-3.5-flash", "gemini-3.1-flash-lite"];
+const REQUEST_TIMEOUT_MS = 30_000;
+// Errors worth retrying on the next model (model missing, overloaded, server error).
+const FALLBACK_STATUSES = new Set([404, 500, 502, 503, 504]);
+
+function getModelChain() {
+  const preferred = process.env.GEMINI_MODEL?.trim();
+
+  return [...new Set([preferred, ...DEFAULT_MODELS].filter(Boolean))] as string[];
+}
+
+async function generateText(apiKey: string, prompt: string, generationConfig: GenerationConfig) {
+  const genAI = new GoogleGenerativeAI(apiKey);
+  let lastError: unknown;
+
+  for (const modelName of getModelChain()) {
+    try {
+      const model = genAI.getGenerativeModel(
+        { model: modelName, generationConfig },
+        { timeout: REQUEST_TIMEOUT_MS },
+      );
+      const result = await model.generateContent(prompt);
+
+      return result.response.text();
+    } catch (error) {
+      lastError = error;
+
+      const status = getErrorStatus(error);
+      const canFallBack =
+        error instanceof GoogleGenerativeAIAbortError ||
+        (status !== null && FALLBACK_STATUSES.has(status));
+
+      if (!canFallBack) throw error;
+
+      logAIError(`model ${modelName} unavailable, trying next`, error);
+    }
+  }
+
+  throw lastError;
+}
+
+async function isSignedIn() {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  return Boolean(user);
+}
+
+// Maps SDK/network failures to short messages; raw errors never reach the client.
+function toFriendlyAIError(error: unknown) {
+  if (error instanceof GoogleGenerativeAIAbortError) {
+    return "The AI took too long to respond. Please try again.";
+  }
+
+  const status = getErrorStatus(error);
+
+  if (status === 429) return "AI rate limit reached. Please wait a moment and try again.";
+  if (status === 400) return "The AI couldn't process this request. Try a shorter or clearer topic.";
+  if (status === 401 || status === 403) return "AI generation isn't configured correctly. Please contact the administrator.";
+  if (status && status >= 500) return "The AI service is temporarily unavailable. Please try again.";
+
+  return "AI is unavailable right now. Please try again.";
+}
+
+function logAIError(context: string, error: unknown) {
+  // Log only non-sensitive metadata; never the key or the full request.
+  console.error(`[ai] ${context}`, {
+    name: error instanceof Error ? error.name : typeof error,
+    status: getErrorStatus(error),
+  });
+}
 
 type AIAction =
   | "chat"
@@ -36,12 +127,9 @@ function cleanJsonResponse(value: string) {
   return value.replace(/```json/g, "").replace(/```/g, "").trim();
 }
 
-function getErrorMessage(error: unknown) {
-  if (error instanceof Error) return error.message;
-  return "AI is unavailable right now.";
-}
-
 function getErrorStatus(error: unknown) {
+  if (error instanceof GoogleGenerativeAIFetchError) return error.status ?? null;
+
   if (
     typeof error === "object" &&
     error !== null &&
@@ -65,24 +153,21 @@ function getTopic(input: GenerateAIResponseInput) {
 export async function generateAIResponse(
   input: GenerateAIResponseInput,
 ): Promise<AIResponse> {
+  if (!(await isSignedIn())) {
+    return { success: false, message: "Please log in to use the AI assistant." };
+  }
+
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
     return {
       success: false,
-      message: "Missing GEMINI_API_KEY in .env.local.",
+      message: "AI features aren't configured yet.",
     };
   }
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-
-  const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash-lite",
-    generationConfig: {
-      maxOutputTokens: 280,
-      temperature: 0.4,
-    },
-  });
+  // Newer models spend part of the output budget on reasoning, so allow headroom.
+  const chatConfig: GenerationConfig = { maxOutputTokens: 1024, temperature: 0.4 };
 
   let prompt = "";
   const topic = getTopic(input);
@@ -199,8 +284,7 @@ Rules:
   }
 
   try {
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
+    const text = await generateText(apiKey, prompt, chatConfig);
 
     if (input.action === "suggest_wrong_answers") {
       try {
@@ -228,14 +312,86 @@ Rules:
       message: text.trim(),
     };
   } catch (error: unknown) {
-    console.error("Gemini AI error:", error);
+    logAIError("assistant request failed", error);
 
+    return { success: false, message: toFriendlyAIError(error) };
+  }
+}
+
+// --- Structured quiz generation -------------------------------------------
+
+export type GenerateQuizQuestionsResult =
+  | { success: true; questions: Question[]; skipped: number }
+  | { success: false; message: string };
+
+export async function generateQuizQuestions(
+  input: unknown,
+): Promise<GenerateQuizQuestionsResult> {
+  if (!(await isSignedIn())) {
+    return { success: false, message: "Please log in to generate questions." };
+  }
+
+  const parsedInput = generationRequestSchema.safeParse(input);
+
+  if (!parsedInput.success) {
     return {
       success: false,
-      message:
-        getErrorStatus(error) === 429
-          ? "AI rate limit reached. Please wait a few seconds and try again."
-          : getErrorMessage(error),
+      message: parsedInput.error.issues[0]?.message ?? "Please check your input.",
     };
   }
+
+  const request = parsedInput.data;
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey) {
+    return { success: false, message: "AI generation isn't configured yet." };
+  }
+
+  let text: string;
+
+  try {
+    text = await generateText(apiKey, buildGenerationPrompt(request), {
+      temperature: 0.3,
+      maxOutputTokens: 8192,
+      responseMimeType: "application/json",
+      responseSchema: buildResponseSchema(request.types) as unknown as ResponseSchema,
+    });
+  } catch (error) {
+    logAIError("quiz generation failed", error);
+    return { success: false, message: toFriendlyAIError(error) };
+  }
+
+  const parsed = parseGeneratedQuestions(text, request);
+
+  if (!parsed.ok) {
+    logAIError(`quiz generation returned ${parsed.error} output`, null);
+    return {
+      success: false,
+      message: "The AI returned an unusable response. Please try again.",
+    };
+  }
+
+  // Final gate: the same schema the builder uses when saving and publishing.
+  const questions: Question[] = [];
+  let skipped = parsed.rejected.length;
+
+  for (const candidate of parsed.questions) {
+    const checked = questionSchema.safeParse({ ...candidate, id: crypto.randomUUID() });
+
+    if (!checked.success) {
+      skipped += 1;
+      continue;
+    }
+
+    questions.push({ ...candidate, ...checked.data });
+  }
+
+  if (questions.length === 0) {
+    return {
+      success: false,
+      message: "The AI couldn't produce valid questions for this request. Try rephrasing the topic.",
+    };
+  }
+
+  return { success: true, questions, skipped };
 }

@@ -212,7 +212,7 @@ export default function AdminEventsTable({
 
   return (
     <>
-      <div className="grid gap-3 border-b border-white/10 px-5 py-4 lg:grid-cols-[1fr_180px]">
+      <div className="grid gap-3 border-b border-line px-5 py-4 lg:grid-cols-[1fr_180px]">
         <div className="relative">
           <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
 
@@ -227,7 +227,7 @@ export default function AdminEventsTable({
         <select
           value={eventTypeFilter}
           onChange={(event) => setEventTypeFilter(event.target.value)}
-          className="h-11 rounded-xl border border-white/10 bg-black/20 px-4 pr-10 text-sm text-white outline-none"
+          className="h-11 rounded-xl border border-line bg-black/20 px-4 pr-10 text-sm text-white outline-none"
         >
           <option value="all">All events</option>
           {eventTypes.map((eventType) => (
@@ -239,7 +239,7 @@ export default function AdminEventsTable({
       </div>
 
       {isRefreshing && (
-        <div className="flex items-center gap-2 border-b border-white/10 px-5 py-3 text-sm text-slate-400">
+        <div className="flex items-center gap-2 border-b border-line px-5 py-3 text-sm text-slate-400">
           <Loader2 className="h-4 w-4 animate-spin" />
           Refreshing activity logs...
         </div>
@@ -247,7 +247,7 @@ export default function AdminEventsTable({
 
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[1180px] table-auto text-left text-sm">
-          <thead className="border-b border-white/10 text-slate-400">
+          <thead className="border-b border-line text-slate-400">
             <tr>
               <th className="w-[250px] px-5 py-3 font-medium">Event</th>
               <th className="w-[230px] px-5 py-3 font-medium">Student</th>
@@ -266,13 +266,13 @@ export default function AdminEventsTable({
                 <tr key={event.id} className="border-b border-white/5">
                   <td className="px-5 py-4">
                     <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
                         <Icon className="h-5 w-5" />
                       </div>
 
                       <div className="min-w-0">
                         <span
-                          className={`inline-flex max-w-[160px] rounded-full border px-3 py-1 text-xs font-medium ${getEventClass(
+                          className={`inline-flex max-w-[160px] rounded-md border px-2 py-0.5 text-xs font-medium ${getEventClass(
                             event.type,
                           )}`}
                         >
@@ -382,7 +382,7 @@ export default function AdminEventsTable({
           return (
             <div key={event.id} className="space-y-4 px-5 py-5">
               <div className="flex min-w-0 items-start gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
                   <Icon className="h-5 w-5" />
                 </div>
 
@@ -397,7 +397,7 @@ export default function AdminEventsTable({
 
                   <div className="mt-2 flex flex-wrap gap-2">
                     <span
-                      className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getEventClass(
+                      className={`inline-flex rounded-md border px-2 py-0.5 text-xs font-medium ${getEventClass(
                         event.type,
                       )}`}
                     >
@@ -407,7 +407,7 @@ export default function AdminEventsTable({
                 </div>
               </div>
 
-              <div className="grid gap-3 rounded-2xl border border-white/10 bg-white/[0.02] p-4 text-sm">
+              <div className="grid gap-3 rounded-xl border border-line bg-white/[0.02] p-4 text-sm">
                 <div className="flex justify-between gap-3">
                   <span className="text-slate-500">Student</span>
                   <span className="max-w-[190px] truncate text-right text-slate-300">
@@ -471,7 +471,7 @@ export default function AdminEventsTable({
         open={selectedEvent !== null}
         onOpenChange={() => setSelectedEvent(null)}
       >
-        <DialogContent className="max-h-[85vh] w-[calc(100vw-2rem)] max-w-3xl overflow-y-auto border-cyan-400/20 bg-slate-950 p-5 sm:p-6">
+        <DialogContent className="max-h-[85vh] w-[calc(100vw-2rem)] max-w-3xl overflow-y-auto border-cyan-400/20 bg-surface p-5 sm:p-6">
           {selectedEvent && (
             <>
               <DialogHeader>
@@ -484,11 +484,11 @@ export default function AdminEventsTable({
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="mt-5 grid gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm md:grid-cols-2">
+              <div className="mt-5 grid gap-3 rounded-xl border border-line bg-white/[0.03] p-4 text-sm md:grid-cols-2">
                 <div>
                   <p className="text-slate-500">Event Type</p>
                   <span
-                    className={`mt-1 inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getEventClass(
+                    className={`mt-1 inline-flex rounded-md border px-2 py-0.5 text-xs font-medium ${getEventClass(
                       selectedEvent.type,
                     )}`}
                   >

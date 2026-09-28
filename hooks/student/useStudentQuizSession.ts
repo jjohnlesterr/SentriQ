@@ -88,9 +88,10 @@ export function useStudentQuizSession({
       )
       .subscribe();
 
+    // Realtime delivers approval instantly; polling is only a fallback.
     const polling = window.setInterval(() => {
       void syncSession();
-    }, 1500);
+    }, 5000);
 
     return () => {
       window.clearInterval(polling);

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-import { CheckCircle2, Lightbulb, Loader2, Send, X } from "lucide-react";
+import { Check, Lightbulb, Loader2, Send, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -66,25 +66,26 @@ export default function QuestionCard({
   );
 
   return (
-    <Card className="relative rounded-3xl border border-white/10 bg-white/5 p-5 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl md:p-7">
+    <Card className="relative rounded-xl border border-line bg-surface p-5 md:p-7">
       {hasHint && (
         <div className="absolute right-5 top-5 z-20">
           <button
             type="button"
             onClick={() => setShowHint((prev) => !prev)}
-            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-yellow-400/20 bg-yellow-500/10 text-yellow-300 transition hover:scale-105 hover:bg-yellow-500/20"
-            aria-label="Show hint"
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-line-strong text-amber-300 transition-colors hover:bg-white/[0.04]"
+            aria-label={showHint ? "Hide hint" : "Show hint"}
+            aria-expanded={showHint}
           >
             <Lightbulb className="h-5 w-5" />
           </button>
 
           {showHint && (
-            <div className="absolute right-0 top-14 w-64 rounded-2xl border border-yellow-400/20 bg-slate-950/95 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl">
+            <div className="absolute right-0 top-12 w-64 rounded-lg border border-line-strong bg-surface-raised p-4 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.7)]">
               <div className="mb-2 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  <Lightbulb className="h-4 w-4 text-yellow-300" />
+                  <Lightbulb className="h-4 w-4 text-amber-300" />
 
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-yellow-200">
+                  <p className="text-xs font-medium uppercase tracking-[0.14em] text-amber-200">
                     Hint
                   </p>
                 </div>
@@ -108,7 +109,7 @@ export default function QuestionCard({
       )}
 
       <div className="mx-auto max-w-4xl">
-        <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.25em] text-violet-300 md:text-xs md:tracking-[0.3em]">
+        <p className="mb-3 text-xs font-medium text-slate-500">
           Question {currentIndex + 1} ·{" "}
           {question.type === "multiple_choice"
             ? "Multiple Choice"
@@ -118,7 +119,7 @@ export default function QuestionCard({
         </p>
 
         <h2
-          className={`${questionTextClassName} max-w-4xl break-words pr-0 font-semibold text-slate-300 md:pr-10`}
+          className={`${questionTextClassName} max-w-4xl break-words pr-0 font-medium text-white md:pr-10`}
         >
           {question.text}
         </h2>
@@ -129,7 +130,7 @@ export default function QuestionCard({
               value={typeof selectedAnswer === "string" ? selectedAnswer : ""}
               onChange={(e) => onAnswer(e.target.value)}
               placeholder="Type your answer"
-              className="h-12 rounded-2xl border-white/10 bg-white/5 px-4 text-base text-white"
+              className="h-12 px-4 text-base"
             />
           ) : (
             question.options.map((option, index) => {
@@ -140,22 +141,23 @@ export default function QuestionCard({
                   key={index}
                   type="button"
                   onClick={() => onAnswer(index)}
+                  aria-pressed={isSelected}
                   className={
                     isSelected
-                      ? "w-full cursor-pointer rounded-2xl border border-violet-400/50 bg-violet-500/20 p-4 text-left text-slate-100 shadow-lg transition hover:bg-violet-500/25 md:p-5"
-                      : "w-full cursor-pointer rounded-2xl border border-white/10 bg-white/5 p-4 text-left text-slate-300 transition hover:border-violet-400/30 hover:bg-white/10 hover:text-slate-100 md:p-5"
+                      ? "w-full cursor-pointer rounded-lg border border-cyan-400/70 bg-cyan-400/[0.07] p-4 text-left text-white transition-colors md:p-5"
+                      : "w-full cursor-pointer rounded-lg border border-line-strong p-4 text-left text-slate-300 transition-colors hover:border-slate-500/70 hover:bg-white/[0.03] hover:text-white md:p-5"
                   }
                 >
                   <div className="flex items-center gap-3 md:gap-4">
                     <div
                       className={
                         isSelected
-                          ? "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-500 text-white"
-                          : "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-400"
+                          ? "flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-cyan-400 text-cyan-950"
+                          : "flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-line-strong text-sm text-slate-400"
                       }
                     >
                       {isSelected ? (
-                        <CheckCircle2 className="h-5 w-5" />
+                        <Check className="h-4 w-4" />
                       ) : (
                         String.fromCharCode(65 + index)
                       )}
@@ -177,7 +179,7 @@ export default function QuestionCard({
             variant="secondary"
             onClick={onPrevious}
             disabled={currentIndex === 0}
-            className="h-11 cursor-pointer border-white/10 bg-white/5 hover:bg-white/10 hover:text-white"
+            className="h-11"
           >
             Previous
           </Button>
@@ -188,7 +190,7 @@ export default function QuestionCard({
               variant="secondary"
               onClick={onNext}
               disabled={!isCurrentAnswered}
-              className="h-11 cursor-pointer"
+              className="h-11"
             >
               Next
             </Button>
@@ -198,7 +200,7 @@ export default function QuestionCard({
               variant="primary"
               onClick={onSubmit}
               disabled={isSubmitting || answeredCount < totalQuestions}
-              className="h-11 cursor-pointer"
+              className="h-11"
             >
               {isSubmitting ? (
                 <>

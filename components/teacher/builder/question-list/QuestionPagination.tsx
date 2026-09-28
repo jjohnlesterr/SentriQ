@@ -25,7 +25,7 @@ export default function QuestionPagination({
         type="button"
         variant="ghost"
         onClick={isExpanded ? onSeeLess : onSeeMore}
-        className="h-11 w-full rounded-2xl border border-white/10 bg-white/10 text-sm font-semibold text-white hover:bg-white/15"
+        className="h-11 w-full rounded-xl border border-line bg-white/10 text-sm font-semibold text-white hover:bg-white/15"
       >
         {isExpanded ? "See Less" : `See More (${totalQuestions - visibleCount})`}
       </Button>

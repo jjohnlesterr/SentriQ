@@ -53,7 +53,7 @@ export default function OptionRow({
       className={`relative flex min-w-0 items-center gap-3 rounded-2xl border p-3 transition ${
         isCorrect
           ? "border-emerald-400/30 bg-emerald-500/10"
-          : "border-white/10 bg-white/[0.03]"
+          : "border-line bg-white/[0.03]"
       }`}
     >
       <Checkbox
@@ -67,7 +67,7 @@ export default function OptionRow({
         onChange={(e) => onChange(e.target.value)}
         placeholder={`Option ${optionIndex + 1}`}
         disabled={disabled}
-        className="h-11 min-w-0 flex-1 rounded-xl border-white/10 bg-slate-950/40 px-3 text-sm"
+        className="h-11 min-w-0 flex-1 rounded-xl border-line bg-surface px-3 text-sm"
       />
 
       <div className="relative">
@@ -81,7 +81,7 @@ export default function OptionRow({
         </button>
 
         {isMenuOpen && (
-          <div className="absolute right-0 top-11 z-30 w-44 overflow-hidden rounded-2xl border border-white/10 bg-slate-950/95 p-1 shadow-2xl backdrop-blur-xl">
+          <div className="absolute right-0 top-11 z-30 w-44 overflow-hidden rounded-xl border border-line bg-surface p-1">
             <button
               type="button"
               disabled={disableMoveUp}

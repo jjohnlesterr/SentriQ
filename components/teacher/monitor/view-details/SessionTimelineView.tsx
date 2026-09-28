@@ -43,7 +43,7 @@ function getEventMeta(type: SessionEventType) {
   if (type === "join-requested") {
     return {
       icon: UserRoundCheck,
-      className: "border-indigo-300/20 bg-indigo-500/20 text-indigo-200",
+      className: "border-cyan-300/20 bg-cyan-500/20 text-cyan-200",
     };
   }
 
@@ -109,7 +109,7 @@ function getEventMeta(type: SessionEventType) {
 
   return {
     icon: Clock,
-    className: "border-blue-300/20 bg-blue-500/20 text-blue-200",
+    className: "border-cyan-300/20 bg-cyan-500/20 text-cyan-200",
   };
 }
 
@@ -126,7 +126,7 @@ export default function SessionTimelineView({
 
   if (session.events.length === 0) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-sm text-slate-400">
+      <div className="py-8 text-center text-sm text-slate-500">
         No events recorded.
       </div>
     );
@@ -195,7 +195,7 @@ export default function SessionTimelineView({
                   Math.min(current + PREVIEW_LIMIT, session.events.length),
                 )
               }
-              className="h-10 w-full rounded-2xl border border-white/10 bg-white/5 text-sm text-white hover:bg-white/10"
+              className="h-9 w-full text-sm"
             >
               See More ({nextCount})
             </Button>
@@ -206,7 +206,7 @@ export default function SessionTimelineView({
               type="button"
               variant="ghost"
               onClick={() => setVisibleCount(PREVIEW_LIMIT)}
-              className="h-10 w-full rounded-2xl border border-white/10 bg-white/5 text-sm text-slate-300 hover:bg-white/10 hover:text-white"
+              className="h-9 w-full text-sm text-slate-400"
             >
               See Less
             </Button>
@@ -215,7 +215,7 @@ export default function SessionTimelineView({
       )}
 
       {!hasMore && (
-        <div className="ml-12 mt-4 border-t border-white/10 pt-4 text-center text-xs text-slate-500">
+        <div className="ml-12 mt-4 border-t border-line pt-4 text-center text-xs text-slate-500">
           End of activity
         </div>
       )}

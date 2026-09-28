@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase/client";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type {
   Question,
   Quiz,
@@ -147,6 +147,8 @@ function mapSessionRow(row: SessionRow): QuizSession {
 }
 
 async function getSessionWithEvents(sessionId: string): Promise<QuizSession> {
+  const supabase = await createSupabaseServerClient();
+
   const { data, error } = await supabase
     .from("sessions")
     .select("*, session_events(*)")
@@ -164,6 +166,8 @@ export async function joinQuizService(
   studentName: string,
   quizCode: string,
 ): Promise<{ session: QuizSession; quiz: Quiz }> {
+  const supabase = await createSupabaseServerClient();
+
   const normalizedCode = quizCode.replace(/\s/g, "").toUpperCase();
 
   const { data: quizData, error: quizError } = await supabase
@@ -233,6 +237,8 @@ export async function joinQuizService(
 export async function cancelJoinRequestService(
   sessionId: string,
 ): Promise<void> {
+  const supabase = await createSupabaseServerClient();
+
   const session = await getSessionByIdService(sessionId);
 
   if (!session) return;
@@ -261,6 +267,8 @@ export async function cancelJoinRequestService(
 }
 
 export async function expirePendingJoinRequestService(sessionId: string) {
+  const supabase = await createSupabaseServerClient();
+
   const session = await getSessionByIdService(sessionId);
 
   if (!session) return null;
@@ -296,6 +304,8 @@ export async function expirePendingJoinRequestService(sessionId: string) {
 export async function getSessionByIdService(
   sessionId: string,
 ): Promise<QuizSession | null> {
+  const supabase = await createSupabaseServerClient();
+
   const { data, error } = await supabase
     .from("sessions")
     .select("*, session_events(*)")
@@ -319,6 +329,8 @@ export async function recordSessionEventService(
     durationSeconds?: number;
   },
 ): Promise<QuizSession> {
+  const supabase = await createSupabaseServerClient();
+
   const session = await getSessionByIdService(sessionId);
 
   if (!session) {
@@ -378,6 +390,8 @@ export async function updateSessionAnswerService(
   questionIndex: number,
   answer: number | string,
 ): Promise<QuizSession> {
+  const supabase = await createSupabaseServerClient();
+
   const session = await getSessionByIdService(sessionId);
 
   if (!session) {
@@ -427,6 +441,8 @@ export async function updateSessionReportVisibilityService(
   sessionId: string,
   visibility: ReportVisibility,
 ): Promise<QuizSession> {
+  const supabase = await createSupabaseServerClient();
+
   const { error } = await supabase
     .from("sessions")
     .update({
@@ -445,6 +461,8 @@ export async function completeSessionService(
   sessionId: string,
   submittedScore?: number,
 ): Promise<QuizSession> {
+  const supabase = await createSupabaseServerClient();
+
   const session = await getSessionByIdService(sessionId);
 
   if (!session) {
@@ -490,6 +508,8 @@ export async function expireSessionService(
   sessionId: string,
   submittedScore?: number,
 ): Promise<QuizSession> {
+  const supabase = await createSupabaseServerClient();
+
   const session = await getSessionByIdService(sessionId);
 
   if (!session) {
@@ -537,6 +557,8 @@ export async function expireSessionService(
 export async function updateSessionHeartbeatService(
   sessionId: string,
 ): Promise<void> {
+  const supabase = await createSupabaseServerClient();
+
   const { error } = await supabase
     .from("sessions")
     .update({
@@ -551,6 +573,8 @@ export async function updateSessionHeartbeatService(
 }
 
 export async function expirePendingJoinRequestsService() {
+  const supabase = await createSupabaseServerClient();
+
   const tenMinutesAgo = new Date(
     Date.now() - JOIN_REQUEST_TIMEOUT_MS,
   ).toISOString();
@@ -599,6 +623,8 @@ export async function expirePendingJoinRequestsService() {
 }
 
 export async function cleanupInactiveSessionsService() {
+  const supabase = await createSupabaseServerClient();
+
   await expirePendingJoinRequestsService();
 
   const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();

@@ -9,7 +9,7 @@ export default function QuestionSection({ children, className }: Props) {
   return (
     <section
       className={cn(
-        "min-w-0 rounded-3xl border border-white/10 bg-white/[0.04] p-4 shadow-[0_18px_70px_rgba(0,0,0,0.25)] backdrop-blur-xl md:p-6 lg:p-7",
+        "min-w-0 rounded-xl border border-line bg-surface p-4 md:p-6 lg:p-7",
         className
       )}
     >

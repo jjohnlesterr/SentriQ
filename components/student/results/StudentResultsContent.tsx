@@ -85,7 +85,7 @@ export default function StudentResultsContent({
 
   return (
     <PageShell>
-      <section className="mx-auto min-h-screen max-w-5xl px-4 py-6 sm:px-6 md:px-10 lg:px-12">
+      <section className="mx-auto min-h-screen max-w-3xl px-4 py-8 sm:px-6 md:py-12">
         <div className="space-y-5">
           <ResultSummaryCard
             quizTitle={results.quiz.title}
@@ -132,10 +132,11 @@ export default function StudentResultsContent({
           <Button
             type="button"
             onClick={handleReturnHome}
-            className="h-12 w-full rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-sm font-bold text-white shadow-lg shadow-violet-500/20 transition hover:brightness-110 sm:h-14 sm:text-base md:mx-auto md:flex md:max-w-sm"
+            variant="ghost"
+            className="mx-auto flex"
           >
-            <Home className="h-5 w-5" />
-            Return Home
+            <Home className="h-4 w-4" />
+            Return home
           </Button>
         </div>
       </section>

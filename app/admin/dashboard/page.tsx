@@ -53,7 +53,7 @@ function StatCard({
     <GlassCard className="h-[104px] w-[168px] shrink-0 p-4 md:h-[120px] md:w-auto md:p-5">
       <div className="flex items-center gap-3">
         <Icon className="h-6 w-6 text-cyan-300" />
-        <h2 className="text-4xl font-bold leading-none text-cyan-300">
+        <h2 className="text-3xl font-semibold leading-none tabular-nums text-white">
           {value}
         </h2>
       </div>
@@ -78,7 +78,7 @@ function OverviewGroup({
   }[];
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 md:p-5 xl:border-0 xl:bg-transparent xl:p-0">
+    <div className="rounded-xl border border-line bg-white/[0.02] p-4 md:p-5 xl:border-0 xl:bg-transparent xl:p-0">
       <div className="flex items-center gap-3">
         <Icon className={`h-6 w-6 ${iconClassName}`} />
         <h3 className="font-semibold text-white">{title}</h3>
@@ -90,7 +90,7 @@ function OverviewGroup({
             key={item.label}
             className={
               index < items.length - 1
-                ? "flex items-center justify-between border-b border-white/10 pb-2"
+                ? "flex items-center justify-between border-b border-line pb-2"
                 : "flex items-center justify-between"
             }
           >
@@ -156,12 +156,12 @@ export default async function AdminDashboardPage() {
     <AdminShell>
       <div className="mx-auto max-w-7xl space-y-6">
         <div>
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-sm text-cyan-200">
+          <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.14em] text-cyan-300">
             <ShieldCheck className="h-4 w-4" />
             Admin Control Panel
           </div>
 
-          <h1 className="text-3xl font-bold md:text-4xl">Admin Dashboard</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-white md:text-[1.75rem]">Admin Dashboard</h1>
 
           <p className="mt-2 text-sm text-slate-400">
             Welcome back,{" "}
@@ -215,7 +215,7 @@ export default async function AdminDashboardPage() {
               <OverviewGroup
                 title="Quizzes"
                 icon={BookOpen}
-                iconClassName="text-violet-300"
+                iconClassName="text-cyan-300"
                 items={[
                   { label: "Published", value: publishedQuizzesCount },
                   { label: "Draft", value: draftQuizzesCount },

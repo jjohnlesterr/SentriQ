@@ -22,17 +22,17 @@ export default function BuilderMobileLayout({
     <>
       <div className="mt-5 xl:hidden">
         <Tabs defaultValue="questions" className="w-full">
-          <TabsList className="grid h-auto w-full grid-cols-2 rounded-2xl border border-white/10 bg-white/[0.04] p-1 backdrop-blur-xl">
+          <TabsList className="grid h-auto w-full grid-cols-2">
             <TabsTrigger
               value="details"
-              className="rounded-xl px-3 py-2.5 text-xs sm:text-sm"
+              className="text-xs sm:text-sm"
             >
               Details
             </TabsTrigger>
 
             <TabsTrigger
               value="questions"
-              className="rounded-xl px-3 py-2.5 text-xs sm:text-sm"
+              className="text-xs sm:text-sm"
             >
               Questions
             </TabsTrigger>
