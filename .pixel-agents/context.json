@@ -1,0 +1,61 @@
+{
+  "projectName": "sentriq",
+  "languages": [
+    "TypeScript",
+    "JavaScript"
+  ],
+  "frameworks": [
+    "Next.js (App Router)",
+    "React"
+  ],
+  "backend": [
+    "Node.js API"
+  ],
+  "database": [
+    "SQL / Relational DB"
+  ],
+  "testing": [
+    "Unit & E2E Testing"
+  ],
+  "auth": [
+    "Supabase Auth & DB"
+  ],
+  "styling": [
+    "TailwindCSS"
+  ],
+  "packageManager": "npm",
+  "directories": [
+    "app",
+    "components",
+    "constants",
+    "hooks",
+    "lib",
+    "public",
+    "store"
+  ],
+  "files": [
+    ".gitignore",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "components.json",
+    "eslint.config.mjs",
+    "next.config.ts",
+    "package-lock.json",
+    "package.json",
+    "postcss.config.mjs",
+    "proxy.ts",
+    "README.md",
+    "tsconfig.json"
+  ],
+  "recommendedSkills": [
+    "nextjs",
+    "react",
+    "tailwind",
+    "supabase",
+    "codebase-intelligence",
+    "security-audit",
+    "performance-profiling",
+    "testing"
+  ],
+  "agentSpecializations": {}
+}
