@@ -24,7 +24,7 @@ const features = [
     icon: Eye,
     title: "Live monitoring",
     description:
-      "See who is answering, how far along they are, and who has gone idle — updated in real time.",
+      "See who is answering, how far along they are, and who has gone idle, updated in real time.",
   },
   {
     icon: ShieldAlert,
@@ -48,7 +48,7 @@ const features = [
 
 export default function FeaturesSection() {
   return (
-    <section id="features" className="scroll-mt-24 border-t border-line py-20 md:py-24">
+    <section id="features" className="scroll-mt-24 py-16 md:py-20">
       <div className="max-w-2xl">
         <h2 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">
           Everything a teacher needs to run a fair quiz
@@ -59,21 +59,19 @@ export default function FeaturesSection() {
         </p>
       </div>
 
-      <div className="mt-12 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+      <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {features.map((feature) => {
           const Icon = feature.icon;
 
           return (
-            <div key={feature.title}>
+            <li key={feature.title} className="rounded-lg border border-line bg-surface p-5">
               <Icon className="h-5 w-5 text-cyan-300" aria-hidden="true" />
-              <h3 className="mt-4 font-medium text-white">{feature.title}</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-400">
-                {feature.description}
-              </p>
-            </div>
+              <h3 className="mt-3 font-medium text-slate-100">{feature.title}</h3>
+              <p className="mt-1.5 text-sm leading-6 text-slate-400">{feature.description}</p>
+            </li>
           );
         })}
-      </div>
+      </ul>
     </section>
   );
 }

@@ -23,21 +23,17 @@ const steps = [
 
 export default function HowItWorksSection() {
   return (
-    <section id="how-it-works" className="scroll-mt-24 border-t border-line py-20 md:py-24">
-      <h2 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">
-        How it works
-      </h2>
+    <section id="how-it-works" className="scroll-mt-24 py-16 md:py-20">
+      <h2 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">How it works</h2>
 
-      <ol className="mt-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
+      <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {steps.map((step, index) => (
-          <li key={step.title} className="border-t border-line-strong pt-5">
-            <span className="text-sm font-medium tabular-nums text-cyan-300">
+          <li key={step.title} className="rounded-lg border border-line bg-surface p-5">
+            <span className="text-xs font-medium tabular-nums text-cyan-300">
               {String(index + 1).padStart(2, "0")}
             </span>
-            <h3 className="mt-3 font-medium text-white">{step.title}</h3>
-            <p className="mt-2 text-sm leading-6 text-slate-400">
-              {step.description}
-            </p>
+            <h3 className="mt-2 font-medium text-slate-100">{step.title}</h3>
+            <p className="mt-1.5 text-sm leading-6 text-slate-400">{step.description}</p>
           </li>
         ))}
       </ol>
