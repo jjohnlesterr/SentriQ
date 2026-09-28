@@ -18,7 +18,7 @@ function DialogOverlay({
   return (
     <DialogPrimitive.Overlay
       className={cn(
-        "fixed inset-0 z-50 bg-black/70 backdrop-blur-sm",
+        "fixed inset-0 z-50 bg-black/70 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
         className
       )}
       {...props}
@@ -37,14 +37,14 @@ function DialogContent({
 
       <DialogPrimitive.Content
         className={cn(
-          "fixed left-1/2 top-1/2 z-50 flex max-h-[90vh] w-[calc(100%-1.5rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-3xl border border-white/10 bg-slate-950 p-5 text-white shadow-2xl outline-none sm:w-full sm:p-6",
+          "fixed left-1/2 top-1/2 z-50 flex max-h-[90vh] w-[calc(100%-1.5rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl border border-line-strong bg-surface p-5 text-white shadow-[0_24px_64px_-12px_rgba(0,0,0,0.7)] outline-none data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-[0.98] data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-[0.98] sm:w-full sm:p-6",
           className
         )}
         {...props}
       >
         <div className="overflow-y-auto pr-1">{children}</div>
 
-        <DialogPrimitive.Close className="absolute right-4 top-4 rounded-xl p-2 text-slate-400 transition hover:bg-white/10 hover:text-white">
+        <DialogPrimitive.Close className="absolute right-4 top-4 rounded-md p-2 text-slate-400 transition-colors hover:bg-white/[0.06] hover:text-white">
           <X className="h-4 w-4" />
         </DialogPrimitive.Close>
       </DialogPrimitive.Content>
@@ -71,7 +71,7 @@ function DialogTitle({
   return (
     <DialogPrimitive.Title
       className={cn(
-        "pr-10 text-xl font-bold text-white sm:text-2xl",
+        "pr-10 text-lg font-semibold tracking-tight text-white",
         className
       )}
       {...props}

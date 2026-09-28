@@ -103,17 +103,17 @@ export default function TeacherAppSidebar({
           type="button"
           aria-label="Close sidebar overlay"
           onClick={closeSidebar}
-          className="fixed inset-0 z-40 cursor-pointer bg-black/60 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 cursor-pointer bg-black/60 lg:hidden"
         />
       )}
 
       <aside
         className={cn(
-          "fixed left-0 top-0 flex h-screen flex-col border-r border-white/10 py-5 text-white transition-[width] duration-300",
+          "fixed left-0 top-0 flex h-screen flex-col border-r border-line py-5 text-white transition-[width] duration-300",
           open
-            ? "z-50 w-[88%] max-w-sm bg-slate-950/95 px-5 shadow-2xl backdrop-blur-2xl lg:hidden"
+            ? "z-50 w-[88%] max-w-sm bg-surface px-5 lg:hidden"
             : cn(
-                "z-40 hidden bg-slate-950/60 backdrop-blur-xl lg:flex",
+                "z-40 hidden bg-canvas lg:flex",
                 isCollapsed ? "w-20 px-3" : "w-64 px-4",
               ),
         )}
@@ -132,7 +132,7 @@ export default function TeacherAppSidebar({
               onClick={onToggleCollapsed}
               aria-label="Open sidebar"
               title="Open sidebar"
-              className="group relative flex h-11 w-11 cursor-pointer items-center justify-center rounded-2xl transition hover:bg-white/10"
+              className="group relative flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl transition hover:bg-white/10"
             >
               <span className="relative h-11 w-11 transition group-hover:scale-90 group-hover:opacity-0">
                 <Image
@@ -172,7 +172,7 @@ export default function TeacherAppSidebar({
                   onClick={closeSidebar}
                   aria-label="Close sidebar"
                   title="Close sidebar"
-                  className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white lg:hidden"
+                  className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-line bg-white/[0.03] text-slate-300 transition hover:bg-white/10 hover:text-white lg:hidden"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -193,7 +193,7 @@ export default function TeacherAppSidebar({
 
         {/* NAVIGATION */}
         <ScrollArea className="min-h-0 flex-1 pr-2">
-          <nav className="space-y-2 pb-4">
+          <nav className="space-y-1 pb-4">
             <SidebarButton
               icon={LayoutDashboard}
               active={activePage === "dashboard"}
@@ -217,7 +217,7 @@ export default function TeacherAppSidebar({
                     Quiz Builder
                   </SidebarButton>
 
-                  <div className="invisible absolute left-full top-0 z-[90] ml-3 w-52 translate-x-2 rounded-2xl border border-white/10 bg-slate-950/95 p-2 opacity-0 shadow-2xl backdrop-blur-xl transition group-hover:visible group-hover:translate-x-0 group-hover:opacity-100">
+                  <div className="invisible absolute left-full top-0 z-[90] ml-3 w-52 translate-x-2 rounded-xl border border-line bg-surface p-2 opacity-0 transition group-hover:visible group-hover:translate-x-0 group-hover:opacity-100">
                     <p className="px-3 py-2 text-xs font-semibold text-slate-500">
                       Quiz Builder
                     </p>
@@ -253,7 +253,7 @@ export default function TeacherAppSidebar({
                     Live Monitor
                   </SidebarButton>
 
-                  <div className="invisible absolute left-full top-0 z-[90] ml-3 w-56 translate-x-2 rounded-2xl border border-white/10 bg-slate-950/95 p-2 opacity-0 shadow-2xl backdrop-blur-xl transition group-hover:visible group-hover:translate-x-0 group-hover:opacity-100">
+                  <div className="invisible absolute left-full top-0 z-[90] ml-3 w-56 translate-x-2 rounded-xl border border-line bg-surface p-2 opacity-0 transition group-hover:visible group-hover:translate-x-0 group-hover:opacity-100">
                     <p className="px-3 py-2 text-xs font-semibold text-slate-500">
                       Live Monitor
                     </p>
@@ -300,7 +300,7 @@ export default function TeacherAppSidebar({
                     active={activePage === "drafts"}
                     onClick={() => navigate("/teacher/drafts")}
                     className={
-                      activePage !== "drafts" ? "text-violet-200" : ""
+                      activePage !== "drafts" ? "text-cyan-200" : ""
                     }
                   >
                     Drafts
@@ -371,7 +371,7 @@ export default function TeacherAppSidebar({
               onClick={() => navigate("/admin/dashboard")}
               collapsed={isCollapsed}
               title="Switch to Admin View"
-              className="border border-violet-400/20 bg-violet-500/10 text-violet-100 hover:bg-violet-500/20"
+              className="text-cyan-300 hover:text-cyan-200"
             >
               Switch to Admin View
             </SidebarButton>
@@ -379,9 +379,9 @@ export default function TeacherAppSidebar({
 
           {/* TEACHER PROFILE */}
           {!isCollapsed && (
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+            <div className="border-t border-line px-1 pt-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-violet-500 text-sm font-bold text-white">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-slate-200 border border-line-strong bg-surface-raised">
                   T
                 </div>
 

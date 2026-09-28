@@ -11,7 +11,6 @@ function Card({ className, ...props }: React.ComponentProps<"div">) {
         border
         bg-background
         text-foreground
-        shadow-sm
         `,
         className,
       )}

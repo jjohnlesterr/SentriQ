@@ -13,23 +13,22 @@ function Input({
       className={cn(
         `
         flex
-        h-12
+        h-11
         w-full
-        rounded-xl
+        rounded-lg
         border
-        border-white/10
-        bg-white/5
-        px-4
+        border-line-strong
+        bg-surface
+        px-3.5
         py-2
         text-sm
         text-white
         outline-none
-        transition-all
-        placeholder:text-slate-400
-        focus:border-cyan-400/40
-        focus:bg-white/10
+        transition-colors
+        placeholder:text-slate-500
+        focus:border-cyan-400/70
         focus:ring-2
-        focus:ring-cyan-400/20
+        focus:ring-cyan-400/15
         disabled:cursor-not-allowed
         disabled:opacity-50
         `,

@@ -11,10 +11,13 @@ const buttonVariants = cva(
   justify-center
   gap-2
   whitespace-nowrap
-  rounded-xl
+  rounded-lg
   text-sm
   font-medium
-  transition-all
+  transition-colors
+  focus-visible:outline-2
+  focus-visible:outline-offset-2
+  focus-visible:outline-cyan-400
   disabled:pointer-events-none
   disabled:opacity-50
   `,
@@ -22,31 +25,30 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-600 hover:to-blue-600",
+          "bg-cyan-400 font-semibold text-cyan-950 hover:bg-cyan-300",
 
         secondary:
-          "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:from-violet-600 hover:to-fuchsia-600",
+          "border border-line-strong bg-surface-raised text-slate-100 hover:border-slate-500/60 hover:bg-[#1d222b]",
 
         ghost:
-          "border border-white/10 bg-white/5 text-white hover:bg-white/10",
+          "border border-line bg-transparent text-slate-200 hover:border-line-strong hover:bg-white/[0.04] hover:text-white",
 
-        destructive:
-          "bg-red-600 text-white hover:bg-red-700",
+        destructive: "bg-red-600 text-white hover:bg-red-500",
 
         success:
-          "border border-emerald-400/20 bg-gradient-to-r from-emerald-500/90 to-emerald-400/80 text-white hover:from-emerald-400 hover:to-emerald-300 shadow-lg shadow-emerald-950/20 backdrop-blur-xl",
+          "bg-emerald-500 font-semibold text-emerald-950 hover:bg-emerald-400",
 
         successSoft:
-          "border border-emerald-400/20 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20 hover:text-emerald-100",
+          "border border-emerald-400/25 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/15 hover:text-emerald-100",
 
         dangerSoft:
-          "border border-red-400/20 bg-red-500/10 text-red-200 hover:bg-red-500/20 hover:text-red-100",
+          "border border-red-400/25 bg-red-500/10 text-red-200 hover:bg-red-500/15 hover:text-red-100",
       },
 
       size: {
-        default: "h-11 px-5",
-        lg: "h-14 px-8 text-base",
-        sm: "h-9 px-3 text-xs",
+        default: "h-10 px-4",
+        lg: "h-12 px-6 text-base",
+        sm: "h-8 px-3 text-xs",
         mobile: "h-10 px-4 text-sm",
         icon: "h-10 w-10 p-0",
       },

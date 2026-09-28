@@ -5,23 +5,11 @@ import { cn } from "@/lib/shared/utils";
 
 type Props = React.ComponentProps<"div">;
 
-export function GlassCard({
-  children,
-  className,
-  ...props
-}: Props) {
+// The app's standard raised surface. (Name kept for existing imports.)
+export function GlassCard({ children, className, ...props }: Props) {
   return (
     <Card
-      className={cn(
-        `
-        rounded-3xl
-        border-white/10
-        bg-white/5
-        backdrop-blur-xl
-        shadow-2xl
-        `,
-        className
-      )}
+      className={cn("rounded-xl border-line bg-surface text-slate-200", className)}
       {...props}
     >
       {children}
