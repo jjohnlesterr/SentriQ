@@ -29,7 +29,7 @@ function StatCard({
     <GlassCard className="h-[104px] w-[168px] shrink-0 p-4 md:h-[120px] md:w-auto md:p-5">
       <div className="flex items-center gap-3">
         <Icon className="h-6 w-6 text-cyan-300" />
-        <h2 className="text-4xl font-bold leading-none text-cyan-300">
+        <h2 className="text-3xl font-semibold leading-none tabular-nums text-white">
           {value}
         </h2>
       </div>
@@ -54,12 +54,12 @@ export default async function AdminEventsPage() {
     <AdminShell>
       <div className="mx-auto max-w-7xl space-y-6">
         <div>
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-sm text-cyan-200">
+          <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.14em] text-cyan-300">
             <ShieldCheck className="h-4 w-4" />
             Admin Control Panel
           </div>
 
-          <h1 className="text-3xl font-bold md:text-4xl">Activity Logs</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-white md:text-[1.75rem]">Activity Logs</h1>
 
           <p className="mt-2 text-sm text-slate-400">
             Search and review all recorded session events and activities.
@@ -76,7 +76,7 @@ export default async function AdminEventsPage() {
         </div>
 
         <GlassCard className="overflow-hidden p-0">
-          <div className="border-b border-white/10 px-5 py-5">
+          <div className="border-b border-line px-5 py-5">
             <div className="flex items-center gap-2">
               <Activity className="h-5 w-5 text-cyan-300" />
               <h2 className="text-lg font-semibold">Activity Records</h2>

@@ -131,7 +131,7 @@ export default function AdminQuizzesTable({
 
   return (
     <>
-      <div className="border-b border-white/10 px-5 py-4">
+      <div className="border-b border-line px-5 py-4">
         <div className="relative">
           <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
 
@@ -145,7 +145,7 @@ export default function AdminQuizzesTable({
       </div>
 
       {isRefreshing && (
-        <div className="flex items-center gap-2 border-b border-white/10 px-5 py-3 text-sm text-slate-400">
+        <div className="flex items-center gap-2 border-b border-line px-5 py-3 text-sm text-slate-400">
           <Loader2 className="h-4 w-4 animate-spin" />
           Refreshing quizzes...
         </div>
@@ -153,7 +153,7 @@ export default function AdminQuizzesTable({
 
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[1100px] table-fixed text-left text-sm">
-          <thead className="border-b border-white/10 text-slate-400">
+          <thead className="border-b border-line text-slate-400">
             <tr>
               <th className="w-[360px] px-5 py-3 font-medium">Quiz</th>
               <th className="w-[230px] px-5 py-3 font-medium">Creator</th>
@@ -257,7 +257,7 @@ export default function AdminQuizzesTable({
         {quizzes.map((quiz) => (
           <div key={quiz.id} className="space-y-4 px-5 py-5">
             <div className="flex items-start gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
                 <BookOpen className="h-5 w-5" />
               </div>
 
@@ -291,7 +291,7 @@ export default function AdminQuizzesTable({
               </div>
             </div>
 
-            <div className="grid gap-3 rounded-2xl border border-white/10 bg-white/[0.02] p-4 text-sm">
+            <div className="grid gap-3 rounded-xl border border-line bg-white/[0.02] p-4 text-sm">
               <div className="flex justify-between gap-3">
                 <span className="text-slate-500">Questions</span>
                 <span className="text-slate-300">{quiz.question_count}</span>
@@ -358,7 +358,7 @@ export default function AdminQuizzesTable({
         open={selectedQuiz !== null}
         onOpenChange={() => setSelectedQuiz(null)}
       >
-        <DialogContent className="max-h-[85vh] w-[calc(100vw-2rem)] max-w-3xl overflow-y-auto border-cyan-400/20 bg-slate-950">
+        <DialogContent className="max-h-[85vh] w-[calc(100vw-2rem)] max-w-3xl overflow-y-auto border-cyan-400/20 bg-surface">
           {selectedQuiz && (
             <>
               <DialogHeader>
@@ -375,7 +375,7 @@ export default function AdminQuizzesTable({
               </DialogHeader>
 
               <div className="mt-4 grid gap-3 md:grid-cols-2">
-                <div className="min-w-0 rounded-2xl border border-white/10 p-4">
+                <div className="min-w-0 rounded-xl border border-line p-4">
                   <div className="flex items-center gap-2 text-slate-300">
                     <User className="h-4 w-4 text-cyan-300" />
                     Creator
@@ -389,7 +389,7 @@ export default function AdminQuizzesTable({
                   </p>
                 </div>
 
-                <div className="min-w-0 rounded-2xl border border-white/10 p-4">
+                <div className="min-w-0 rounded-xl border border-line p-4">
                   <div className="flex items-center gap-2 text-slate-300">
                     <Calendar className="h-4 w-4 text-cyan-300" />
                     Created
@@ -403,7 +403,7 @@ export default function AdminQuizzesTable({
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-white/10 p-4">
+                <div className="rounded-xl border border-line p-4">
                   <div className="flex items-center gap-2 text-slate-300">
                     <FileQuestion className="h-4 w-4 text-cyan-300" />
                     Questions
@@ -414,7 +414,7 @@ export default function AdminQuizzesTable({
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-white/10 p-4">
+                <div className="rounded-xl border border-line p-4">
                   <div className="flex items-center gap-2 text-slate-300">
                     <BookOpen className="h-4 w-4 text-cyan-300" />
                     Attempts
@@ -427,7 +427,7 @@ export default function AdminQuizzesTable({
               </div>
 
               {selectedQuiz.description && (
-                <div className="mt-4 rounded-2xl border border-white/10 p-4">
+                <div className="mt-4 rounded-xl border border-line p-4">
                   <p className="text-sm text-slate-400">Description</p>
 
                   <p className="mt-2 whitespace-pre-wrap break-words text-sm text-white">
