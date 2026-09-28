@@ -1,10 +1,11 @@
 "use client";
 
-import { Loader2, ShieldCheck } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
-import SectionHeading from "@/components/shared/SectionHeading";
+import FormMessage from "@/components/shared/FormMessage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { VALIDATION_LIMITS } from "@/lib/validations/constants";
 
 type Props = {
@@ -18,7 +19,7 @@ type Props = {
 };
 
 function sanitizeInput(value: string) {
-  return value.replace(/^\s+/, "");
+  return value.replace(/^s+/, "");
 }
 
 export default function JoinRequestForm({
@@ -31,77 +32,66 @@ export default function JoinRequestForm({
   onSubmit,
 }: Props) {
   return (
-    <form onSubmit={onSubmit} className="space-y-5">
-      <SectionHeading
-        icon={ShieldCheck}
-        badge="Student Access Portal"
-        title="Join Quiz"
-        description="Enter your name and quiz code to securely join your assessment."
-        variant="page"
-        className="mb-6 md:mb-8"
-        badgeClassName="mb-4 border-cyan-400/20 bg-cyan-400/10 px-3 py-1.5 text-xs text-cyan-200 md:mb-4"
-        titleClassName="text-3xl md:text-4xl"
-        descriptionClassName="mt-2 text-sm leading-6 text-slate-300 md:mt-3"
-      />
+    <div>
+      <h1 className="text-xl font-semibold tracking-tight text-white">Join a quiz</h1>
+      <p className="mt-1.5 text-sm text-slate-400">
+        Enter your name and the code from your teacher. They&apos;ll approve you
+        before the quiz starts.
+      </p>
 
-      <div className="space-y-2">
-        <label className="text-sm text-slate-200">Student Name</label>
+      <form onSubmit={onSubmit} className="mt-6 space-y-4">
+        <div className="space-y-1.5">
+          <div className="flex items-baseline justify-between">
+            <Label htmlFor="student-name">Your name</Label>
+            <span className="text-xs tabular-nums text-slate-500">
+              {studentName.length}/{VALIDATION_LIMITS.STUDENT_NAME_MAX}
+            </span>
+          </div>
 
-        <Input
-          value={studentName}
-          maxLength={VALIDATION_LIMITS.STUDENT_NAME_MAX}
-          placeholder="Enter your name"
-          className="h-11"
-          onChange={(e) =>
-            onStudentNameChange(sanitizeInput(e.target.value))
-          }
-          required
-        />
-
-        <div className="flex justify-end">
-          <span className="text-xs text-slate-500">
-            {studentName.length}/{VALIDATION_LIMITS.STUDENT_NAME_MAX}
-          </span>
+          <Input
+            id="student-name"
+            value={studentName}
+            maxLength={VALIDATION_LIMITS.STUDENT_NAME_MAX}
+            placeholder="First and last name"
+            autoComplete="name"
+            onChange={(e) => onStudentNameChange(sanitizeInput(e.target.value))}
+            required
+          />
         </div>
-      </div>
 
-      <div className="space-y-2">
-        <label className="text-sm text-slate-200">Quiz Code</label>
-
-        <Input
-          value={quizCode}
-          placeholder="ENTER QUIZ CODE"
-          className="h-11 uppercase"
-          maxLength={12}
-          onChange={(e) =>
-            onQuizCodeChange(
-              sanitizeInput(e.target.value.toUpperCase())
-            )
-          }
-          required
-        />
-      </div>
-
-      {error && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-          {error}
+        <div className="space-y-1.5">
+          <Label htmlFor="quiz-code">Quiz code</Label>
+          <Input
+            id="quiz-code"
+            value={quizCode}
+            placeholder="e.g. BIO3QZ"
+            className="font-mono uppercase tracking-[0.2em] placeholder:font-sans placeholder:normal-case placeholder:tracking-normal"
+            maxLength={12}
+            autoComplete="off"
+            autoCapitalize="characters"
+            spellCheck={false}
+            onChange={(e) => onQuizCodeChange(sanitizeInput(e.target.value.toUpperCase()))}
+            required
+          />
         </div>
-      )}
 
-      <Button
-        type="submit"
-        className="h-11 w-full"
-        disabled={isLoading || !studentName.trim() || !quizCode.trim()}
-      >
-        {isLoading ? (
-          <span className="flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Joining...
-          </span>
-        ) : (
-          "Request Access"
-        )}
-      </Button>
-    </form>
+        {error && <FormMessage>{error}</FormMessage>}
+
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={isLoading || !studentName.trim() || !quizCode.trim()}
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Sending request…
+            </>
+          ) : (
+            "Request to join"
+          )}
+        </Button>
+      </form>
+    </div>
   );
 }
