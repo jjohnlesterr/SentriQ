@@ -1,6 +1,6 @@
 "use server";
 
-import { supabase } from "@/lib/supabase/client";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   cancelJoinRequestService,
   cleanupInactiveSessionsService,
@@ -82,10 +82,6 @@ function mapSessionRow(row: SessionRow): QuizSession {
   };
 }
 
-function countEvents(events: SessionEvent[], type: SessionEventType) {
-  return events.filter((event) => event.type === type).length;
-}
-
 export async function joinQuiz(studentName: string, quizCode: string) {
   return joinQuizService(studentName, quizCode);
 }
@@ -110,13 +106,6 @@ export async function recordSessionEvent(
   return recordSessionEventService(sessionId, event);
 }
 
-export async function recordTabSwitch(sessionId: string) {
-  return recordSessionEventService(sessionId, {
-    type: "tab-left",
-    description: "Student left the quiz tab.",
-  });
-}
-
 export async function updateSessionAnswer(
   sessionId: string,
   questionIndex: number,
@@ -129,6 +118,8 @@ export async function updateSessionReportVisibility(
   sessionId: string,
   visibility: ReportVisibility,
 ): Promise<QuizSession> {
+  const supabase = await createSupabaseServerClient();
+
   const { error } = await supabase
     .from("sessions")
     .update({
@@ -164,6 +155,8 @@ export async function expireSession(
 }
 
 export async function getQuizSessions(quizId: string): Promise<QuizSession[]> {
+  const supabase = await createSupabaseServerClient();
+
   await expirePendingJoinRequestsService();
 
   const { data, error } = await supabase
@@ -203,6 +196,8 @@ export async function getQuizSessions(quizId: string): Promise<QuizSession[]> {
 }
 
 export async function approveSession(sessionId: string): Promise<QuizSession> {
+  const supabase = await createSupabaseServerClient();
+
   const checkedSession = await expirePendingJoinRequestService(sessionId);
 
   if (!checkedSession) {
@@ -243,6 +238,8 @@ export async function approveSession(sessionId: string): Promise<QuizSession> {
 }
 
 export async function rejectSession(sessionId: string): Promise<QuizSession> {
+  const supabase = await createSupabaseServerClient();
+
   const { error } = await supabase
     .from("sessions")
     .update({ approval_status: "rejected" })
@@ -271,27 +268,6 @@ export async function rejectSession(sessionId: string): Promise<QuizSession> {
   return session;
 }
 
-export async function getSessionViolations(sessionId: string) {
-  const session = await getSessionByIdService(sessionId);
-
-  if (!session) {
-    throw new Error("Session not found");
-  }
-
-  const tabLeft = countEvents(session.events, "tab-left");
-  const fullscreenExit = countEvents(session.events, "fullscreen-exit");
-  const copyAttempt = countEvents(session.events, "copy-attempt");
-  const pasteAttempt = countEvents(session.events, "paste-attempt");
-
-  return {
-    tabLeft,
-    fullscreenExit,
-    copyAttempt,
-    pasteAttempt,
-    total: tabLeft + fullscreenExit + pasteAttempt + copyAttempt,
-  };
-}
-
 export async function updateSessionHeartbeat(sessionId: string) {
   return updateSessionHeartbeatService(sessionId);
 }
@@ -300,11 +276,9 @@ export async function cleanupInactiveSessions() {
   return cleanupInactiveSessionsService();
 }
 
-export async function expirePendingJoinRequests() {
-  return expirePendingJoinRequestsService();
-}
-
 export async function deleteTeacherSessions(sessionIds: string[]) {
+  const supabase = await createSupabaseServerClient();
+
   if (sessionIds.length === 0) return { deletedCount: 0 };
 
   const { error: eventsError } = await supabase

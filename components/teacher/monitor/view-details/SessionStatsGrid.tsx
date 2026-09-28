@@ -120,10 +120,10 @@ function StatCard({
   }[tone];
 
   return (
-    <div className="min-h-[68px] rounded-2xl border border-white/10 bg-white/[0.04] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:min-h-[78px] sm:p-4">
+    <div className="rounded-lg bg-white/[0.025] px-3 py-2.5 sm:px-3.5 sm:py-3">
       <p className="text-[11px] leading-4 text-slate-400 sm:text-xs">{label}</p>
 
-      <p className={`mt-1 text-sm font-bold capitalize ${toneClass}`}>
+      <p className={`mt-1 text-sm font-semibold capitalize tabular-nums ${toneClass}`}>
         {value}
       </p>
     </div>

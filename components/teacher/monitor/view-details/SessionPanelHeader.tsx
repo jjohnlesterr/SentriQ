@@ -29,7 +29,7 @@ export default function SessionPanelHeader({
         type="button"
         onClick={onClick}
         size="sm"
-        className="h-8 shrink-0 rounded-full px-3 text-xs font-semibold shadow-lg shadow-cyan-500/20"
+        className="h-8 shrink-0 rounded-full px-3 text-xs font-semibold"
       >
         <Eye className="mr-1.5 h-3.5 w-3.5" />
         {buttonLabel}

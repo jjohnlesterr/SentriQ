@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import {
@@ -132,8 +132,25 @@ export function useTeacherMonitor() {
     return () => window.clearInterval(timer);
   }, []);
 
+  // Session ids shown on this monitor, used to ignore activity from other quizzes.
+  const sessionIdsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    sessionIdsRef.current = new Set(rawSessions.map((session) => session.id));
+  }, [rawSessions]);
+
   useEffect(() => {
     if (!autoRefresh) return;
+
+    // One answer produces several realtime events; coalesce them into one reload.
+    let reloadTimer: number | undefined;
+
+    function scheduleReload() {
+      window.clearTimeout(reloadTimer);
+      reloadTimer = window.setTimeout(() => {
+        void loadSessionsOnly();
+      }, 400);
+    }
 
     const channel = supabase
       .channel(`teacher-monitor-${quizId}`)
@@ -145,9 +162,7 @@ export function useTeacherMonitor() {
           table: "sessions",
           filter: `quiz_id=eq.${quizId}`,
         },
-        () => {
-          void loadSessionsOnly();
-        },
+        scheduleReload,
       )
       .on(
         "postgres_changes",
@@ -156,13 +171,20 @@ export function useTeacherMonitor() {
           schema: "public",
           table: "session_events",
         },
-        () => {
-          void loadSessionsOnly();
+        (payload) => {
+          const row = (payload.new ?? payload.old) as { session_id?: string } | null;
+
+          // session_events has no quiz_id, so filter client-side. Unknown ids are
+          // covered by the sessions subscription above.
+          if (!row?.session_id || sessionIdsRef.current.has(row.session_id)) {
+            scheduleReload();
+          }
         },
       )
       .subscribe();
 
     return () => {
+      window.clearTimeout(reloadTimer);
       void supabase.removeChannel(channel);
     };
   }, [quizId, autoRefresh, loadSessionsOnly]);
@@ -212,9 +234,10 @@ export function useTeacherMonitor() {
     router.push(`/teacher/quiz/${id}/monitor`);
   }
 
-  function logout() {
-    clearTeacherSession();
-    router.push("/teacher/login");
+  async function logout() {
+    await clearTeacherSession();
+    router.replace("/teacher/login");
+    router.refresh();
   }
 
   function toggleAutoRefresh() {
