@@ -42,7 +42,7 @@ export default function AIChatHead({
       <button
         type="button"
         onClick={() => setIsOpen((current) => !current)}
-        className="fixed bottom-4 right-4 z-[9999] flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-2xl shadow-violet-950/50 transition hover:scale-105 sm:bottom-6 sm:right-6 sm:h-14 sm:w-14"
+        className="fixed bottom-4 right-4 z-[9999] flex h-12 w-12 items-center justify-center rounded-full text-slate-200 transition sm:bottom-6 sm:right-6 sm:h-14 sm:w-14 border border-line-strong bg-surface-raised"
         aria-label={isOpen ? "Close AI assistant" : "Open AI assistant"}
       >
         <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" />

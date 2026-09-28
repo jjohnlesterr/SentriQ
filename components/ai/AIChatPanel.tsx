@@ -312,16 +312,16 @@ export default function AIChatPanel({
   }
 
   return (
-    <div className="fixed bottom-16 left-1/2 z-[9999] flex h-[58vh] w-[92vw] max-w-[380px] -translate-x-1/2 flex-col overflow-hidden rounded-[28px] border border-white/10 bg-slate-950/95 shadow-2xl shadow-black/50 backdrop-blur-2xl sm:bottom-20 md:left-auto md:right-6 md:top-auto md:h-[560px] md:w-[400px] md:translate-x-0">
-      <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-4 py-3">
+    <div className="fixed bottom-16 left-1/2 z-[9999] flex h-[58vh] w-[92vw] max-w-[380px] -translate-x-1/2 flex-col overflow-hidden rounded-xl border border-line bg-surface shadow-black/50 backdrop-blur-2xl sm:bottom-20 md:left-auto md:right-6 md:top-auto md:h-[560px] md:w-[400px] md:translate-x-0">
+      <div className="flex shrink-0 items-center justify-between border-b border-line px-4 py-3">
         <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-violet-300" />
+          <Sparkles className="h-4 w-4 text-cyan-300" />
 
           <p className="text-sm font-bold text-white md:text-base">
             AI Assistant
           </p>
 
-          <span className="rounded-full bg-violet-500/20 px-2 py-0.5 text-[9px] font-bold text-violet-200">
+          <span className="rounded-full bg-cyan-500/20 px-2 py-0.5 text-[9px] font-bold text-cyan-200">
             BETA
           </span>
         </div>
@@ -336,7 +336,7 @@ export default function AIChatPanel({
         </button>
       </div>
 
-      <div className="shrink-0 border-b border-white/10 px-4 py-3">
+      <div className="shrink-0 border-b border-line px-4 py-3">
         <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
           Suggested actions
         </p>
@@ -348,7 +348,7 @@ export default function AIChatPanel({
               type="button"
               disabled={isPending || isCoolingDown}
               onClick={() => handleChipClick(chip)}
-              className="rounded-xl border border-violet-400/30 bg-violet-500/10 px-3 py-2 text-[11px] font-semibold text-violet-200 transition hover:bg-violet-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-xl border border-cyan-400/30 bg-cyan-500/10 px-3 py-2 text-[11px] font-semibold text-cyan-200 transition hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {chip}
             </button>
@@ -369,8 +369,8 @@ export default function AIChatPanel({
             key={index}
             className={
               message.role === "user"
-                ? "ml-auto max-w-[85%] rounded-2xl bg-violet-500 px-3 py-2 text-xs text-white md:text-sm"
-                : "mr-auto max-w-[85%] rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-slate-100 md:text-sm"
+                ? "ml-auto max-w-[85%] rounded-xl bg-cyan-500 px-3 py-2 text-xs text-white md:text-sm"
+                : "mr-auto max-w-[85%] rounded-xl border border-line bg-white/[0.04] px-3 py-2 text-xs text-slate-100 md:text-sm"
             }
           >
             <p className="break-words whitespace-pre-wrap">
@@ -382,7 +382,7 @@ export default function AIChatPanel({
                 {message.wrongAnswers.map((answer) => (
                   <div
                     key={answer}
-                    className="rounded-xl border border-white/10 bg-slate-950/50 px-3 py-2 text-xs text-slate-100 md:text-sm"
+                    className="rounded-xl border border-line bg-surface px-3 py-2 text-xs text-slate-100 md:text-sm"
                   >
                     {answer}
                   </div>
@@ -393,7 +393,7 @@ export default function AIChatPanel({
                   onClick={() =>
                     onApplyWrongAnswers(message.wrongAnswers ?? [])
                   }
-                  className="mt-2 h-9 w-full rounded-xl bg-violet-500 text-xs text-white hover:bg-violet-600 md:h-10 md:text-sm"
+                  className="mt-2 h-9 w-full rounded-xl bg-cyan-500 text-xs text-white hover:bg-cyan-600 md:h-10 md:text-sm"
                 >
                   Apply to Choices
                 </Button>
@@ -403,13 +403,13 @@ export default function AIChatPanel({
         ))}
 
         {isPending && (
-          <div className="mr-auto max-w-[85%] rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-slate-400 md:text-sm">
+          <div className="mr-auto max-w-[85%] rounded-xl border border-line bg-white/[0.04] px-3 py-2 text-xs text-slate-400 md:text-sm">
             AI is thinking...
           </div>
         )}
       </div>
 
-      <div className="flex shrink-0 gap-2 border-t border-white/10 p-3">
+      <div className="flex shrink-0 gap-2 border-t border-line p-3">
         <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -417,7 +417,7 @@ export default function AIChatPanel({
             if (e.key === "Enter") handleSubmit();
           }}
           placeholder="Ask anything about your quiz..."
-          className="h-10 rounded-2xl border-white/10 bg-slate-950/60 text-sm text-white"
+          className="h-10 rounded-xl border-line bg-surface text-sm text-white"
           disabled={isPending}
         />
 
@@ -425,7 +425,7 @@ export default function AIChatPanel({
           type="button"
           onClick={handleSubmit}
           disabled={isPending || isCoolingDown}
-          className="h-10 w-10 shrink-0 rounded-2xl bg-violet-500 p-0 hover:bg-violet-600 disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-10 w-10 shrink-0 rounded-xl bg-cyan-500 p-0 hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-50"
           aria-label="Send message"
         >
           <Send className="h-4 w-4" />
