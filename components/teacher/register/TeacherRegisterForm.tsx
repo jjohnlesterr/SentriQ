@@ -1,177 +1,166 @@
 "use client";
 
 import { useState } from "react";
-import { Turnstile } from "@marsidev/react-turnstile";
-import {
-  Eye,
-  EyeOff,
-  LockKeyhole,
-  ShieldCheck,
-  UserPlus,
-} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-import SectionHeading from "@/components/shared/SectionHeading";
-import { GlassCard } from "@/components/shared/GlassCard";
+import FormMessage from "@/components/shared/FormMessage";
+import PasswordInput from "@/components/shared/PasswordInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { getHomePathForRole } from "@/lib/auth/redirect";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 
 export default function TeacherRegisterForm({
   onSuccess,
+  onSwitchToLogin,
 }: {
   onSuccess?: () => void;
+  /** In the modal, swaps to the login form; on the page, a link is used instead. */
+  onSwitchToLogin?: () => void;
 }) {
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [captchaToken, setCaptchaToken] = useState("");
-
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
+    if (isLoading) return;
+
     const normalizedEmail = email.trim().toLowerCase();
 
-    if (!normalizedEmail) return setError("Enter email");
-    if (!captchaToken) return setError("Complete security check");
-    if (password.length < 6) return setError("Min 6 characters");
+    if (!normalizedEmail) return setError("Enter your email address.");
+    if (password.length < 6) return setError("Password must be at least 6 characters.");
     if (password !== confirmPassword)
-      return setError("Passwords do not match");
+      return setError("Passwords do not match.");
 
     setIsLoading(true);
     setError("");
+    setNotice("");
 
-    const { data, error } = await supabaseBrowser.auth.signUp({
-      email: normalizedEmail,
-      password,
-      options: { captchaToken },
-    });
+    try {
+      const { data, error } = await supabaseBrowser.auth.signUp({
+        email: normalizedEmail,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
 
-    setIsLoading(false);
+      if (error) return setError(error.message);
+      if (!data.user) return setError("Sign up failed. Please try again.");
 
-    if (error) return setError(error.message);
-    if (!data.user) return setError("Signup failed");
+      // Supabase hides existing accounts by returning a user with no identities.
+      if (data.user.identities?.length === 0) {
+        return setError(
+          "An account with this email already exists. Please sign in instead.",
+        );
+      }
 
-    onSuccess?.();
+      // Email confirmation disabled: the user is signed in immediately.
+      if (data.session) {
+        router.replace(getHomePathForRole("teacher"));
+        router.refresh();
+        onSuccess?.();
+        return;
+      }
+
+      setPassword("");
+      setConfirmPassword("");
+      setNotice(
+        `Account created. Check ${normalizedEmail} for a confirmation link, then sign in.`,
+      );
+    } catch {
+      setError(
+        "Unable to create an account right now. Please check your connection and try again.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
   }
 
-  const inputClass =
-    "h-11 w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder:text-slate-400 focus:border-cyan-400/40 focus:ring-0 focus:outline-none";
-
   return (
-    <GlassCard className="p-5 sm:p-6 md:p-8">
-      <SectionHeading
-        icon={UserPlus}
-        badge="Teacher Registration"
-        title="Create Account"
-        description="Register to create quizzes and manage students."
-        variant="page"
-        className="mb-6 md:mb-8"
-        badgeClassName="mb-4 border-cyan-400/20 bg-cyan-400/10 px-3 py-1.5 text-xs text-cyan-200"
-        titleClassName="text-3xl md:text-4xl"
-        descriptionClassName="mt-2 text-sm text-slate-300"
-      />
+    <div>
+      <h1 className="text-xl font-semibold tracking-tight text-white">
+        Create a teacher account
+      </h1>
+      <p className="mt-1.5 text-sm text-slate-400">
+        Build quizzes and monitor your students&apos; sessions.
+      </p>
 
-      <form className="space-y-5" autoComplete="off">
-
-        <Input
-          type="email"
-          placeholder="teacher@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className={inputClass}
-          autoComplete="username"
-        />
-
-        <div className="relative z-10">
-          <LockKeyhole className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-
+      <form className="mt-6 space-y-4" autoComplete="off" onSubmit={handleSubmit}>
+        <div className="space-y-1.5">
+          <Label htmlFor="register-email">Email</Label>
           <Input
-            type={showPassword ? "text" : "password"}
-            placeholder="Create password"
+            id="register-email"
+            type="email"
+            placeholder="you@school.edu"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="username"
+            disabled={isLoading}
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="register-password">Password</Label>
+          <PasswordInput
+            id="register-password"
+            placeholder="At least 6 characters"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className={`${inputClass} pl-11 pr-12`}
             autoComplete="new-password"
             name="new-password"
             data-form-type="other"
-            spellCheck={false}
+            disabled={isLoading}
           />
-
-          <button
-            type="button"
-            onClick={() => setShowPassword((p) => !p)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white z-20"
-          >
-            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-          </button>
         </div>
 
-        <div className="relative z-10">
-          <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-
-          <Input
-            type={showConfirmPassword ? "text" : "password"}
-            placeholder="Confirm password"
+        <div className="space-y-1.5">
+          <Label htmlFor="register-confirm-password">Confirm password</Label>
+          <PasswordInput
+            id="register-confirm-password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className={`${inputClass} pl-11 pr-12`}
             autoComplete="new-password"
             name="confirm-password"
             data-form-type="other"
-            spellCheck={false}
+            disabled={isLoading}
           />
+        </div>
 
+        {error && <FormMessage>{error}</FormMessage>}
+        {notice && <FormMessage tone="success">{notice}</FormMessage>}
+
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? "Creating account…" : "Create account"}
+        </Button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-slate-400">
+        Already have an account?{" "}
+        {onSwitchToLogin ? (
           <button
             type="button"
-            onClick={() => setShowConfirmPassword((p) => !p)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white z-20"
+            onClick={onSwitchToLogin}
+            className="font-medium text-cyan-300 hover:text-cyan-200"
           >
-            {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            Log in
           </button>
-        </div>
-
-        <div className="w-full">
-          <Turnstile
-            siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
-            onSuccess={(token) => setCaptchaToken(token)}
-            onExpire={() => setCaptchaToken("")}
-            options={{ size: "flexible" }}
-          />
-        </div>
-
-        {error && (
-          <p className="text-sm text-red-300">{error}</p>
+        ) : (
+          <Link href="/teacher/login" className="font-medium text-cyan-300 hover:text-cyan-200">
+            Log in
+          </Link>
         )}
-
-        <Button
-          type="submit"
-          className="h-11 w-full"
-          disabled={isLoading}
-          onClick={handleSubmit}
-        >
-          {isLoading ? "Creating..." : "Create Account"}
-        </Button>
-
-        <button
-          type="button"
-          className="w-full text-center text-sm text-slate-400 hover:text-white"
-          onClick={() =>
-            window.dispatchEvent(
-              new CustomEvent("open-auth-modal", {
-                detail: "login",
-              }),
-            )
-          }
-        >
-          Already have an account? Login
-        </button>
-      </form>
-    </GlassCard>
+      </p>
+    </div>
   );
 }

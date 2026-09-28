@@ -1,26 +1,32 @@
 "use client";
 
 import { useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 
+import StudentJoinForm from "@/components/student/join/StudentJoinForm";
+import TeacherLoginForm from "@/components/teacher/login/TeacherLoginForm";
+import TeacherRegisterForm from "@/components/teacher/register/TeacherRegisterForm";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useAuthModal } from "@/store/useAuthModal";
-import LoginModal from "./LoginModal";
-import SignUpModal from "./SignUpModal";
-import QuizCodeModal from "./QuizCodeModal";
 
 type AuthModalAction = "signup" | "login" | "quiz";
+
+const modalTitles: Record<AuthModalAction, string> = {
+  login: "Log in",
+  signup: "Create a teacher account",
+  quiz: "Join a quiz",
+};
 
 export default function AuthModalManager() {
   const { type, isOpen, open, close } = useAuthModal();
 
+  // Legacy entry point: some components open modals via a window event.
   useEffect(() => {
     const handler = (e: Event) => {
-      const customEvent = e as CustomEvent<AuthModalAction>;
-      const action = customEvent.detail;
+      const action = (e as CustomEvent<AuthModalAction>).detail;
 
-      if (action === "signup") open("signup");
-      if (action === "login") open("login");
-      if (action === "quiz") open("quiz");
+      if (action === "signup" || action === "login" || action === "quiz") {
+        open(action);
+      }
     };
 
     window.addEventListener("open-auth-modal", handler);
@@ -31,28 +37,20 @@ export default function AuthModalManager() {
   }, [open]);
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* BACKDROP */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-md"
-            onClick={close}
-          />
+    <Dialog open={isOpen} onOpenChange={(next) => !next && close()}>
+      <DialogContent className="max-w-md p-6 sm:p-8" aria-describedby={undefined}>
+        {type && <DialogTitle className="sr-only">{modalTitles[type]}</DialogTitle>}
 
-          {/* MODAL LAYER */}
-          <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <AnimatePresence mode="wait">
-              {type === "login" && <LoginModal onClose={close} />}
-              {type === "signup" && <SignUpModal onClose={close} />}
-              {type === "quiz" && <QuizCodeModal onClose={close} />}
-            </AnimatePresence>
-          </div>
-        </>
-      )}
-    </AnimatePresence>
+        {type === "login" && (
+          <TeacherLoginForm onSuccess={close} onSwitchToSignup={() => open("signup")} />
+        )}
+
+        {type === "signup" && (
+          <TeacherRegisterForm onSuccess={close} onSwitchToLogin={() => open("login")} />
+        )}
+
+        {type === "quiz" && <StudentJoinForm onApproved={close} />}
+      </DialogContent>
+    </Dialog>
   );
 }
